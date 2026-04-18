@@ -27,4 +27,4 @@ pnpm-debug.log*
 src/content/topics/*.md
 
 # WebPages
-src/assets/WebPages/*.*
+src/assets/WebPages/*
