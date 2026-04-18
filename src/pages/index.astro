@@ -1,0 +1,14 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+import FlexibleLayout from "../components/UI/FlexibleLayout.vue";
+import { buildMenuTree } from "../utils/buildMenuTree";
+
+const topics = await getCollection("topics");
+const menuTree = buildMenuTree(topics);
+---
+
+<Layout title="Home Page - Appunti & Note">
+  <FlexibleLayout client:only="vue" initialMenuData={menuTree} />
+</Layout>
+// Force refresh

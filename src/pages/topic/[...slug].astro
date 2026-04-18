@@ -1,0 +1,62 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import FlexibleLayout from '../../components/UI/FlexibleLayout.vue';
+import { buildMenuTree, findSiblings } from '../../utils/buildMenuTree';
+
+export async function getStaticPaths() {
+  const topicsInfo = await getCollection('topics');
+  const menuTree = buildMenuTree(topicsInfo);
+
+  return topicsInfo.map(topic => {
+    // Pre-compute siblings per ogni topic
+    const siblings = findSiblings(topicsInfo, topic.data.menu);
+    return {
+      params: { slug: topic.id },
+      props: { topic, menuTree, siblings },
+    };
+  });
+}
+
+const { topic, menuTree, siblings } = Astro.props;
+
+// --- 🌉 Asset Resolution Bridge ---
+const allAssets = import.meta.glob('/src/assets/WebPages/**/*.{png,jpg,jpeg,mp3,gif,svg}', { eager: true });
+
+function resolveAsset(legacyPath: string) {
+  if (!legacyPath) return '';
+  const cleanPath = legacyPath.startsWith('/') ? legacyPath.slice(1) : legacyPath;
+  const fullPath = `/src/assets/${cleanPath}`;
+  
+  const asset = allAssets[fullPath];
+  if (asset) {
+    const mod = (asset as any).default;
+    return typeof mod === 'object' ? mod.src : mod;
+  }
+  return legacyPath;
+}
+
+// 1. Risolviamo gli asset nel corpo del testo
+let resolvedBody = topic.body;
+resolvedBody = resolvedBody.replace(/(src|href)="(\/WebPages\/[^"]+)"/g, (match, attr, path) => {
+  return `${attr}="${resolveAsset(path)}"`;
+});
+
+// 2. Risolviamo gli asset nelle immagini del carosello
+const resolvedItems = (topic.data.images || []).map(img => resolveAsset(img));
+
+const pageData = {
+   type: topic.data.type,
+   topic: topic.data.title,
+   route: `/topic/${topic.id}`,
+   code: resolvedBody,
+   items: resolvedItems,
+   pgn: topic.data.pgn || '',
+   siblings: siblings,
+   menuPath: topic.data.menu,
+};
+---
+
+<Layout title={topic.data.title}>
+  <FlexibleLayout client:load initialPageData={pageData} initialMenuData={menuTree} />
+</Layout>

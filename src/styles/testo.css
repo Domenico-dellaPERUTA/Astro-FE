@@ -1,0 +1,6 @@
+
+@media all and (min-width: 450px) {
+    .testo img {
+        float: left; padding: 15px 15px 15px 0;
+    }
+}

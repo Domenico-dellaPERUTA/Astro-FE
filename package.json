@@ -1,0 +1,29 @@
+{
+  "name": "astro-fe",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": "22.20.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/vue": "^6.0.1",
+    "@nanostores/vue": "^1.1.0",
+    "@tailwindcss/vite": "^4.2.2",
+    "astro": "^6.1.7",
+    "chess.js": "^1.4.0",
+    "lucide-vue-next": "^1.0.0",
+    "monaco-editor": "^0.53.0",
+    "monaco-editor-vue3": "^1.0.5",
+    "nanostores": "^1.2.0",
+    "pinia": "^3.0.4",
+    "tailwindcss": "^4.2.2",
+    "vue": "^3.5.32",
+    "vue3-carousel": "^0.17.0"
+  }
+}

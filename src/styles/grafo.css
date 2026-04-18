@@ -1,0 +1,48 @@
+.graficoRete {
+    position: relative;
+    width: 100%;
+    height: 400px;
+}
+
+.nodo {
+    position: absolute;
+    display: inline-block;
+    text-align: center;
+}
+
+.nodo svg {
+    display: block;
+    margin: 0 auto;
+}
+
+.nodo span {
+    font-size: 12px;
+    color: #333;
+}
+
+
+.grafo .sapMSLITitleOnly {
+    font-size: 1rem; 
+    font-family: 'Julee', cursive;
+    color: #54545e;
+}
+
+.grafo .sapMSLIImgIcon {
+    font-family: "SAP-icons";
+    font-size: 1rem;
+    color: #000000ad;
+}
+
+ .grafo .sapMLIBFocusable:focus {
+    background: #d3c77366 !important;
+    color: #d3ff9d !important;
+}
+
+.grafo .sapMLIBHoverable:hover{
+    background: #73c4d366 !important;
+    color: #9df0ff !important;
+}
+
+.sapFAvatarS {
+    font-size: 2.125rem;
+}

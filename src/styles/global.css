@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+/* assets/css/global.css */
+
+/* ---------------------------------------------------------
+   🌍 Global Styles with rem-based fluid scaling
+---------------------------------------------------------- */
+
+/* FONT IMPORT */
+@font-face {
+  font-family: 'Julee';
+  src: url('/fonts/Julee-Regular.ttf');
+}
+
+@font-face {
+  font-family: 'Fredericka the Great';
+  src: url('/fonts/FrederickatheGreat-Regular.ttf');
+}
+
+@font-face {
+  font-family: 'New Tegomin';
+  src: url('/fonts/NewTegomin-Regular.ttf');
+}
+
+@font-face {
+  font-family: 'BhuTuka Expanded One';
+  src: url('/fonts/BhuTukaExpandedOne-Regular.ttf');
+}
+
+/* -------------------------
+   BASE: dimensione dinamica
+-------------------------- */
+
+/* 
+   Imposta il font base su <html>
+   clamp(min, preferito, max)
+   → cresce in base alla larghezza dello schermo
+*/
+html {
+  font-size: clamp(14px, 0.9vw + 0.4rem, 18px);
+}
+
+/* Reset */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Julee', cursive;
+  line-height: 1.5;
+  background-color: #fff;
+  color: #333;
+  font-size: 1rem; /* base 1rem = html font-size */
+}
+
+/* -------------------------
+   TIPOGRAFIA SCALABILE
+-------------------------- */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Fredericka the Great', cursive;
+  font-weight: normal;
+  margin: 0 0 0.5rem;
+  line-height: 1.2;
+}
+
+h1 { font-size: 2.5rem; } /* ≈ 40px su desktop */
+h2 { font-size: 2rem;   } /* ≈ 32px */
+h3 { font-size: 1.75rem; }
+h4 { font-size: 1.5rem;  }
+h5 { font-size: 1.25rem; }
+h6 { font-size: 1rem;    }
+
+p {
+  margin-bottom: 1rem;
+}
+
+/* -------------------------
+   ELEMENTI COMUNI
+-------------------------- */
+button {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+small {
+  font-size: 0.875rem;
+}
+
+.monaco-editor,
+.monaco-editor .overflow-guard {
+  position: relative !important;
+}
+
+.monaco-editor .monaco-scrollable-element {
+  left: 0 !important;
+}
+.monaco-editor textarea.ime-text-area {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  height: 1px !important;
+  width: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+/* -------------------------
+   RESPONSIVE ADJUSTMENTS
+-------------------------- */
+@media (max-width: 768px) {
+  html {
+    font-size: clamp(13px, 1vw + 0.3rem, 16px);
+  }
+
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 13px;
+  }
+
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+
+  /* 🔹 Le immagini si adattano allo schermo */
+  img {
+    width: 95%;
+    height: auto; /* mantiene le proporzioni */
+    display: block; /* rimuove spazi indesiderati sotto l’immagine */
+  }
+
+  /* 🔹 Se vuoi togliere margini o padding attorno */
+  .content img {
+    margin: 0;
+    padding: 0;
+    border-radius: 0; /* opzionale */
+  }
+}
