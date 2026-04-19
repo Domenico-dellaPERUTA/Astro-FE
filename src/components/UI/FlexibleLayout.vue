@@ -150,12 +150,21 @@ function onSelectMenu(item: any): void {
 </script>
 
 <style scoped>
+/* 🔴 OVERRIDE: Disabilita Tailwind container utility */
+.container {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
 /* Container principale */
 .container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  container-type: inline-size;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Layout principale */
@@ -164,6 +173,8 @@ function onSelectMenu(item: any): void {
   display: flex;
   overflow: hidden;
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Sidebar sinistra */
@@ -171,6 +182,7 @@ function onSelectMenu(item: any): void {
   background-color: #404040;
   overflow-y: auto;
   transition: all 0.3s ease;
+  min-width: 0;
 }
 
 .sidebar-device {
@@ -186,7 +198,9 @@ function onSelectMenu(item: any): void {
 /* Contenuto */
 .content {
   flex: 1;
+  min-width: 0;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 /* Sidebar destra */
@@ -194,10 +208,11 @@ function onSelectMenu(item: any): void {
   background-color: #ffffff;
   border-left: 1px solid #ddd;
   overflow-y: auto;
+  min-width: 0;
 }
 
-/* 🔮 Layout adattivo senza breakpoint numerici */
-@container (max-width: 45rem) {
+/* 🔮 Layout adattivo basato su viewport (non container) */
+@media (max-width: 720px) {
   .main {
     flex-direction: column;
   }
@@ -212,7 +227,7 @@ function onSelectMenu(item: any): void {
   }
 }
 
-@container (min-width: 45rem) and (max-width: 85rem) {
+@media (min-width: 721px) and (max-width: 1360px) {
   .main {
     flex-direction: row;
   }
@@ -226,7 +241,7 @@ function onSelectMenu(item: any): void {
   }
 }
 
-@container (min-width: 85rem) {
+@media (min-width: 1361px) {
   .main {
     flex-direction: row;
   }

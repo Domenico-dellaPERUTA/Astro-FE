@@ -6,6 +6,13 @@
    🌍 Global Styles with rem-based fluid scaling
 ---------------------------------------------------------- */
 
+/* UNIVERSAL BOX SIZING */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 /* FONT IMPORT */
 @font-face {
   font-family: 'Julee';
@@ -87,23 +94,7 @@ small {
   font-size: 0.875rem;
 }
 
-.monaco-editor,
-.monaco-editor .overflow-guard {
-  position: relative !important;
-}
 
-.monaco-editor .monaco-scrollable-element {
-  left: 0 !important;
-}
-.monaco-editor textarea.ime-text-area {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  height: 1px !important;
-  width: 1px !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
 /* -------------------------
    RESPONSIVE ADJUSTMENTS
 -------------------------- */
@@ -129,7 +120,7 @@ small {
   img {
     width: 95%;
     height: auto; /* mantiene le proporzioni */
-    display: block; /* rimuove spazi indesiderati sotto l’immagine */
+    display: block; /* rimuove spazi indesiderati sotto l'immagine */
   }
 
   /* 🔹 Se vuoi togliere margini o padding attorno */
