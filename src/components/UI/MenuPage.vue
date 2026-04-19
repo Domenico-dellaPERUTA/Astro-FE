@@ -3,8 +3,9 @@
   <img 
     v-if="showAvatar == 'run'"
     class="avatar" 
-    src="/assets/avatar.gif" 
-    />
+    src="/avatar.gif"
+    alt="avatar animato"
+  />
 
   <ul class="right-menu">
     <li

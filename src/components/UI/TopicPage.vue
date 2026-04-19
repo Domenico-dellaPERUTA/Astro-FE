@@ -29,7 +29,7 @@
               class="carousel-image"
             />
             <div v-else class="image-placeholder">
-              <img src="/assets/await.gif" alt="loading">
+              <img src="/await.gif" alt="loading">
             </div>
 
             <!-- Audio associato -->
@@ -63,7 +63,7 @@
       </button>
     </div>
     <div v-else class="image-placeholder">
-      <img src="/assets/await.gif" alt="loading">
+      <img src="/await.gif" alt="loading">
     </div>
   </div>
 
