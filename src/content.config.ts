@@ -17,6 +17,9 @@ const topicsCollection = defineCollection({
     // Dati specifici per gli scacchi (pgn)
     pgn: z.string().optional(),
     
+    // Audio per code
+    audio: z.string().optional(),
+    
     // Dati per dizionario
     dictionary: z.array(z.object({
       item: z.string(),

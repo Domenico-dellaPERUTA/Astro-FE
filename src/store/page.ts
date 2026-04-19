@@ -19,6 +19,7 @@ const menuPath = ref('')
 const showAvatar = ref('stop')
 const pathFile = ref('')
 const carouselRef = ref<any>(null)
+const audio = ref('')
 
 // Chess state
 const chessCurrentMove = ref(0)
@@ -35,6 +36,15 @@ const setPageData = (data: any) => {
     currentIndex.value = data.currentIndex || 0
     siblings.value = data.siblings || []
     menuPath.value = data.menuPath || ''
+    audio.value = data.audio || ''
+    
+    // Per il tipo code, imposta pathFile al valore di audio se presente
+    // Rimuovi il "/" iniziale se presente, perché HeaderBar lo aggiungerà
+    if (data.type === 'code' && data.audio) {
+        pathFile.value = data.audio.startsWith('/') ? data.audio.slice(1) : data.audio
+    } else {
+        pathFile.value = ''
+    }
     
     // Sincronizza Info Store
     const info = useInfoStore()
@@ -96,6 +106,7 @@ export const usePageStore = () => {
         siblings,
         menuPath,
         route,
+        audio,
         chessCurrentMove,
         chessTotalMoves,
         chessFlipped,

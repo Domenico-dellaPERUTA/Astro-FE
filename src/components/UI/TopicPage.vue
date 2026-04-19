@@ -111,7 +111,7 @@ import { useAuthStore } from '../../store/auth'
 import ChessBoard from './ChessBoard.vue'
 
 const pageStore = usePageStore()
-const { topic, type, items, code, pgn, currentIndex, showAvatar, setCarouselRef, navigateToPage } = pageStore
+const { topic, type, items, code, pgn, currentIndex, showAvatar, setCarouselRef, navigateToPage, audio } = pageStore
 
 const infoStore = useInfoStore()
 const { page: infoPageNum, maxPage: infoMaxPageNum } = infoStore
@@ -123,6 +123,7 @@ const renderedHtml = ref('')
 // Monaco Editor per il codice
 const monacoCodeContainer = ref<HTMLElement | null>(null)
 const dictionaryCodeContainer = ref<HTMLElement | null>(null)
+const codeAudioRef = ref<HTMLAudioElement | null>(null)
 let codeEditor: any = null
 let monaco: any = null
 
@@ -300,11 +301,14 @@ onMounted(() => {
 watch(
   () => code.value,
   async (newCode) => {
-    console.log('[TopicPage] Watch page.code triggered:', type.value, newCode?.length);
     if (type.value === 'html') {
+      // 🔧 Correggi i percorsi delle immagini: src="WebPages/..." → src="/WebPages/..."
+      let correctedCode = newCode || ''
+      correctedCode = correctedCode.replace(/src=(["'])(?!\/|https?:\/\/)([^"']*)\1/g, 'src=$1/$2')
+      
       renderedHtml.value = ''
       await nextTick()
-      renderedHtml.value = `<div class="page">${newCode}</div>` || ''
+      renderedHtml.value = `<div class="page">${correctedCode}</div>` || ''
     } else if (type.value === 'code' && codeEditor) {
       // Aggiorna il contenuto dell'editor con codice pulito
       const cleaned = cleanCode(newCode || '')
