@@ -331,23 +331,27 @@ watch(
 
 /** ⬅️➡️ Navigazione carosello con preload */
 const prevSlide = async () => {
-  const prevIndex = infoPageNum.value - 2
-  if (prevIndex < 0) return
-  
-  // Naviga e precarica
-  carouselRef.value?.prev()
-  navigateToPage(prevIndex, false)
-  await preloadAdjacentImages(prevIndex)
+  if (!carouselRef.value) {
+    console.warn('[TopicPage] carouselRef is not available')
+    return
+  }
+  try {
+    await carouselRef.value.prev()
+  } catch (e) {
+    console.error('[TopicPage] Error in prevSlide:', e)
+  }
 }
 
 const nextSlide = async () => {
-  const nextIndex = infoPageNum.value
-  if (nextIndex >= infoMaxPageNum.value) return
-  
-  // Naviga e precarica
-  carouselRef.value?.next()
-  navigateToPage(nextIndex, false)
-  await preloadAdjacentImages(nextIndex)
+  if (!carouselRef.value) {
+    console.warn('[TopicPage] carouselRef is not available')
+    return
+  }
+  try {
+    await carouselRef.value.next()
+  } catch (e) {
+    console.error('[TopicPage] Error in nextSlide:', e)
+  }
 }
 
 /** 🔊 Eventi audio/avatar */
