@@ -226,7 +226,21 @@ const infoCode = computed(() => (items.value[currentIndex.value] || {
 }) as CodeItem)
 
 
-const currentTitle = computed(() => topic.value || 'HOME')
+const currentTitle = computed(() => {
+  if (!topic.value) return 'HOME'
+  
+  const menuPath = pageStore.menuPath?.value || ''
+  console.log('[HeaderBar] menuPath:', menuPath)
+  
+  if (menuPath) {
+    const parts = menuPath.split('/')
+    const lastPart = parts[parts.length - 1].trim()
+    console.log('[HeaderBar] Found menuPath:', menuPath, 'lastPart:', lastPart)
+    return lastPart
+  }
+  
+  return topic.value
+})
 const isHome = computed(() => !topic.value || topic.value === 'HOME')
 const isLogin = computed(() => !topic.value || topic.value === 'LOGIN' || topic.value === 'Login' || topic.value === 'login')
 const isAdmin = computed(() => !topic.value || topic.value === 'Cockpit Admin' || topic.value === 'cockpit admin' || topic.value === 'COCKPIT ADMIN')
