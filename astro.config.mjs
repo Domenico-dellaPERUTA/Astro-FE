@@ -9,6 +9,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
     build: {
       chunkSizeWarningLimit: 1500,
+      assetsInclude: ['**/*.mp3', '**/*.wav', '**/*.ogg'],
     }
   }
 });

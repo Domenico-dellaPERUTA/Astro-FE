@@ -1,4 +1,5 @@
 ---
+import helloAudioSrc from '../../assets/WebPages/Rust/hello_word.mp3';
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import FlexibleLayout from '../../components/UI/FlexibleLayout.vue';
@@ -21,10 +22,12 @@ export async function getStaticPaths() {
 const { topic, menuTree, siblings } = Astro.props;
 
 // --- 🌉 Asset Resolution Bridge ---
-const allAssets = import.meta.glob('/src/assets/WebPages/**/*.{png,jpg,jpeg,mp3,gif,svg}', { eager: true });
+const allAssets = import.meta.glob('/src/assets/WebPages/**/*.{png,jpg,jpeg,gif,svg}', { eager: true });
 
 function resolveAsset(legacyPath: string) {
   if (!legacyPath) return '';
+  if (/\.(mp3|wav|ogg)$/i.test(legacyPath)) return legacyPath;
+  
   const cleanPath = legacyPath.startsWith('/') ? legacyPath.slice(1) : legacyPath;
   const fullPath = `/src/assets/${cleanPath}`;
   
@@ -33,6 +36,20 @@ function resolveAsset(legacyPath: string) {
     const mod = (asset as any).default;
     return typeof mod === 'object' ? mod.src : mod;
   }
+  return legacyPath;
+}
+
+// Audio resolve - use pre-imported audio files
+function resolveAudio(legacyPath: string) {
+  if (!legacyPath) return '';
+  if (!/\.(mp3|wav|ogg)$/i.test(legacyPath)) return legacyPath;
+  
+  // Match by filename and return pre-imported URL
+  if (legacyPath.includes('hello_word')) {
+    return helloAudioSrc;
+  }
+  
+  // For other audio files, return original path
   return legacyPath;
 }
 
@@ -46,7 +63,7 @@ resolvedBody = resolvedBody.replace(/(src|href)="(\/WebPages\/[^"]+)"/g, (match,
 const resolvedItems = (topic.data.images || []).map(img => resolveAsset(img));
 
 // 3. Risolviamo l'audio
-const resolvedAudio = topic.data.audio ? resolveAsset(topic.data.audio) : '';
+const resolvedAudio = topic.data.audio ? resolveAudio(topic.data.audio) : '';
 
 const pageData = {
    type: topic.data.type,
@@ -59,6 +76,8 @@ const pageData = {
    siblings: siblings,
    menuPath: topic.data.menu,
 };
+
+
 ---
 
 <Layout title={topic.data.title}>

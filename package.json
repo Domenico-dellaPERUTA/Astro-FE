@@ -18,6 +18,7 @@
     "astro": "^6.1.7",
     "chess.js": "^1.4.0",
     "lucide-vue-next": "^1.0.0",
+    "marked": "^18.0.2",
     "monaco-editor": "^0.53.0",
     "monaco-editor-vue3": "^1.0.5",
     "nanostores": "^1.2.0",

@@ -99,7 +99,7 @@
 
         <!-- AUDIO -->
         <ActionButton
-          v-if="type == 'code'"
+          v-if="type == 'code' || type == 'md'"
           :onClick="playAudio ? onRunAudio : onStopAudio"
         >
           <template #icon>
@@ -314,7 +314,11 @@ const onRunAudio = async () => {
   let sPath: string = pathFile.value ?? ''
   if (!sPath) return
 
-  sPath = '/'+sPath.replace(/\.[^/.]+$/, '.mp3') // percorso .mp3
+  if (!sPath.toLowerCase().endsWith('.mp3')) {
+    sPath = '/'+sPath.replace(/\.[^/.]+$/, '.mp3')
+  } else {
+    sPath = '/'+sPath
+  }
 
   // evita click multipli mentre controlliamo/avviamo
   if (checkingAudio.value) return

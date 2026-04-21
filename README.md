@@ -1,46 +1,57 @@
-# Astro Starter Kit: Basics
+# Appunti & Note
 
-```sh
-npm create astro@latest -- --template basics
+Sito web personale per annotare, organizzare e condividere ciò che impari.
+
+## Tech Stack
+- Astro + Vue.js
+- TailwindCSS
+- Monaco Editor (syntax highlighting)
+- chess.js (scacchi)
+- Nanostores (state management)
+
+## Funzionalità
+
+### Tipi di contenuto supportati
+- **html** - Pagine con testo, immagini e link
+- **code** - Codice sorgente con syntax highlighting (Monaco Editor)
+- **carousel** - Gallerie di immagini con audio
+- **dictionary** - Dizionari con trascrizione fonetica
+- **chess** - Scacchiere interattive
+- **home** - Pagina home personalizzata
+
+### Organizzazione contenuti
+- Menu gerarchico a cartelle (struttura nidificata)
+- Ordinamento personalizzato degli elementi
+- Layout responsivo (desktop/tablet/phone)
+
+## Struttura
+```
+src/
+├── content/topics/    # Contenuti (file .md)
+├── assets/WebPages/  # Immagini, video, audio
+├── components/       # Componenti Vue
+├── store/            # State management (nanostores)
+└── utils/            # Utility (buildMenuTree)
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+### Media
+Immagini, video e audio vanno inseriti in `src/assets/WebPages/`. I riferimenti nei file markdown sono relativi a questa cartella (es. `/WebPages/immagini/foto.png`).
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+## Aggiungere nuovi appunti
+Creare un file `.md` in `src/content/topics/` con frontmatter:
+```yaml
+---
+title: "Titolo"
+type: "html"        # html|code|carousel|dictionary|chess
+menu: "Categoria/Sottocategoria"
+index: 1
+---
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## Comandi
+```bash
+npm install
+npm run dev      # Server sviluppo (localhost:4321)
+npm run build    # Build produzione
+npm run preview  # Preview build
+```

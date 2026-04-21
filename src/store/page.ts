@@ -27,6 +27,9 @@ const chessTotalMoves = ref(0)
 const chessFlipped = ref(false)
 
 const setPageData = (data: any) => {
+    // Reset pathFile prima di tutto per evitare valori residui
+    pathFile.value = ''
+    
     type.value = data.type || 'home'
     topic.value = data.topic || ''
     code.value = data.code || ''
@@ -38,12 +41,10 @@ const setPageData = (data: any) => {
     menuPath.value = data.menuPath || ''
     audio.value = data.audio || ''
     
-    // Per il tipo code, imposta pathFile al valore di audio se presente
+    // Per il tipo code e md, imposta pathFile al valore di audio se presente
     // Rimuovi il "/" iniziale se presente, perché HeaderBar lo aggiungerà
-    if (data.type === 'code' && data.audio) {
+    if ((data.type === 'code' || data.type === 'md') && data.audio) {
         pathFile.value = data.audio.startsWith('/') ? data.audio.slice(1) : data.audio
-    } else {
-        pathFile.value = ''
     }
     
     // Sincronizza Info Store

@@ -1,0 +1,55 @@
+.md {
+  font-family: 'New Tegomin';
+  line-height: 1.5;
+  font-size: 1.2rem;;
+  color: #000000;
+  margin: 1rem;
+}
+
+.md h1 {
+  color: #1b63bcd6;
+  font-weight:lighter;
+  font-size: 1.7rem;
+  margin: 1rem;
+}
+
+.md h2 {
+  color: #bc3e1be1;
+  font-weight:lighter;
+  font-size: 1.4rem;
+  margin: 1rem;
+}
+
+.md h3 {
+  color: #1b9ebcc9;
+  font-weight:lighter;
+  font-size: 1.1rem;
+  margin: 1rem;
+}
+
+.md h4 {
+  color: #561bbcc9;
+  font-family: 'New Tegomin';
+  font-size: 1.5rem;
+  margin: 1rem;
+}
+
+.md pre {
+  background-color: #f7f6f6;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem;
+}
+pre code {
+  font-family: "Lucida Console", "Courier New", monospace;
+    color: #000000da;
+}
+code {
+  font-family: "Lucida Console", "Courier New", monospace;
+    color: #1254fadf;
+}
+
+.language-abap {
+  font-family: "Lucida Console", "Courier New", monospace;
+  font-size: 1.1rem;
+}

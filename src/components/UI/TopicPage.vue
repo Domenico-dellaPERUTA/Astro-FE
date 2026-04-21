@@ -8,6 +8,9 @@
       <div ref="monacoCodeContainer" class="monaco-code-container"></div>
   </div>
 
+  <!------------------------------- 🧩 MD (Markdown) -------------------------------->
+  <div v-else-if="type === 'md'" v-html="renderedMarkdown"></div>
+
   <!------------------------------- 🧩 CAROUSEL ---------------------------------------->
   <div v-else-if="type === 'carousel'" class="carousel-container relative">
     <div v-if="!initialLoading">
@@ -119,6 +122,13 @@ const { page: infoPageNum, maxPage: infoMaxPageNum } = infoStore
 const auth = useAuthStore()
 
 const renderedHtml = ref('')
+const renderedMarkdown = ref('')
+const markdownContainer = ref<HTMLElement | null>(null)
+
+// Import marked for Markdown rendering
+import { marked } from 'marked'
+
+
 
 // Monaco Editor per il codice
 const monacoCodeContainer = ref<HTMLElement | null>(null)
@@ -315,6 +325,14 @@ watch(
       codeEditor.setValue(cleaned)
       const language = detectLanguage(cleaned)
       monaco.editor.setModelLanguage(codeEditor.getModel(), language)
+    } else if (type.value === 'md') {
+      // Convert markdown to HTML using marked
+      try {
+        renderedMarkdown.value = `<div class="md" > ${ marked(newCode || '') as string }</div>`
+      } catch (e) {
+        console.error('[TopicPage] Markdown parse error:', e)
+        renderedMarkdown.value = newCode || ''
+      }
     }
   },
   { immediate: true }
@@ -329,6 +347,15 @@ watch(
     } else if (newType === 'code' || newType === 'dictionary') {
       await nextTick()
       if (!codeEditor) await initializeCodeEditor(newType)
+    } else if (newType === 'md') {
+      // Convert markdown to HTML
+      await nextTick()
+      try {
+        renderedMarkdown.value = `<div class="md" > ${ marked(code.value || '') as string }</div>`
+      } catch (e) {
+        console.error('[TopicPage] Markdown parse error:', e)
+        renderedMarkdown.value = code.value || ''
+      }
     }
   }
 )
@@ -555,4 +582,5 @@ audio {
   height: auto; 
   width: 100%; 
 }
+
 </style>
