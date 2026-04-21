@@ -1,55 +1,124 @@
 .md {
-  font-family: 'New Tegomin';
-  line-height: 1.5;
-  font-size: 1.2rem;;
-  color: #000000;
+  font-family: 'New Tegomin', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  font-size: 1.1rem;
+  color: #1a1a1a;
   margin: 1rem;
+  padding: 1rem;
+  background-color: #fafafa;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  max-width: 950px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .md h1 {
-  color: #1b63bcd6;
-  font-weight:lighter;
-  font-size: 1.7rem;
-  margin: 1rem;
+  color: #1a365d;
+  font-weight: normal;
+  font-size: 1.8rem;
+  margin: 1.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #4299e1;
 }
 
 .md h2 {
-  color: #bc3e1be1;
-  font-weight:lighter;
-  font-size: 1.4rem;
-  margin: 1rem;
+  color: #2c5282;
+  font-weight: normal;
+  font-size: 1.45rem;
+  margin: 1.25rem 0 0.75rem;
+  padding-left: 0.5rem;
+  border-left: 3px solid #4299e1;
 }
 
 .md h3 {
-  color: #1b9ebcc9;
-  font-weight:lighter;
-  font-size: 1.1rem;
-  margin: 1rem;
+  color: #2b6cb0;
+  font-weight: normal;
+  font-size: 1.2rem;
+  margin: 1rem 0 0.5rem;
 }
 
 .md h4 {
-  color: #561bbcc9;
-  font-family: 'New Tegomin';
-  font-size: 1.5rem;
-  margin: 1rem;
+  color: #3182ce;
+  font-family: 'New Tegomin', sans-serif;
+  font-size: 1.15rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.md p {
+  margin: 0.75rem 0;
+}
+
+.md ul, .md ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.md li {
+  margin: 0.35rem 0;
 }
 
 .md pre {
   background-color: #f7f6f6;
   padding: 1rem;
+  border-radius: 4px;
   overflow-x: auto;
   margin: 1rem;
+  font-size: 0.95rem;
 }
-pre code {
-  font-family: "Lucida Console", "Courier New", monospace;
-    color: #000000da;
+
+.md code {
+  font-family: 'Lucida Console', 'Courier New', monospace;
+  background-color: #edf2f7;
+  color: #1254fa;
+  padding: 0.15rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.9em;
 }
-code {
-  font-family: "Lucida Console", "Courier New", monospace;
-    color: #1254fadf;
+
+.md pre code {
+  background-color: transparent;
+  color: #000000;
+  padding: 0;
+}
+
+.md blockquote {
+  border-left: 4px solid #4299e1;
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  background-color: #ebf8ff;
+  color: #2c5282;
+  border-radius: 0 4px 4px 0;
+}
+
+.md hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1.5rem 0;
+}
+
+.md strong {
+  font-weight: 600;
+  color: #1a365d;
+}
+
+.md table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.md th, .md td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.md th {
+  background-color: #edf2f7;
 }
 
 .language-abap {
-  font-family: "Lucida Console", "Courier New", monospace;
-  font-size: 1.1rem;
+  font-family: 'Lucida Console', 'Courier New', monospace;
+  font-size: 1rem;
 }

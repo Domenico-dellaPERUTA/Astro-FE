@@ -9,7 +9,7 @@
   </div>
 
   <!------------------------------- 🧩 MD (Markdown) -------------------------------->
-  <div v-else-if="type === 'md'" v-html="renderedMarkdown"></div>
+  <div v-else-if="type === 'md'" class="md" v-html="renderedMarkdown"></div>
 
   <!------------------------------- 🧩 CAROUSEL ---------------------------------------->
   <div v-else-if="type === 'carousel'" class="carousel-container relative">
