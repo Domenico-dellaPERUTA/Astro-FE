@@ -55,6 +55,14 @@ function resolveAudio(legacyPath: string) {
 
 // 1. Risolviamo gli asset nel corpo del testo
 let resolvedBody = topic.body;
+
+// per i file .md -> ![alt](/WebPages/...)
+resolvedBody = resolvedBody.replace(/!\[([^\]]*)\]\((\/WebPages\/[^)]+)\)/g, (match, alt, path) => {
+  const resolved = resolveAsset(path);
+  return `![${alt}](${resolved})`;
+});
+
+// per i file html src="..." o href="..."
 resolvedBody = resolvedBody.replace(/(src|href)="(\/WebPages\/[^"]+)"/g, (match, attr, path) => {
   return `${attr}="${resolveAsset(path)}"`;
 });
