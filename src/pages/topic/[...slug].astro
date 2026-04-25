@@ -118,7 +118,18 @@ resolvedBody = resolvedBody.replace(/(src|href)="(\/WebPages\/[^"]+)"/g, (match,
 // 2. Risolviamo gli asset nelle immagini del carosello o nel dizionario
 let resolvedItems = [];
 if (topic.data.type === 'carousel') {
-  resolvedItems = (topic.data.images || []).map(img => resolveAsset(img));
+  resolvedItems = (topic.data.images || []).map(img => {
+    // Risolviamo l'immagine
+    const resolvedImg = resolveAsset(img);
+    // Risolviamo l'audio corrispondente (sostituendo l'estensione nel path originale)
+    const audioPath = String(img).replace(/\.(png|jpg|jpeg)$/i, '.mp3');
+    const resolvedAud = resolveAudio(audioPath);
+    return {
+      image: resolvedImg,
+      audio: resolvedAud,
+      originalPath: img // teniamolo per compatibilità o debug
+    };
+  });
 } else if (topic.data.type === 'dictionary' && topic.data.dictionary) {
   // Risolviamo gli asset solo per l'elemento corrente per performance
   resolvedItems = topic.data.dictionary.map((item, idx) => {

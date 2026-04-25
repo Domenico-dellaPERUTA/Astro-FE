@@ -22,12 +22,12 @@
         class="rounded-2xl overflow-hidden"
         @slide-start="onSlideChange"
       >
-        <Slide v-for="(img, index) in items" :key="index">
+        <Slide v-for="(item, index) in items" :key="index">
           <div class="slide">
             <!-- Mostra immagine se già scaricata -->
             <img
-              v-if="carouselImages[img as string]"
-              :src="carouselImages[img as string]"
+              v-if="carouselImages[item.image || item]"
+              :src="item.image || item"
               alt="immagine carousel"
               class="carousel-image"
             />
@@ -37,9 +37,9 @@
 
             <!-- Audio associato -->
             <audio
-              v-if="carouselImages[img as string]"
+              v-if="carouselImages[item.image || item]"
               :id="`audio_${index}`"
-              :src="audioSrc(img as string)"
+              :src="item.audio || audioSrc(item)"
               @play="runAvatar()"
               @ended="stopAvatar()"
               @pause="pauseAvatar()"
@@ -241,48 +241,48 @@ const detectLanguage = (code: string): string => {
 }
 
 /** 🔧 Percorso immagine normalizzato */
-function normalizedSrc(path: string) {
+function normalizedSrc(input: any) {
+  const path = typeof input === 'object' ? input.image : input
   if (!path) return ''
+  if (path.startsWith('/_astro') || path.startsWith('http')) return path
   const clean = path.startsWith('/') ? path.slice(1) : path
   return `/${clean}`
 }
 
 /** 🔊 Percorso audio corrispondente */
-function audioSrc(path: string) {
+function audioSrc(input: any) {
+  if (typeof input === 'object' && input.audio) return input.audio
+  const path = typeof input === 'object' ? input.originalPath || input.image : input
   if (!path) return ''
   const clean = decodeURIComponent(String(path)).replace('.jpg', '.mp3').replace('.png', '.mp3')
   return `/${clean.startsWith('/') ? clean.slice(1) : clean}`
 }
 
 /** 🔄 Gestione immagini statica */
-async function fetchImageIfNeeded(path: string) {
+async function fetchImageIfNeeded(item: any) {
+  const path = typeof item === 'object' ? item.image : item
   if (!path || carouselImages.value[path]) return
-  // In modalità statica, usiamo direttamente il percorso
   carouselImages.value[path] = path
 }
 
 /** 📥 Precarica immagini adiacenti all'indice corrente */
 async function preloadAdjacentImages(currentIndexArg: number) {
-  const itemsList = items.value as string[]
+  const itemsList = items.value
   if (!Array.isArray(itemsList) || itemsList.length === 0) return
 
   // Carica immagine corrente
-  const currentPath = itemsList[currentIndexArg]
-  if (currentPath) await fetchImageIfNeeded(currentPath)
+  const currentItem = itemsList[currentIndexArg]
+  if (currentItem) await fetchImageIfNeeded(currentItem)
 
-  // Precarica immagine successiva (in background)
+  // Precarica immagine successiva
   const nextIndex = (currentIndexArg + 1) % itemsList.length
-  const nextPath = itemsList[nextIndex]
-  if (nextPath && !carouselImages.value[nextPath]) {
-    fetchImageIfNeeded(nextPath) // Non await - carica in background
-  }
+  const nextItem = itemsList[nextIndex]
+  if (nextItem) fetchImageIfNeeded(nextItem)
 
-  // Precarica immagine precedente (in background)
+  // Precarica immagine precedente
   const prevIndex = (currentIndexArg - 1 + itemsList.length) % itemsList.length
-  const prevPath = itemsList[prevIndex]
-  if (prevPath && !carouselImages.value[prevPath]) {
-    fetchImageIfNeeded(prevPath) // Non await - carica in background
-  }
+  const prevItem = itemsList[prevIndex]
+  if (prevItem) fetchImageIfNeeded(prevItem)
 }
 
 /** 🎯 Evento cambio slide dal carousel */
