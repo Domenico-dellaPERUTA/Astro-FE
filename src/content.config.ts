@@ -27,7 +27,11 @@ const topicsCollection = defineCollection({
       type: z.string(),
       fonetic: z.string().optional(),
       path: z.string().optional(),
-      codeDescription: z.string().optional()
+      codeDescription: z.string().optional(),
+      links: z.string().optional(),
+      synonyms: z.string().optional(),
+      opposites: z.string().optional(),
+      note: z.string().optional(),
     })).optional()
   }),
 });

@@ -67,11 +67,10 @@ export async function getStaticPaths() {
 const { topic, menuTree, siblings, currentIndex, virtualTitle } = Astro.props;
 
 // --- 🌉 Asset Resolution Bridge ---
-const allAssets = import.meta.glob('/src/assets/WebPages/**/*.{png,jpg,jpeg,gif,svg}', { eager: true });
+const allAssets = import.meta.glob('/src/assets/WebPages/**/*.{png,jpg,jpeg,gif,svg,mp3}', { eager: true });
 
 function resolveAsset(legacyPath: string) {
   if (!legacyPath) return '';
-  if (/\.(mp3|wav|ogg)$/i.test(legacyPath)) return legacyPath;
   
   const cleanPath = legacyPath.startsWith('/') ? legacyPath.slice(1) : legacyPath;
   const fullPath = `/src/assets/${cleanPath}`;
@@ -84,17 +83,21 @@ function resolveAsset(legacyPath: string) {
   return legacyPath;
 }
 
-// Audio resolve - use pre-imported audio files
+// Audio resolve - use pre-imported audio files or dynamic resolution
 function resolveAudio(legacyPath: string) {
   if (!legacyPath) return '';
+  
+  // Try dynamic resolution first
+  const resolved = resolveAsset(legacyPath);
+  if (resolved !== legacyPath) return resolved;
+
+  // Fallback for specific files or external links
   if (!/\.(mp3|wav|ogg)$/i.test(legacyPath)) return legacyPath;
   
-  // Match by filename and return pre-imported URL
   if (legacyPath.includes('hello_word')) {
     return helloAudioSrc;
   }
   
-  // For other audio files, return original path
   return legacyPath;
 }
 
@@ -116,8 +119,21 @@ resolvedBody = resolvedBody.replace(/(src|href)="(\/WebPages\/[^"]+)"/g, (match,
 let resolvedItems = [];
 if (topic.data.type === 'carousel') {
   resolvedItems = (topic.data.images || []).map(img => resolveAsset(img));
-} else if (topic.data.type === 'dictionary') {
-  resolvedItems = topic.data.dictionary || [];
+} else if (topic.data.type === 'dictionary' && topic.data.dictionary) {
+  // Risolviamo gli asset solo per l'elemento corrente per performance
+  resolvedItems = topic.data.dictionary.map((item, idx) => {
+    if (idx === currentIndex) {
+      const path = item.path || '';
+      return {
+        ...item,
+        // Aggiungiamo campi risolti che TopicPage.vue possa usare
+        resolvedImageJpg: resolveAsset(`${path}${item.item}.jpg`),
+        resolvedImagePng: resolveAsset(`${path}${item.item}.png`),
+        resolvedAudio: resolveAudio(`${path}${item.item}.mp3`)
+      };
+    }
+    return item;
+  });
 }
 
 // 3. Risolviamo l'audio
@@ -126,7 +142,7 @@ const resolvedAudio = topic.data.audio ? resolveAudio(topic.data.audio) : '';
 const pageData = {
    type: topic.data.type,
    topic: virtualTitle || topic.data.title,
-   route: `/topic/${topic.id}`,
+   route: virtualTitle ? `/topic/${topic.id}/${virtualTitle}` : `/topic/${topic.id}`,
    code: resolvedBody,
    items: resolvedItems,
    pgn: topic.data.pgn || '',

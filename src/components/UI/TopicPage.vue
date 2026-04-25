@@ -81,17 +81,27 @@
         <div ref="dictionaryCodeContainer" class="dictionary-code-container"></div>
     </div>
 
+    <div v-if="dictionary?.synonyms" class="dictionary-extra">
+      <strong>Sinonimi:</strong> {{ dictionary.synonyms }}
+    </div>
+    <div v-if="dictionary?.opposites" class="dictionary-extra">
+      <strong>Opposti:</strong> {{ dictionary.opposites }}
+    </div>
+    <div v-if="dictionary?.note" class="dictionary-note">
+      {{ dictionary.note }}
+    </div>
+
     <img 
-      :src="`/${dictionary?.path}${dictionary?.item}.jpg`" 
+      :src="dictionary?.resolvedImageJpg || `/${dictionary?.path}${dictionary?.item}.jpg`" 
       @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
       class="img-centrata" 
     />
     <img 
-      :src="`/${dictionary?.path}${dictionary?.item}.png`" 
+      :src="dictionary?.resolvedImagePng || `/${dictionary?.path}${dictionary?.item}.png`" 
       @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
       class="img-centrata" 
     />
-    <audio :key="dictionary?.item" :src="`/${dictionary?.path}${dictionary?.item}.mp3`" autoplay></audio>
+    <audio :key="dictionary?.item" :src="dictionary?.resolvedAudio || `/${dictionary?.path}${dictionary?.item}.mp3`" autoplay></audio>
     
   </div>
 
@@ -398,6 +408,13 @@ interface DictionaryItem {
   description: string
   path?: string
   codeDescription?: string
+  links?: string
+  synonyms?: string
+  opposites?: string
+  note?: string
+  resolvedImageJpg?: string
+  resolvedImagePng?: string
+  resolvedAudio?: string
 }
 const dictionary = computed<DictionaryItem | undefined>(() => items.value[currentIndex.value] as DictionaryItem)
 const colorTextDictionary = (sType: string): string => {
@@ -582,6 +599,26 @@ audio {
 .dictionary img { 
   height: auto; 
   width: 100%; 
+}
+
+.dictionary-extra {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  color: #666;
+  font-style: italic;
+  text-align: center;
+}
+
+.dictionary-note {
+  margin: 1rem auto;
+  padding: 0.5rem;
+  background-color: #fffde7;
+  border-left: 4px solid #fdd835;
+  color: #333;
+  width: 90%;
+  text-align: left;
+  font-style: normal;
+  border-radius: 4px;
 }
 
 </style>

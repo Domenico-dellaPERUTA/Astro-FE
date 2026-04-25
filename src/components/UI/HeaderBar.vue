@@ -459,10 +459,10 @@ const onLinkSelect = (item: Link) => {
   isOpenOpposites.value = false
   isOpenLinks.value = false
   setTimeout(() => {
-    const index = items.value.map((r:any) => r.item).indexOf(item.name) ?? 0
-    const topicVal = topic.value || 'topic'
-    const slug = encodeURIComponent(topicVal)
-    window.location.assign(`/topic/${slug}/page/${index}/chapter/0`)
+    const sibling = siblings.value.find((s: any) => s.name === item.name)
+    if (sibling?.link) {
+      window.location.assign(sibling.link)
+    }
   },250)
 }
 
