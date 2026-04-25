@@ -22,14 +22,16 @@
       <h1 class="title">
         {{ currentTitle }}
       </h1>
-      <!-- Pulsante login -->
+      <!-- Pulsante login --> 
+<!--
       <button 
         v-if="isHome"
         @click="window.location.assign('/login')" 
         class="btn-icon-user"
       >
         <User2 class="icon-user" />
-      </button>
+      </button> 
+-->
 
       <!-- Pulsante home -->
       <button 
