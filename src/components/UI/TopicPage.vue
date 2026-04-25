@@ -24,27 +24,30 @@
       >
         <Slide v-for="(item, index) in items" :key="index">
           <div class="slide">
-            <!-- Mostra immagine se già scaricata -->
-            <img
-              v-if="carouselImages[item.image || item]"
-              :src="item.image || item"
-              alt="immagine carousel"
-              class="carousel-image"
-            />
-            <div v-else class="image-placeholder">
-              <img src="/await.gif" alt="loading">
-            </div>
+            <div class="slide-content">
+              <!-- Mostra immagine se già scaricata -->
+              <img
+                v-if="carouselImages[item.image || item]"
+                :src="item.image || item"
+                alt="immagine carousel"
+                class="carousel-image"
+              />
+              <div v-else class="image-placeholder">
+                <img src="/await.gif" alt="loading">
+              </div>
 
-            <!-- Audio associato -->
-            <audio
-              v-if="carouselImages[item.image || item]"
-              :id="`audio_${index}`"
-              :src="item.audio || audioSrc(item)"
-              @play="runAvatar()"
-              @ended="stopAvatar()"
-              @pause="pauseAvatar()"
-              controls
-            />
+              <!-- Audio associato -->
+              <audio
+                v-if="carouselImages[item.image || item]"
+                :id="`audio_${index}`"
+                :src="item.audio || audioSrc(item)"
+                @play="runAvatar()"
+                @ended="stopAvatar()"
+                @pause="pauseAvatar()"
+                controls
+                class="carousel-audio"
+              />
+            </div>
           </div>
         </Slide>
       </Carousel>
@@ -475,32 +478,40 @@ watch(
 .carousel-container {
   position: relative;
   width: 100%;
-  max-width: 65rem;
+  max-width: 80rem; /* Increased for larger images */
   height: auto;
-  margin: 3rem auto;
+  margin: 1rem auto;
   padding: 1rem;
 }
 
 .slide {
-  width: 95%;
+  width: 100%;
   height: auto;
-  display: block;
-  margin: auto;
+  display: flex;
+  justify-content: center;
   padding: 1rem;
 }
 
-.carousel-image {
-  width: 85%;
-  height: auto;
-  display: block;
-  margin: auto;
-  border-radius: 1.5rem;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+.slide-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%; 
 }
 
-audio {
+.carousel-image {
+  width: 100%; 
+  max-height: 70vh; /* More height while keeping audio visible */
+  height: auto;
+  display: block;
+  border-radius: 1.5rem;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+  object-fit: contain;
+}
+
+.carousel-audio {
   width: 100%;
-  margin: 1.5rem 0;
+  margin-top: 1.2rem;
 }
 
 /* 🔵 Loader immagine */
@@ -509,6 +520,7 @@ audio {
   justify-content: center;
   align-items: center;
   height: 25rem;
+  width: 100%;
   background-color: #f8fafc;
   border-radius: 1.5rem;
 }
@@ -560,7 +572,7 @@ audio {
   height: calc(55vh - 101px);
   background-color: #1e1e1e;
   padding: 0;
-  margin: 1.5rem 0;
+  margin: 0.5rem 0;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -587,7 +599,7 @@ audio {
   background-color: white; 
   text-align: center;
   max-width: 60rem;
-  margin: 4rem auto;
+  margin: 1.5rem auto;
   padding: 3rem;
   border-radius: 24px;
   box-shadow: 0 10px 50px rgba(0,0,0,0.05);

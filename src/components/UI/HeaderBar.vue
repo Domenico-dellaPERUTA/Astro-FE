@@ -45,7 +45,7 @@
 
     <!-------------------------------- Barra secondaria ---------------------------->
     <div v-if="!isHome && !isLogin && !isAdmin" class="header-secondary">
-      <div v-if="!isPhone && !isTablet" class="title-topic">Lista Argomenti</div>
+      <div v-if="!isPhone && !isTablet" class="title-topic"> </div>
     
 
       <div class="info-title">{{ infoTitle }}</div>
@@ -600,6 +600,23 @@ const onLinkSelect = (item: Link) => {
   font-family: 'Fredericka the Great', cursive;
   font-size: 1.7rem;
   font-weight: normal;
+}
+
+/* 📱 Responsive Adjustments for Mobile */
+@media (max-width: 768px) {
+  .title {
+    font-size: 1.4rem; /* Scale down main title */
+    letter-spacing: 0.5px;
+  }
+  .info-title {
+    font-size: 1.2rem; /* Scale down secondary title */
+  }
+  .header-main {
+    padding: 0 0.5rem;
+  }
+  .header-secondary {
+    padding: 0 0.5rem;
+  }
 }
 
 .page-info-carousel {

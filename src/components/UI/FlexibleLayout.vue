@@ -87,9 +87,11 @@ onMounted(() => {
 
   const checkLayout = () => {
     isPhone.value = window.innerWidth <= 768
-    // Su desktop/tablet il menu è aperto di default, su phone chiuso
+    isTablet.value = window.innerWidth > 768 && window.innerWidth <= 1024
+
+    // Su desktop (>1024) il menu è aperto di default, su tablet/phone è chiuso
     if (type.value !== 'home') {
-      showMenu.value = window.innerWidth > 768
+      showMenu.value = window.innerWidth > 1024
     } else {
       showMenu.value = false
     }
@@ -99,7 +101,7 @@ onMounted(() => {
 })
 
 function onSelectMenu(item: any): void {
-  if (item.link && window.innerWidth <= 768) {
+  if (item.link && window.innerWidth <= 1024) {
     showMenu.value = false
   }
 }
@@ -184,44 +186,47 @@ function onSelectMenu(item: any): void {
   flex-shrink: 0;
   width: 18rem;
   z-index: 10;
+  display: none; /* Hidden by default */
 }
 
-/* 📱 MOBILE (Phone) */
-@media (max-width: 768px) {
+/* 📱 MOBILE / TABLET (Drive Mode) */
+@media (max-width: 1024px) {
   .sidebar-left {
     position: absolute;
     top: 0;
     left: 0;
     bottom: 0;
-    width: 280px;
+    width: 300px;
     transform: translateX(-100%);
     box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+    z-index: 100; /* Must be high */
   }
   
   /* Quando il menu è aperto su mobile tramite classe o state */
   .sidebar-left.is-open {
     transform: translateX(0);
   }
-
-  .sidebar-right {
-    display: none;
-  }
 }
 
-/* 💻 DESKTOP / TABLET */
-@media (min-width: 769px) {
+/* 💻 DESKTOP */
+@media (min-width: 1025px) {
   .sidebar-left {
     width: 20rem;
     transform: none !important;
+    z-index: 10;
   }
-  
+}
+
+/* 🖥️ DESKTOP / WIDE SCREENS */
+@media (min-width: 1501px) {
   .sidebar-right {
+    display: block;
     width: 18rem;
   }
 }
 
 /* 🖥️ LARGE DESKTOP */
-@media (min-width: 1440px) {
+@media (min-width: 1801px) {
   .sidebar-left {
     width: 24rem;
   }
