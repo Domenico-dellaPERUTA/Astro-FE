@@ -486,8 +486,10 @@ const onLinkSelect = (item: Link) => {
 /* Header principale */
 .header {
   width: 100%;
-  background-color: #404040;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* shadow-md */
+  background-color: #121212; /* Charcoal black */
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  view-transition-name: main-header;
 }
 
 /* Barra principale */
@@ -495,32 +497,37 @@ const onLinkSelect = (item: Link) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 3.75rem; /* h-[3.75rem] */
-  padding: 0 1rem; /* px-4 */
+  height: 4rem;
+  padding: 0 1.5rem;
 }
 
 /* Pulsanti icona */
 .btn-icon {
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  background: none;
-  border: none;
+  padding: 0.6rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  color: #cbd5e1; 
-  background-color: #cbd5e1d3;
+  color: #f8fafc; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .btn-icon:hover {
-  background-color: #cbd5e140; /* hover:bg-gray-300 */
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
 }
 
 /* Titolo */
 .title {
   flex: 1;
   text-align: center;
-  color: #dbff6e;
-  vertical-align: middle;
+  color: #ff8c00; /* Brilliant Orange */
   font-family: 'Fredericka the Great', cursive;
+  font-size: 2.2rem; /* Larger */
   font-weight: normal;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 25px rgba(255, 140, 0, 0.4);
 }
 
 /* Barra secondaria */
@@ -528,123 +535,99 @@ const onLinkSelect = (item: Link) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 2.5rem; /* h-[2.5rem] */
-  padding: 0 1rem;
-  background-color: #f7fafc; /* bg-gray-100 */
-  border-top: 1px solid #e2e8f0; /* border-t */
-}
-
-/* Pulsanti piccoli */
-.btn-small {
-  padding: 0.25rem;
-  border-radius: 0.25rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-.btn-small:hover {
-  background-color: #e2e8f0; /* hover:bg-gray-200 */
+  height: 3rem; /* Slightly taller */
+  padding: 0 1.5rem;
+  background-color: #1f1f1f;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Icone */
 .icon {
-  width: 1.5rem; /* w-6 */
-  height: 1.5rem; /* h-6 */
-  color: #374151; /* text-gray-700 */
+  width: 1.6rem;
+  height: 1.6rem;
+  color: #f8fafc;
 }
 .icon-small {
-  width: 1.25rem; /* w-5 */
-  height: 1.25rem; /* h-5 */
-  color: #374151;
+  width: 1.3rem;
+  height: 1.3rem;
+  color: #cbd5e1;
 }
 
 .icon-on {
-  width: 1.25rem; /* w-5 */
-  height: 1.25rem; /* h-5 */
-  color: #659d67;
-  padding: 0.25rem;
-  border-radius: 0.25rem;
-  border-width: 1px;
-  border-color: #659d67;
-  border-style: solid;
+  width: 1.3rem;
+  height: 1.3rem;
+  color: #cfff04; /* Neon green consistency */
+  padding: 0.2rem;
+  border-radius: 6px;
+  border: 1.5px solid #cfff04;
 }
 .icon-on:hover {
-  background-color: #659d67;
-  color: #f7fafc;
+  background-color: #cfff04;
+  color: #121212;
 }
 
 .icon-off {
-  width: 1.25rem; /* w-5 */
-  height: 1.25rem; /* h-5 */
-  color: #ac7272;
-  padding: 0.25rem;
-  border-radius: 0.25rem;
-  border-width: 1px;
-  border-color: #ac7272;
-  border-style: solid;
+  width: 1.3rem;
+  height: 1.3rem;
+  color: #fb7185;
+  padding: 0.2rem;
+  border-radius: 6px;
+  border: 1.5px solid #fb7185;
 }
 .icon-off:hover {
-  background-color: #ac7272;
-  color: #f7fafc;
+  background-color: #fb7185;
+  color: #121212;
 }
 
 /* Layout barra secondaria */
-.left-buttons {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
 .page-nav {
   display: flex;
   align-items: center;
-  gap: 0.75rem; /* gap-3 */
+  gap: 1rem;
 }
 
 .page-info {
-  font-size: 0.875rem; /* text-sm */
-  color: #374151; /* text-gray-700 */
-}
-
-.spacer {
-  width: 2.5rem; /* w-10 */
+  font-size: 1rem;
+  color: #f8fafc;
+  font-weight: bold;
 }
 
 .info-title {
   flex: 1;
   text-align: center;
-  color: #2270be;
-  text-shadow: 4px 4px 4px #aaa;
+  color: #60a5fa; /* Brilliant Blue */
+  text-shadow: 0 0 15px rgba(96, 165, 250, 0.3);
   font-family: 'Fredericka the Great', cursive;
-  font-size: 1.5rem;
-  font-weight: lighter;
+  font-size: 1.7rem;
+  font-weight: normal;
 }
 
 .page-info-carousel {
-  font-size: 0.875rem; /* text-lg */
-  color: #374151; /* text-gray-700 */
+  font-size: 1rem;
+  color: #f8fafc;
+  padding: 0 0.5rem;
 }
 
 .btn-icon-user {
-  width: 2.6rem;
-  height: 2.6rem;
-  padding: 0.4rem;
-  border-radius: 1.3rem;
-  background: none;
-  border: none;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  background: rgba(219, 255, 110, 0.1);
+  border: 1px solid rgba(219, 255, 110, 0.3);
   cursor: pointer;
-  color: #404040; 
-  background-color:#cbd5e140;
+  color: #dbff6e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-left: 2rem;
 }
 .btn-icon-user:hover {
-  background-color:  #dbff6e; /* hover:bg-gray-300 */
+  background-color: #dbff6e;
+  color: #0f172a;
 }
 .icon-user {
-  color: #dbff6e;
-}
-.icon-user:hover {
-  color: #404040;
+  width: 1.4rem;
+  height: 1.4rem;
 }
 
 

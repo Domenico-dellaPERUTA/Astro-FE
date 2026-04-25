@@ -1,29 +1,46 @@
 <!-- app/components/UI/MenuItem.vue -->
 <template>
   <li v-if="item.name">
-    <div 
-      :class="hasChildren ? 'submenu-item' : 'menu-item' " 
-      @click.stop="toggle"
+    <!-- Link per le foglie (con ViewTransitions support) -->
+    <a 
+      v-if="item.link"
+      :href="item.link"
+      :class="[
+        'menu-item-base',
+        'menu-item',
+        (item.link === currentPath) ? 'is-active' : ''
+      ]" 
       :style="{ 
-        paddingLeft: (0.5 + (level??0) * 0.25) + 'rem', 
-        backgroundColor: hasChildren ? background : '#f7fafc' 
+        paddingLeft: (0.75 + (level??0) * 0.75) + 'rem'
       }"
     >
-      <!-- sinistra: cartella + nome -->
       <div class="left">
-        <template v-if="item.isFolder">
-          <FolderOpen v-if="open" class="icon-open" />
-          <Folder v-else class="icon" />
-        </template>
+        <span class="name">{{ item.name }}</span>
+      </div>
+      <div class="arrow">
+        <ChevronRight class="icon" />
+      </div>
+    </a>
+
+    <!-- Div per le cartelle -->
+    <div 
+      v-else
+      :class="[
+        'menu-item-base',
+        'submenu-item',
+        containsPath(item, currentPath || '') ? 'is-active' : ''
+      ]" 
+      @click.stop="toggle"
+      :style="{ 
+        paddingLeft: (0.75 + (level??0) * 0.75) + 'rem'
+      }"
+    >
+      <div class="left">
+        <FolderOpen v-if="open" class="icon-open" />
+        <Folder v-else class="icon" />
         <span :class="open ? 'selected-name' : 'name' ">{{ item.name }}</span>
       </div>
-
-      <!-- destra: freccia -->
-      <div v-if="!item.isFolder" class="arrow">
-        <ChevronRight class="icon-open" />
-      </div>
     </div>
-
 
     <!-- sotto-menu -->
     <MenuMaster
@@ -99,76 +116,99 @@ li {
   padding: 0;
 }
 
-.menu-item {
+/* Base item style */
+.menu-item-base {
   display: flex;
   align-items: center;
-  font-family: 'New Tegomin';
   justify-content: space-between;
   cursor: pointer;
-  padding: 0.25rem;
-  border-style:solid;
-  border-width:0.25px;
-  border-color: rgba(89, 183, 255, 0.721);
-  transition: background-color 0.2s;
-  color: rgba(89, 183, 255, 1);
-  font-size: 1rem;
-  font-weight: lighter;
-  height: 2rem;
+  padding: 0.75rem 1rem;
+  user-select: none;
+  position: relative;
+  border-left: 3px solid transparent;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.menu-item:hover, .submenu-item:hover{
-  display: flex;
-  border-color: rgba(255, 205, 89, 0.721);
-  color: rgba(255, 205, 89, 1);
-
+.menu-item {
+  font-family: 'New Tegomin', serif;
+  color: #94a3b8; /* Slate 400 */
+  font-size: 0.95rem;
 }
 
 .submenu-item {
-  display: flex;
-  align-items: center;
-  font-family: 'Fredericka the Great';
-  justify-content: space-between;
-  cursor: pointer;
-  padding: 0.25rem;
-  border-style:solid;
-  border-width:0.25px;
-  border-color: rgba(255, 255, 255, 0.721);
-  transition: background-color 0.2s;
-  color: rgba(255, 255, 255, 0.721);
-  font-size: 1.25rem;
-  font-weight: lighter;
-  height: 2rem;
+  font-family: 'Fredericka the Great', cursive;
+  color: #f8fafc; /* Slate 50 */
+  font-size: 1.2rem;
+  letter-spacing: 0.5px;
 }
 
-.menu-item:hover {
-  background-color: #4b5563; /* grigio hover */
+/* Hover effects */
+.menu-item-base:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #fff;
 }
 
+/* Selected state for leaf items (Green) */
+.menu-item.is-active {
+  background-color: rgba(207, 255, 4, 0.08);
+  color: #cfff04;
+  border-left-color: #cfff04;
+}
+.menu-item.is-active .selected-name {
+  color: #cfff04;
+}
+
+/* Selected state for folders (Blue) */
+.submenu-item.is-active {
+  background-color: rgba(59, 130, 246, 0.08);
+  color: #3b82f6;
+  border-left-color: #3b82f6;
+}
+.submenu-item.is-active .selected-name {
+  color: #3b82f6;
+}
+
+.selected-name {
+  font-weight: bold;
+}
+
+/* Iconography */
 .left {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  overflow: hidden;
 }
 
 .icon {
-  color: rgba(255, 255, 255, 0.721);
-  width: 1.25rem;
-  height: 1.25rem;
+  color: #64748b;
+  width: 1.1rem;
+  height: 1.1rem;
   flex-shrink: 0;
 }
+
 .icon-open {
-  color: rgba(89, 183, 255, 0.721);
-  width: 1.25rem;
-  height: 1.25rem;
+  color: #3b82f6; /* Brilliant Blue */
+  width: 1.1rem;
+  height: 1.1rem;
   flex-shrink: 0;
+}
+
+.arrow {
+  display: flex;
+  align-items: center;
+  opacity: 0.5;
 }
 
 .name {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.selected-name {
-  white-space: nowrap;
-  font-weight: bold;
-  color: rgba(89, 183, 255, 1);
+
+/* Adaptive logic for sidebar contrast */
+:deep(.menu-list) {
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  margin-left: 1.5rem;
 }
 </style>

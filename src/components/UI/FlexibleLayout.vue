@@ -1,6 +1,11 @@
 <!-- app/components/UI/FlexibleLayout.vue -->
 <template>
   <div ref="container" class="container">
+    <!-- Overlay di caricamento -->
+    <div v-if="isLoading" class="loading-overlay">
+       <img src="/await.gif" alt="Caricamento..." class="loading-gif" />
+    </div>
+
     <!-- Header -->
     <HeaderBar
       :isPhone="isPhone"
@@ -13,8 +18,7 @@
     <div ref="main" class="main">
       <!-- Sidebar sinistra -->
       <aside
-        v-if="showMenu"
-        :class="['sidebar-left', isPhone ? 'sidebar-device' : '']"
+        :class="['sidebar-left', showMenu ? 'is-open' : '']"
       >
         <MenuMaster :menuItems="treeMenu" :currentPath="route" @select="onSelectMenu" />
       </aside>
@@ -27,7 +31,7 @@
 
       <!-- Sidebar destra -->
       <aside
-        v-if="siblings?.length >= 1 && !isPhone && !isTablet"
+        v-if="siblings?.length >= 1"
         class="sidebar-right"
       >
         <MenuPage />
@@ -37,9 +41,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
-import { useInfoStore } from '../../store/info'
 import { usePageStore } from '../../store/page'
 import { useMenuStore } from '../../store/menu'
 import MenuPage from './MenuPage.vue'
@@ -49,103 +52,56 @@ import TopicPage from './TopicPage.vue'
 import HomePage from './HomePage.vue'
 
 const props = defineProps({
-  initialPageData: {
-    type: Object,
-    default: () => null
-  },
-  initialMenuData: {
-    type: Array,
-    default: () => null
-  }
+  initialPageData: { type: Object, default: () => null },
+  initialMenuData: { type: Array, default: () => null }
 })
 
 const pageStore = usePageStore()
 const { type, topic, items, siblings, route, setPageData } = pageStore
 const { treeMenu } = useMenuStore()
 
-if (props.initialPageData) {
-  setPageData(props.initialPageData)
-}
-if (props.initialMenuData) {
-  treeMenu.value = props.initialMenuData
-}
+// Watch for prop changes to update the store (crucial for transition:persist)
+watch(() => props.initialPageData, (newData) => {
+  if (newData) setPageData(newData)
+}, { immediate: true })
 
-const isLogin = computed(() => topic.value === 'LOGIN' || topic.value === 'Login' || topic.value === 'login')
-const isAdmin = computed(() => topic.value === 'Cockpit Admin' || topic.value === 'cockpit admin' || topic.value === 'COCKPIT ADMIN')
-const isHome = computed(() => type.value === 'home')
+watch(() => props.initialMenuData, (newMenu) => {
+  if (newMenu) treeMenu.value = newMenu as any[]
+}, { immediate: true })
 
-const container = ref<HTMLElement | null>(null)
-const main = ref<HTMLElement | null>(null)
-
-// --- ✅ Stato del layout osservato semanticamente (non con pixel) ---
-const layoutMode = ref<'phone' | 'tablet' | 'desktop'>('desktop')
-
-// --- Compatibilità con codice esistente ---
-const isPhone = computed(() => layoutMode.value === 'phone')
-const isTablet = computed(() => layoutMode.value === 'tablet')
-const isDesktop = computed(() => layoutMode.value === 'desktop')
-
-// --- Gestione menu laterale ---
 const showMenu = ref(true)
+const isLoading = ref(true)
+
 function toggleMenu() {
   showMenu.value = !showMenu.value
 }
 
+const isPhone = ref(false)
+const isTablet = ref(false)
 
-// --- Observer per determinare il layout semanticamente ---
 onMounted(() => {
-  const el = main.value
-  if (!el) return
+  // Rimuovi il caricamento dopo un piccolo ritardo per fluidità
+  setTimeout(() => {
+    isLoading.value = false
+  }, 400)
 
-  const observer = new ResizeObserver(([entry]) => {
-    const style = getComputedStyle(el)
-    const flexDirection = style.flexDirection
-
-    // 🔍 logica "semantica" (non basata su numeri)
-    if (flexDirection === 'column') {
-      layoutMode.value = 'phone'
+  const checkLayout = () => {
+    isPhone.value = window.innerWidth <= 768
+    // Su desktop/tablet il menu è aperto di default, su phone chiuso
+    if (type.value !== 'home') {
+      showMenu.value = window.innerWidth > 768
     } else {
-      // Se c'è abbastanza spazio → desktop (anche con un solo file)
-      const hasRightSidebar = siblings.value?.length >= 1
-      layoutMode.value = hasRightSidebar ? 'desktop' : 'tablet'
-    }
-  })
-  observer.observe(el)
-  onBeforeUnmount(() => observer.disconnect())
-})
-
-// --- Aggiorna visibilità menu quando cambia layout ---
-// sincronizza showMenu in base al layout (più affidabile)
-// sincronizza showMenu in base al layout e al tipo di pagina
-watch([layoutMode, type], ([mode, newType]) => {
-  if (newType === 'home') {
-    showMenu.value = false
-    return
-  }
-
-  if (mode === 'desktop' || mode === 'tablet') {
-    showMenu.value = true
-  } else {
-    // phone
-    showMenu.value = false
-  }
-}, { immediate: true })
-
-
-/**
- * Gestisce la selezione di un item dal menu ad albero.
- * I nodi foglia hanno una proprietà 'link' che porta alla pagina del topic.
- * I nodi cartella vengono gestiti internamente dal MenuItem (toggle apri/chiudi).
- */
-function onSelectMenu(item: any): void {
-  if (item.link) {
-    // Nodo foglia: naviga alla pagina del topic
-    if (isPhone.value) {
       showMenu.value = false
     }
-    window.location.assign(item.link)
   }
-  // Per i nodi cartella, l'apertura/chiusura è gestita da MenuItem.vue
+  checkLayout()
+  window.addEventListener('resize', checkLayout)
+})
+
+function onSelectMenu(item: any): void {
+  if (item.link && window.innerWidth <= 768) {
+    showMenu.value = false
+  }
 }
 </script>
 
@@ -164,7 +120,6 @@ function onSelectMenu(item: any): void {
   flex-direction: column;
   height: 100vh;
   width: 100%;
-  box-sizing: border-box;
 }
 
 /* Layout principale */
@@ -174,25 +129,18 @@ function onSelectMenu(item: any): void {
   overflow: hidden;
   position: relative;
   width: 100%;
-  box-sizing: border-box;
 }
 
 /* Sidebar sinistra */
 .sidebar-left {
-  background-color: #404040;
+  background-color: #121212 !important; /* Force solid carbon */
   overflow-y: auto;
-  transition: all 0.3s ease;
-  min-width: 0;
-}
-
-.sidebar-device {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 70%;
-  z-index: 20;
-  height: auto;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+  width: 20rem; 
+  z-index: 10; /* Lower than content */
+  box-shadow: 4px 0 10px rgba(0,0,0,0.5);
+  view-transition-name: sidebar-left;
 }
 
 /* Contenuto */
@@ -200,26 +148,59 @@ function onSelectMenu(item: any): void {
   flex: 1;
   min-width: 0;
   overflow-y: auto;
-  box-sizing: border-box;
+  background-color: #f8fafc; /* Solid light mode background */
+  position: relative;
+  z-index: 10;
+  view-transition-name: main-content;
+}
+
+/* 🌀 Caricamento */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(18, 18, 18, 0.1); /* Highly transparent charcoal */
+  backdrop-filter: blur(4px); /* Subtler blur */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-gif {
+  width: 250px; /* Larger image */
+  height: 250px;
+  object-fit: contain;
 }
 
 /* Sidebar destra */
 .sidebar-right {
-  background-color: #ffffff;
-  border-left: 1px solid #ddd;
+  background-color: #121212; /* Match primary theme */
+  color: #ffffff;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
   overflow-y: auto;
-  min-width: 0;
+  flex-shrink: 0;
+  width: 18rem;
+  z-index: 10;
 }
 
-/* 🔮 Layout adattivo basato su viewport (non container) */
-@media (max-width: 720px) {
-  .main {
-    flex-direction: column;
-  }
-
+/* 📱 MOBILE (Phone) */
+@media (max-width: 768px) {
   .sidebar-left {
-    width: 100%;
-    height: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    transform: translateX(-100%);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+  }
+  
+  /* Quando il menu è aperto su mobile tramite classe o state */
+  .sidebar-left.is-open {
+    transform: translateX(0);
   }
 
   .sidebar-right {
@@ -227,31 +208,25 @@ function onSelectMenu(item: any): void {
   }
 }
 
-@media (min-width: 721px) and (max-width: 1360px) {
-  .main {
-    flex-direction: row;
-  }
-
+/* 💻 DESKTOP / TABLET */
+@media (min-width: 769px) {
   .sidebar-left {
     width: 20rem;
+    transform: none !important;
   }
-
+  
   .sidebar-right {
-    display: none;
+    width: 18rem;
   }
 }
 
-@media (min-width: 1361px) {
-  .main {
-    flex-direction: row;
-  }
-
+/* 🖥️ LARGE DESKTOP */
+@media (min-width: 1440px) {
   .sidebar-left {
-    width: 25rem;
+    width: 24rem;
   }
-
   .sidebar-right {
-    width: 20rem;
+    width: 22rem;
   }
 }
 </style>

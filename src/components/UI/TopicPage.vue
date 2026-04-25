@@ -180,37 +180,39 @@ const initializeCodeEditor = async (typeArg: string) => {
   }
   
   // Crea nuovo editor
+  const editorOptions = {
+    value: typeArg === 'code' ? cleanCode(code.value) : (dictionary.value?.codeDescription || ''),
+    language: typeArg === 'code' ? detectLanguage(code.value || '') : (dictionary.value?.type || detectLanguage(dictionary.value?.codeDescription || '')),
+    theme: 'vs-dark',
+    automaticLayout: false, // Gestito manualmente per maggior controllo
+    fontSize: 16,
+    readOnly: true,
+    minimap: { enabled: true },
+    wordWrap: 'on' as const,
+    folding: true,
+    lineNumbers: 'on' as const,
+    matchBrackets: 'always' as const,
+    scrollBeyondLastLine: false,
+    tabSize: 2
+  }
+
   codeEditor = typeArg === 'code' ? 
-    monaco.editor.create(monacoCodeContainer.value!, {
-      value: cleanCode(code.value) || '',
-      language: detectLanguage(code.value || ''),
-      theme: 'vs-dark',
-      automaticLayout: true,
-      fontSize: 16,
-      readOnly: true,
-      minimap: { enabled: true },
-      wordWrap: 'on',
-      folding: true,
-      lineNumbers: 'on',
-      matchBrackets: 'always',
-      scrollBeyondLastLine: false,
-      tabSize: 2
-    }) : 
-    monaco.editor.create(dictionaryCodeContainer.value, {
-      value: dictionary.value?.codeDescription || '',
-      language: dictionary.value?.type || detectLanguage(dictionary.value?.codeDescription || ''),
-      theme: 'vs-dark',
-      automaticLayout: true,
-      fontSize: 16,
-      readOnly: true,
-      minimap: { enabled: true },
-      wordWrap: 'on',
-      folding: true,
-      lineNumbers: 'on',
-      matchBrackets: 'always',
-      scrollBeyondLastLine: false,
-      tabSize: 2
+    monaco.editor.create(monacoCodeContainer.value!, editorOptions) : 
+    monaco.editor.create(dictionaryCodeContainer.value!, editorOptions)
+
+  // 📐 Gestione layout dinamico (fix per transizioni e ridimensionamento)
+  const container = typeArg === 'code' ? monacoCodeContainer.value : dictionaryCodeContainer.value
+  if (container) {
+    // Un piccolo ritardo aiuta a garantire che il layout sia stabile dopo la transizione
+    setTimeout(() => {
+      if (codeEditor) codeEditor.layout()
+    }, 100)
+
+    const ro = new ResizeObserver(() => {
+      if (codeEditor) codeEditor.layout()
     })
+    ro.observe(container)
+  }
 }
 
 /** 🔍 Rileva il linguaggio dal codice */
@@ -430,7 +432,7 @@ const colorTextDictionary = (sType: string): string => {
   else if (sType.startsWith('conj')) { sColor3 = sColor2 = "#58FAF4"; sColor1 = "#61380B" }
   else if (sType.startsWith('art')) sColor3 = "#000000"
   else if (sType.startsWith('html')) sColor3 = sColor2 = sColor1 = "#e34c26"
-  return `text-shadow: 1px 1px 2px ${sColor1}, 0 0 1em ${sColor2}, 0 0 0.2em ${sColor3};`
+  return `color: ${sColor3};`
 }
 
 /** 🧹 Cleanup */
@@ -473,28 +475,32 @@ watch(
 .carousel-container {
   position: relative;
   width: 100%;
+  max-width: 65rem;
   height: auto;
-  margin: auto;
+  margin: 3rem auto;
+  padding: 1rem;
 }
 
 .slide {
-  width: 90%;
+  width: 95%;
   height: auto;
   display: block;
   margin: auto;
+  padding: 1rem;
 }
 
 .carousel-image {
-  width: 80%;
+  width: 85%;
   height: auto;
   display: block;
   margin: auto;
-  border-radius: 1rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
 }
 
 audio {
   width: 100%;
-  margin: 0.5rem;
+  margin: 1.5rem 0;
 }
 
 /* 🔵 Loader immagine */
@@ -502,9 +508,9 @@ audio {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 20rem;
-  background-color: #f0f0f0;
-  border-radius: 1rem;
+  height: 25rem;
+  background-color: #f8fafc;
+  border-radius: 1.5rem;
 }
 
 .image-placeholder img {
@@ -517,33 +523,34 @@ audio {
   position: absolute;
   z-index: 10;
   top: 50%;
-  width: 50px;
-  height: 50px;
+  width: 55px;
+  height: 55px;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
-.nav-btn.left { left: 1rem; }
-.nav-btn.right { right: 1rem; }
+.nav-btn.left { left: 0.25rem; }
+.nav-btn.right { right: 0.25rem; }
 .nav-btn:hover {
   background: rgba(255, 255, 255, 1);
   transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 /* Editor del codice con Monaco */
 .code-wrapper {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 101px);
+  height: calc(100vh - 105px); /* Adjusted for layout balance */
   background-color: #1e1e1e;
-  padding: 0;
+  padding: 0; /* Monaco requires 0 padding on container */
   margin: 0;
 }
 
@@ -553,7 +560,10 @@ audio {
   height: calc(55vh - 101px);
   background-color: #1e1e1e;
   padding: 0;
-  margin: 0;
+  margin: 1.5rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .monaco-code-container {
@@ -561,6 +571,7 @@ audio {
   width: 100%;
   height: 100%;
   min-height: 0;
+  overflow: hidden;
 }
 
 .dictionary-code-container {
@@ -574,51 +585,66 @@ audio {
 /* Dictionary */
 .dictionary { 
   background-color: white; 
-  text-align: center; 
+  text-align: center;
+  max-width: 60rem;
+  margin: 4rem auto;
+  padding: 3rem;
+  border-radius: 24px;
+  box-shadow: 0 10px 50px rgba(0,0,0,0.05);
 }
 
 .dictionary h3 { 
-  font-size: 2.8rem; 
-  margin: 0.5rem; 
-  text-align: center; 
+  font-family: 'Fredericka the Great', cursive;
+  font-size: 3.5rem; 
+  margin: 0 0 1rem 0; 
+  color: #1e293b;
+  text-shadow: none;
 }
 
 .dictionary p { 
   text-align: center; 
-  font-family: 'Courier New'; 
-  font-size: 1.5rem; 
-  text-shadow: 0 0 3px black; 
+  font-family: 'Julee', cursive; 
+  font-size: 1.4rem; 
+  color: #64748b;
+  margin-bottom: 2.5rem;
+  font-style: italic;
 }
 
-.dictionary span { 
-  font-family: 'BhuTuka Expanded One'; 
-  padding: 0.25rem; 
-  font-size: 1.5rem; 
+.dictionary h4 span { 
+  font-family: 'New Tegomin', serif;
+  padding: 0.5rem; 
+  font-size: 1.8rem; 
+  color: #334155;
+  border-bottom: 2px dashed #e2e8f0;
 }
 
 .dictionary img { 
   height: auto; 
-  width: 100%; 
+  width: 85%;
+  margin: 2rem auto;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
 .dictionary-extra {
-  margin: 0.5rem 0;
-  font-size: 1rem;
-  color: #666;
+  margin: 1rem 0;
+  font-size: 1.1rem;
+  color: #777;
   font-style: italic;
   text-align: center;
 }
 
 .dictionary-note {
-  margin: 1rem auto;
-  padding: 0.5rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
   background-color: #fffde7;
-  border-left: 4px solid #fdd835;
-  color: #333;
-  width: 90%;
+  border-left: 6px solid #fdd835;
+  color: #444;
+  width: 95%;
   text-align: left;
   font-style: normal;
-  border-radius: 4px;
+  border-radius: 8px;
+  line-height: 1.6;
 }
 
 </style>

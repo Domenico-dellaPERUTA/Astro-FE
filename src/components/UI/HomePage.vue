@@ -1,20 +1,63 @@
-<!-- app/components/UI/HomePage.vue -->
- 
 <template>
-  <canvas ref="canvas"></canvas>
-  <a
-    target="_blank" 
-    rel="noreferrer nofollow" 
-    class="link-privacy" 
-    href="https://www.iubenda.com/privacy-policy/63164304">
-    Privacy Policy
-  </a>
-  <a 
-    rel="noreferrer nofollow" 
-    class="link-personalizza  iubenda-advertising-preferences-link" 
-    href="">
-    Personalizza tracciamento pubblicitario
-  </a>
+  <div class="home-container">
+    <canvas ref="canvas"></canvas>
+    
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <h1 class="hero-title">Benvenuto nei miei <span class="highlight">Appunti</span></h1>
+      <p class="hero-subtitle">Esplora la mia raccolta di note tecniche e linguaggi</p>
+      
+      <!--
+      <div class="category-grid">
+        <a href="/topic/html-dictionary" class="category-card html">
+          <div class="card-glass"></div>
+          <span class="card-icon">🌐</span>
+          <span class="card-name">HTML Tags</span>
+          <span class="card-desc">Dizionario Tag</span>
+        </a>
+
+        <a href="/topic/english-dictionary" class="category-card english">
+          <div class="card-glass"></div>
+          <span class="card-icon">🇬🇧</span>
+          <span class="card-name">Inglese</span>
+          <span class="card-desc">Dizionario</span>
+        </a>
+
+        <a href="/topic/rust-hello" class="category-card rust">
+          <div class="card-glass"></div>
+          <span class="card-icon">🦀</span>
+          <span class="card-name">Rust</span>
+          <span class="card-desc">Linguaggio</span>
+        </a>
+
+        <a href="/topic/sap-cap-introduzione" class="category-card sap">
+          <div class="card-glass"></div>
+          <span class="card-icon">💻</span>
+          <span class="card-name">SAP CAP</span>
+          <span class="card-desc">Enterprise</span>
+        </a>  
+      </div>
+      -->
+    </div>
+
+    <!-- Footer Links -->
+    <div class="footer-links">
+      <a
+        target="_blank" 
+        rel="noreferrer nofollow" 
+        class="footer-link iubenda-privacy-policy" 
+        href="https://www.iubenda.com/privacy-policy/63164304">
+        Privacy Policy
+      </a>
+      <span class="separator">|</span>
+      <a 
+        rel="noreferrer nofollow" 
+        class="footer-link iubenda-advertising-preferences-link" 
+        href="javascript:void(0)">
+        Personalizza tracciamento
+      </a>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -23,7 +66,6 @@ import { ref, onMounted } from 'vue'
 const canvas = ref(null)
 
 onMounted(() => {
-  console.log('[HomePage] Mounted, initializing canvas...');
   const el = canvas.value
   const ctx = el.getContext('2d')
 
@@ -42,7 +84,6 @@ onMounted(() => {
   const mouse_ball = { x: 0, y: 0, r: R * 2, type: 'mouse' }
   let mouse_in = false
 
-  // Utils
   const randomNumFrom = (min, max) => Math.random() * (max - min) + min
   const randomSidePos = length => Math.ceil(Math.random() * length)
   const getRandomSpeed = pos => {
@@ -65,14 +106,10 @@ onMounted(() => {
     }
   }
 
-  // Init
   for(let i=0; i<BALL_NUM; i++) balls.push(getRandomBall())
 
-  // Render loop
   const render = () => {
     ctx.clearRect(0,0,can_w,can_h)
-
-    // Draw balls
     balls.forEach(b => {
       ctx.fillStyle = b.type==='mouse' ? 'rgba(255,100,100,0.8)' : `rgba(207,255,4,${b.alpha})`
       ctx.beginPath()
@@ -81,7 +118,6 @@ onMounted(() => {
       ctx.fill()
     })
 
-    // Draw lines
     for(let i=0;i<balls.length;i++){
       for(let j=i+1;j<balls.length;j++){
         const dx = balls[i].x - balls[j].x
@@ -99,7 +135,6 @@ onMounted(() => {
       }
     }
 
-    // Update balls
     const new_balls = []
     balls.forEach(b=>{
       if(b.type!=='mouse'){
@@ -112,16 +147,11 @@ onMounted(() => {
     })
     balls.length=0
     balls.push(...new_balls)
-
-    // Add balls if needed
     while(balls.length<BALL_NUM + (mouse_in?1:0)) balls.push(getRandomBall())
-
     requestAnimationFrame(render)
   }
-
   render()
 
-  // Canvas resize
   const resizeCanvas = () => {
     can_w = window.innerWidth
     can_h = window.innerHeight
@@ -130,58 +160,122 @@ onMounted(() => {
   }
   window.addEventListener('resize', resizeCanvas)
 
-  // Mouse
   window.addEventListener('mousemove', e => {
     mouse_ball.x = e.clientX
     mouse_ball.y = e.clientY
     mouse_in = true
     if(!balls.includes(mouse_ball)) balls.push(mouse_ball)
   })
-
-  window.addEventListener('mouseleave', () => {
-    const new_balls = balls.filter(b=>b.type!=='mouse')
-    balls.length=0
-    balls.push(...new_balls)
-    mouse_in=false
-  })
 })
 </script>
 
 <style scoped>
+.home-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 canvas {
-  position: fixed;
+  position: absolute;
   inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Hero Section */
+.hero-section {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  padding: 4rem 2rem;
+  max-width: 1000px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeIn 1.2s ease-out;
+}
+
+.hero-title {
+  font-family: 'Fredericka the Great', cursive;
+  font-size: clamp(3rem, 10vw, 6rem);
+  color: #fff;
   margin: 0;
-  padding: 0;
-  background-color: #222;
-  display: block;
-  z-index: -1; /* rimane sotto menu e header */
-  pointer-events: none; /* mouse passa agli elementi sopra */
+  line-height: 1;
+  letter-spacing: -2px;
+  text-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(207, 255, 4, 0.1);
+  animation: fadeInDown 0.8s ease-out;
 }
 
-a.link-privacy {
-  position: fixed;
-  bottom: 10px;
-  left: 10px;
-  color: #2afe0056;
-  font-size: medium;
-  z-index: 10;
-  text-decoration: none;
-}
-a.link-privacy:hover {
-  text-decoration: underline;
-}
-a.link-personalizza {
-  position: fixed;
-  bottom: 10px;
-  left: 150px;
-  color: #fffb0363;
-  font-size: medium;
-  z-index: 10;
-  text-decoration: none;
-}
-a.link-personalizza:hover {
-  text-decoration: underline;
+.hero-title .highlight {
+  color: #cfff04;
+  display: inline-block;
+  transform: rotate(-2deg);
+  margin-left: 0.5rem;
 }
 
+.hero-subtitle {
+  font-family: 'Julee', cursive;
+  font-size: clamp(1.2rem, 4vw, 2.2rem);
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+  font-weight: lighter;
+  animation: fadeInUp 0.8s ease-out 0.3s both;
+}
+
+/* Footer Links */
+.footer-links {
+  position: fixed;
+  bottom: 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 20;
+  padding: 0.8rem 2rem;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  animation: fadeInUp 1s ease-out 0.6s both;
+}
+
+.footer-link {
+  color: rgba(255, 255, 255, 0.3);
+  font-family: 'Julee', cursive;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.footer-link:hover {
+  color: #cfff04;
+  text-shadow: 0 0 15px rgba(207, 255, 4, 0.4);
+  transform: translateY(-1px);
+}
+
+.separator {
+  color: rgba(255, 255, 255, 0.1);
+  font-size: 0.8rem;
+}
+
+/* Animazioni */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Mobile Adaptability */
+@media (max-width: 600px) {
+  .hero-section { padding-top: 10vh; }
+  .footer-links { bottom: 1.5rem; flex-direction: column; gap: 0.5rem; padding: 1rem 1.5rem; width: 80%; }
+  .separator { display: none; }
+}
 </style>
