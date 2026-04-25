@@ -64,7 +64,7 @@ const emit = defineEmits(['select'])
  * Usata per espandere automaticamente i rami attivi.
  */
 function containsPath(node: MenuItem, path: string): boolean {
-  if (node.link === path) return true
+  if (node.link && (path === node.link || path.startsWith(node.link + '/'))) return true
   if (node.menu) {
     return node.menu.some(child => containsPath(child, path))
   }

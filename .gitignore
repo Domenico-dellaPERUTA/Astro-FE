@@ -28,3 +28,4 @@ src/content/topics/*.md
 
 # WebPages
 src/assets/WebPages/*
+create_rust_md.sh

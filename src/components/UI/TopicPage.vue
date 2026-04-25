@@ -412,6 +412,7 @@ const colorTextDictionary = (sType: string): string => {
   else if (sType.startsWith('pron')) sColor3 = "#000080"
   else if (sType.startsWith('conj')) { sColor3 = sColor2 = "#58FAF4"; sColor1 = "#61380B" }
   else if (sType.startsWith('art')) sColor3 = "#000000"
+  else if (sType.startsWith('html')) sColor3 = sColor2 = sColor1 = "#e34c26"
   return `text-shadow: 1px 1px 2px ${sColor1}, 0 0 1em ${sColor2}, 0 0 0.2em ${sColor3};`
 }
 

@@ -77,6 +77,15 @@ export function buildMenuTree(topics: TopicEntry[]): TreeNode[] {
       // Scendiamo nel sottomenu
       currentLevel = existingFolder.menu;
     }
+
+    // [MODIFICA] Aggiungi il topic stesso come nodo foglia nella cartella finale
+    currentLevel.push({
+      name: topic.data.title,
+      link: `/topic/${topic.id}`,
+      type: topic.data.type,
+      index: topic.data.index ?? 1,
+      isFolder: false
+    });
   }
 
   // Seconda passata: aggiungi i link alle cartelle foglia

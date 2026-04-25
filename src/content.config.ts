@@ -26,6 +26,7 @@ const topicsCollection = defineCollection({
       description: z.string(),
       type: z.string(),
       fonetic: z.string().optional(),
+      path: z.string().optional(),
       codeDescription: z.string().optional()
     })).optional()
   }),
