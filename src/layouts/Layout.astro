@@ -14,6 +14,13 @@ const { title = "Astro Basics" } = Astro.props;
 <!doctype html>
 <html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+
     <!-- [inizio] iubenda.com  -->
     <script is:inline>
       var _iub = _iub || [];
@@ -21,9 +28,8 @@ const { title = "Astro Basics" } = Astro.props;
         _iub.csConfiguration = {
           cookiePolicyId: 63164304,
           siteId: 3730307,
-          // Rimosso localConsentDomain per permettere l'autorilevamento su Altervista
-          timeoutLoadConfiguration: 30000,
           lang: "it",
+          localConsentDomain: "note.altervista.org", // Forza il dominio preciso per evitare reset su mobile
           enableTcf: true,
           tcfVersion: 2,
           tcfPurposes: {
@@ -37,7 +43,7 @@ const { title = "Astro Basics" } = Astro.props;
             "9": "consent_only",
             "10": "consent_only",
           },
-          invalidateConsentWithoutLog: false, // Impostato a false per evitare reset non necessari
+          invalidateConsentWithoutLog: false,
           googleAdditionalConsentMode: true,
           consentOnContinuedBrowsing: false,
           banner: {
@@ -52,16 +58,8 @@ const { title = "Astro Basics" } = Astro.props;
       }
     </script>
     <script is:inline src="https://cdn.iubenda.com/cs/tcf/stub-v2.js"></script>
-    <script is:inline async src="https://cdn.iubenda.com/cs/iubenda_cs.js"
-    ></script>
+    <script is:inline async src="https://cdn.iubenda.com/cs/iubenda_cs.js"></script>
     <!-- [fine] iubenda.com  -->
-
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
   </head>
 
   <body>
