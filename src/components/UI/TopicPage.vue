@@ -1,120 +1,122 @@
 <!-- app/components/UI/TopicPage.vue -->
 <template>
-  <!-------------------------------- 🧩 HTML ------------------------------------------->
-  <div v-if="type === 'html'" v-html="renderedHtml"></div>
+  <div :class="['topic-page-container', { 'no-scroll': type === 'code' || type === 'chess' }]">
+    <!-------------------------------- 🧩 HTML ------------------------------------------->
+    <div v-if="type === 'html'" v-html="renderedHtml"></div>
 
-  <!------------------------------- 🧩 CODE ------------------------------------------>
-  <div v-else-if="type === 'code'" class="code-wrapper">
-      <div ref="monacoCodeContainer" class="monaco-code-container"></div>
-  </div>
+    <!------------------------------- 🧩 CODE ------------------------------------------>
+    <div v-else-if="type === 'code'" class="code-wrapper">
+        <div ref="monacoCodeContainer" class="monaco-code-container"></div>
+    </div>
 
-  <!------------------------------- 🧩 MD (Markdown) -------------------------------->
-  <div v-else-if="type === 'md'" class="md" v-html="renderedMarkdown"></div>
+    <!------------------------------- 🧩 MD (Markdown) -------------------------------->
+    <div v-else-if="type === 'md'" class="md" v-html="renderedMarkdown"></div>
 
-  <!------------------------------- 🧩 CAROUSEL ---------------------------------------->
-  <div v-else-if="type === 'carousel'" class="carousel-container relative">
-    <div v-if="!initialLoading">
-      <Carousel
-        ref="carouselRef"
-        :items-to-show="1"
-        :wrap-around="true"
-        :transition="70"
-        class="rounded-2xl overflow-hidden"
-        @slide-start="onSlideChange"
-      >
-        <Slide v-for="(item, index) in items" :key="index">
-          <div class="slide">
-            <div class="slide-content">
-              <!-- Mostra immagine se già scaricata -->
-              <img
-                v-if="carouselImages[item.image || item]"
-                :src="item.image || item"
-                alt="immagine carousel"
-                class="carousel-image"
-              />
-              <div v-else class="image-placeholder">
-                <img src="/await.gif" alt="loading">
+    <!------------------------------- 🧩 CAROUSEL ---------------------------------------->
+    <div v-else-if="type === 'carousel'" class="carousel-container relative">
+      <div v-if="!initialLoading">
+        <Carousel
+          ref="carouselRef"
+          :items-to-show="1"
+          :wrap-around="true"
+          :transition="70"
+          class="rounded-2xl overflow-hidden"
+          @slide-start="onSlideChange"
+        >
+          <Slide v-for="(item, index) in items" :key="index">
+            <div class="slide">
+              <div class="slide-content">
+                <!-- Mostra immagine se già scaricata -->
+                <img
+                  v-if="carouselImages[item.image || item]"
+                  :src="item.image || item"
+                  alt="immagine carousel"
+                  class="carousel-image"
+                />
+                <div v-else class="image-placeholder">
+                  <img src="/await.gif" alt="loading">
+                </div>
+
+                <!-- Audio associato -->
+                <audio
+                  v-if="carouselImages[item.image || item]"
+                  :id="`audio_${index}`"
+                  :src="item.audio || audioSrc(item)"
+                  @play="runAvatar()"
+                  @ended="stopAvatar()"
+                  @pause="pauseAvatar()"
+                  controls
+                  class="carousel-audio"
+                />
               </div>
-
-              <!-- Audio associato -->
-              <audio
-                v-if="carouselImages[item.image || item]"
-                :id="`audio_${index}`"
-                :src="item.audio || audioSrc(item)"
-                @play="runAvatar()"
-                @ended="stopAvatar()"
-                @pause="pauseAvatar()"
-                controls
-                class="carousel-audio"
-              />
             </div>
-          </div>
-        </Slide>
-      </Carousel>
+          </Slide>
+        </Carousel>
 
-      <!-- Pulsante sinistro -->
-      <button class="nav-btn left" @click="prevSlide">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-          stroke-width="2" stroke="currentColor" class="w-6 h-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
+        <!-- Pulsante sinistro -->
+        <button class="nav-btn left" @click="prevSlide">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
 
-      <!-- Pulsante destro -->
-      <button class="nav-btn right" @click="nextSlide">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-          stroke-width="2" stroke="currentColor" class="w-6 h-6">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
+        <!-- Pulsante destro -->
+        <button class="nav-btn right" @click="nextSlide">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+      <div v-else class="image-placeholder">
+        <img src="/await.gif" alt="loading">
+      </div>
     </div>
-    <div v-else class="image-placeholder">
-      <img src="/await.gif" alt="loading">
+
+    <!-------------------------- 🧩 DICTIONARY ---------------------------------->
+    <div v-else-if="type === 'dictionary'" class="dictionary">
+      <h3 :style="colorTextDictionary(dictionary?.type ?? '')">{{ dictionary?.item }}</h3>
+      <p v-if="dictionary?.fonetic">{{ dictionary?.fonetic }}</p>
+      <h4><span>{{ dictionary?.description }}</span></h4>
+     
+      <div v-if="dictionary?.codeDescription && dictionary?.type === 'html'" v-html="dictionary?.codeDescription" class="dictionary-code" />
+      <div v-if="dictionary?.codeDescription" class="dictionary-code-wrapper">
+          <div ref="dictionaryCodeContainer" class="dictionary-code-container"></div>
+      </div>
+
+      <div v-if="dictionary?.synonyms" class="dictionary-extra">
+        <strong>Sinonimi:</strong> {{ dictionary.synonyms }}
+      </div>
+      <div v-if="dictionary?.opposites" class="dictionary-extra">
+        <strong>Opposti:</strong> {{ dictionary.opposites }}
+      </div>
+      <div v-if="dictionary?.note" class="dictionary-note">
+        {{ dictionary.note }}
+      </div>
+
+      <img 
+        :src="dictionary?.resolvedImageJpg || `/${dictionary?.path}${dictionary?.item}.jpg`" 
+        @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
+        class="img-centrata" 
+      />
+      <img 
+        :src="dictionary?.resolvedImagePng || `/${dictionary?.path}${dictionary?.item}.png`" 
+        @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
+        class="img-centrata" 
+      />
+      <audio :key="dictionary?.item" :src="dictionary?.resolvedAudio || `/${dictionary?.path}${dictionary?.item}.mp3`" autoplay></audio>
+      
     </div>
+
+    <!-------------------------- ♟️ CHESS -------------------------------------->
+    <div v-else-if="type === 'chess'" class="chess-wrapper">
+         <ChessBoard :pgn="pgn" />
+    </div>
+
+    <!-------------------------- 🧨 CARICAMENTO ---------------------------------->
+    <div v-else></div>
   </div>
-
-  <!-------------------------- 🧩 DICTIONARY ---------------------------------->
-  <div v-else-if="type === 'dictionary'" class="dictionary">
-    <h3 :style="colorTextDictionary(dictionary?.type ?? '')">{{ dictionary?.item }}</h3>
-    <p v-if="dictionary?.fonetic">{{ dictionary?.fonetic }}</p>
-    <h4><span>{{ dictionary?.description }}</span></h4>
-   
-    <div v-if="dictionary?.codeDescription && dictionary?.type === 'html'" v-html="dictionary?.codeDescription" class="dictionary-code" />
-    <div v-if="dictionary?.codeDescription" class="dictionary-code-wrapper">
-        <div ref="dictionaryCodeContainer" class="dictionary-code-container"></div>
-    </div>
-
-    <div v-if="dictionary?.synonyms" class="dictionary-extra">
-      <strong>Sinonimi:</strong> {{ dictionary.synonyms }}
-    </div>
-    <div v-if="dictionary?.opposites" class="dictionary-extra">
-      <strong>Opposti:</strong> {{ dictionary.opposites }}
-    </div>
-    <div v-if="dictionary?.note" class="dictionary-note">
-      {{ dictionary.note }}
-    </div>
-
-    <img 
-      :src="dictionary?.resolvedImageJpg || `/${dictionary?.path}${dictionary?.item}.jpg`" 
-      @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
-      class="img-centrata" 
-    />
-    <img 
-      :src="dictionary?.resolvedImagePng || `/${dictionary?.path}${dictionary?.item}.png`" 
-      @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
-      class="img-centrata" 
-    />
-    <audio :key="dictionary?.item" :src="dictionary?.resolvedAudio || `/${dictionary?.path}${dictionary?.item}.mp3`" autoplay></audio>
-    
-  </div>
-
-  <!-------------------------- ♟️ CHESS -------------------------------------->
-  <div v-else-if="type === 'chess'" class="chess-wrapper">
-       <ChessBoard :pgn="pgn" />
-  </div>
-
-  <!-------------------------- 🧨 CARICAMENTO ---------------------------------->
-  <div v-else></div>
 </template>
 
 <script setup lang="ts">
@@ -125,6 +127,29 @@ import { usePageStore } from '../../store/page'
 import { useInfoStore } from '../../store/info'
 import { useAuthStore } from '../../store/auth'
 import ChessBoard from './ChessBoard.vue'
+
+
+if (typeof window !== 'undefined') {
+  // Carichiamo il CSS dinamicamente da CDN se Rollup fa i capricci
+  if (!document.getElementById('monaco-style')) {
+    const link = document.createElement('link');
+    link.id = 'monaco-style';
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.53.0/min/vs/editor/editor.main.css';
+    document.head.appendChild(link);
+  }
+  window.MonacoEnvironment = {
+    getWorkerUrl: function () {
+      const workerScript = `
+        self.MonacoEnvironment = { baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.53.0/min/' };
+        importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.53.0/min/vs/base/worker/workerMain.js');
+      `;
+      const blob = new Blob([workerScript], { type: 'application/javascript' });
+      return URL.createObjectURL(blob);
+    }
+  }
+}
+
 
 const pageStore = usePageStore()
 const { topic, type, items, code, pgn, currentIndex, showAvatar, setCarouselRef, navigateToPage, audio } = pageStore
@@ -187,7 +212,7 @@ const initializeCodeEditor = async (typeArg: string) => {
     value: typeArg === 'code' ? cleanCode(code.value) : (dictionary.value?.codeDescription || ''),
     language: typeArg === 'code' ? detectLanguage(code.value || '') : (dictionary.value?.type || detectLanguage(dictionary.value?.codeDescription || '')),
     theme: 'vs-dark',
-    automaticLayout: false, // Gestito manualmente per maggior controllo
+    automaticLayout: true,
     fontSize: 16,
     readOnly: true,
     minimap: { enabled: true },
@@ -203,18 +228,13 @@ const initializeCodeEditor = async (typeArg: string) => {
     monaco.editor.create(monacoCodeContainer.value!, editorOptions) : 
     monaco.editor.create(dictionaryCodeContainer.value!, editorOptions)
 
-  // 📐 Gestione layout dinamico (fix per transizioni e ridimensionamento)
+  // 📐 Gestione layout dinamico
   const container = typeArg === 'code' ? monacoCodeContainer.value : dictionaryCodeContainer.value
-  if (container) {
-    // Un piccolo ritardo aiuta a garantire che il layout sia stabile dopo la transizione
+  if (container && codeEditor) {
+    // Un piccolo ritardo aiuta a garantire che il layout sia stabile
     setTimeout(() => {
       if (codeEditor) codeEditor.layout()
-    }, 100)
-
-    const ro = new ResizeObserver(() => {
-      if (codeEditor) codeEditor.layout()
-    })
-    ro.observe(container)
+    }, 50)
   }
 }
 
@@ -461,6 +481,25 @@ watch(
 </script>
 
 <style scoped>
+.topic-page-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.topic-page-container.no-scroll {
+  overflow: hidden;
+}
+
+/* Specific reset for Monaco to avoid interference from global styles */
+:deep(.monaco-editor) {
+  line-height: normal !important;
+}
+:deep(.monaco-editor .view-line) {
+  line-height: 1.2 !important; /* Force standard Monaco line height */
+}
 .dictionary-code{
   text-align: left; 
   font-family: 'Courier New'; 
@@ -560,16 +599,17 @@ watch(
 .code-wrapper {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 105px); /* Adjusted for layout balance */
+  height: 100%; /* Fill parent container */
   background-color: #1e1e1e;
-  padding: 0; /* Monaco requires 0 padding on container */
+  padding: 0;
   margin: 0;
+  min-height: 50vh;
 }
 
 .dictionary-code-wrapper {
   display: flex;
   flex-direction: column;
-  height: calc(55vh - 101px);
+  height: 50vh; /* Fixed relative height for dictionary */
   background-color: #1e1e1e;
   padding: 0;
   margin: 0.5rem 0;
@@ -587,9 +627,9 @@ watch(
 }
 
 .dictionary-code-container {
-  flex: 2;
+  flex: 1;
   width: 100%;
-  height: 50vh !important;
+  height: 100%;
   min-height: 0;
   text-align: left !important; 
 }

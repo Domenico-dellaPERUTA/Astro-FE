@@ -1,12 +1,12 @@
 ---
-import helloAudioSrc from '../../assets/WebPages/Rust/hello_word.mp3';
-import { getCollection } from 'astro:content';
-import Layout from '../../layouts/Layout.astro';
-import FlexibleLayout from '../../components/UI/FlexibleLayout.vue';
-import { buildMenuTree, findSiblings } from '../../utils/buildMenuTree';
+import helloAudioSrc from "../../assets/WebPages/Rust/hello_word.mp3";
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import FlexibleLayout from "../../components/UI/FlexibleLayout.vue";
+import { buildMenuTree, findSiblings } from "../../utils/buildMenuTree";
 
 export async function getStaticPaths() {
-  const topicsInfo = await getCollection('topics');
+  const topicsInfo = await getCollection("topics");
   const menuTree = buildMenuTree(topicsInfo);
 
   const paths = [];
@@ -14,25 +14,25 @@ export async function getStaticPaths() {
   for (const topic of topicsInfo) {
     const siblings = findSiblings(topicsInfo, topic.data.menu);
 
-    if (topic.data.type === 'dictionary' && topic.data.dictionary) {
+    if (topic.data.type === "dictionary" && topic.data.dictionary) {
       // Crea una pagina per ogni item del dizionario
       topic.data.dictionary.forEach((item, index) => {
         // I "siblings" per queste pagine virtuali sono gli item stessi del dizionario
         const virtualSiblings = topic.data.dictionary.map((d, i) => ({
           name: d.item,
           link: `/topic/${topic.id}/${d.item}`,
-          type: 'dictionary',
-          index: i
+          type: "dictionary",
+          index: i,
         }));
 
         paths.push({
           params: { slug: `${topic.id}/${item.item}` },
-          props: { 
-            topic, 
-            menuTree, 
-            siblings: virtualSiblings, 
+          props: {
+            topic,
+            menuTree,
+            siblings: virtualSiblings,
             currentIndex: index,
-            virtualTitle: item.item 
+            virtualTitle: item.item,
           },
         });
       });
@@ -40,17 +40,17 @@ export async function getStaticPaths() {
       // Pagina base che punta al primo item
       paths.push({
         params: { slug: topic.id },
-        props: { 
-          topic, 
-          menuTree, 
+        props: {
+          topic,
+          menuTree,
           siblings: topic.data.dictionary.map((d, i) => ({
             name: d.item,
             link: `/topic/${topic.id}/${d.item}`,
-            type: 'dictionary',
-            index: i
-          })), 
+            type: "dictionary",
+            index: i,
+          })),
           currentIndex: 0,
-          virtualTitle: topic.data.dictionary[0].item
+          virtualTitle: topic.data.dictionary[0].item,
         },
       });
     } else {
@@ -67,80 +67,91 @@ export async function getStaticPaths() {
 const { topic, menuTree, siblings, currentIndex, virtualTitle } = Astro.props;
 
 // --- 🌉 Asset Resolution Bridge ---
-const allAssets = import.meta.glob('/src/assets/WebPages/**/*.{png,jpg,jpeg,gif,svg,mp3}', { eager: true });
+const allAssets = import.meta.glob(
+  "/src/assets/WebPages/**/*.{png,jpg,jpeg,gif,svg,mp3}",
+  { eager: true },
+);
 
 function resolveAsset(legacyPath: string) {
-  if (!legacyPath) return '';
-  
-  const cleanPath = legacyPath.startsWith('/') ? legacyPath.slice(1) : legacyPath;
+  if (!legacyPath) return "";
+
+  const cleanPath = legacyPath.startsWith("/")
+    ? legacyPath.slice(1)
+    : legacyPath;
   const fullPath = `/src/assets/${cleanPath}`;
-  
+
   const asset = allAssets[fullPath];
   if (asset) {
     const mod = (asset as any).default;
-    return typeof mod === 'object' ? mod.src : mod;
+    return typeof mod === "object" ? mod.src : mod;
   }
   return legacyPath;
 }
 
 // Audio resolve - use pre-imported audio files or dynamic resolution
 function resolveAudio(legacyPath: string) {
-  if (!legacyPath) return '';
-  
+  if (!legacyPath) return "";
+
   // Try dynamic resolution first
   const resolved = resolveAsset(legacyPath);
   if (resolved !== legacyPath) return resolved;
 
   // Fallback for specific files or external links
   if (!/\.(mp3|wav|ogg)$/i.test(legacyPath)) return legacyPath;
-  
-  if (legacyPath.includes('hello_word')) {
+
+  if (legacyPath.includes("hello_word")) {
     return helloAudioSrc;
   }
-  
+
   return legacyPath;
 }
 
 // 1. Risolviamo gli asset nel corpo del testo
-let resolvedBody = topic.body || '';
+let resolvedBody = topic.body || "";
 
 // per i file .md -> ![alt](/WebPages/...)
-resolvedBody = resolvedBody.replace(/!\[([^\]]*)\]\((\/WebPages\/[^)]+)\)/g, (match, alt, path) => {
-  const resolved = resolveAsset(path);
-  return `![${alt}](${resolved})`;
-});
+resolvedBody = resolvedBody.replace(
+  /!\[([^\]]*)\]\((\/WebPages\/[^)]+)\)/g,
+  (match, alt, path) => {
+    const resolved = resolveAsset(path);
+    return `![${alt}](${resolved})`;
+  },
+);
 
 // per i file html src="..." o href="..."
-resolvedBody = resolvedBody.replace(/(src|href)="(\/WebPages\/[^"]+)"/g, (match, attr, path) => {
-  return `${attr}="${resolveAsset(path)}"`;
-});
+resolvedBody = resolvedBody.replace(
+  /(src|href)="(\/WebPages\/[^"]+)"/g,
+  (match, attr, path) => {
+    return `${attr}="${resolveAsset(path)}"`;
+  },
+);
 
 // 2. Risolviamo gli asset nelle immagini del carosello o nel dizionario
 let resolvedItems = [];
-if (topic.data.type === 'carousel') {
-  resolvedItems = (topic.data.images || []).map(img => {
+if (topic.data.type === "carousel") {
+  resolvedItems = (topic.data.images || []).map((img) => {
     // Risolviamo l'immagine
     const resolvedImg = resolveAsset(img);
     // Risolviamo l'audio corrispondente (sostituendo l'estensione nel path originale)
-    const audioPath = String(img).replace(/\.(png|jpg|jpeg)$/i, '.mp3');
+    const audioPath = String(img).replace(/\.(png|jpg|jpeg)$/i, ".mp3");
     const resolvedAud = resolveAudio(audioPath);
     return {
       image: resolvedImg,
       audio: resolvedAud,
-      originalPath: img // teniamolo per compatibilità o debug
+      originalPath: img, // teniamolo per compatibilità o debug
     };
   });
-} else if (topic.data.type === 'dictionary' && topic.data.dictionary) {
+} else if (topic.data.type === "dictionary" && topic.data.dictionary) {
   // Risolviamo gli asset solo per l'elemento corrente per performance
   resolvedItems = topic.data.dictionary.map((item, idx) => {
     if (idx === currentIndex) {
-      const path = item.path || '';
+      const path = item.path || "";
       return {
         ...item,
         // Aggiungiamo campi risolti che TopicPage.vue possa usare
         resolvedImageJpg: resolveAsset(`${path}${item.item}.jpg`),
         resolvedImagePng: resolveAsset(`${path}${item.item}.png`),
-        resolvedAudio: resolveAudio(`${path}${item.item}.mp3`)
+        resolvedAudio: resolveAudio(`${path}${item.item}.mp3`),
       };
     }
     return item;
@@ -148,24 +159,28 @@ if (topic.data.type === 'carousel') {
 }
 
 // 3. Risolviamo l'audio
-const resolvedAudio = topic.data.audio ? resolveAudio(topic.data.audio) : '';
+const resolvedAudio = topic.data.audio ? resolveAudio(topic.data.audio) : "";
 
 const pageData = {
-   type: topic.data.type,
-   topic: virtualTitle || topic.data.title,
-   route: virtualTitle ? `/topic/${topic.id}/${virtualTitle}` : `/topic/${topic.id}`,
-   code: resolvedBody,
-   items: resolvedItems,
-   pgn: topic.data.pgn || '',
-   audio: resolvedAudio,
-   siblings: siblings,
-   menuPath: topic.data.menu,
-   currentIndex: currentIndex,
+  type: topic.data.type,
+  topic: virtualTitle || topic.data.title,
+  route: virtualTitle
+    ? `/topic/${topic.id}/${virtualTitle}`
+    : `/topic/${topic.id}`,
+  code: resolvedBody,
+  items: resolvedItems,
+  pgn: topic.data.pgn || "",
+  audio: resolvedAudio,
+  siblings: siblings,
+  menuPath: topic.data.menu,
+  currentIndex: currentIndex,
 };
-
-
 ---
 
 <Layout title={topic.data.title}>
-  <FlexibleLayout client:load initialPageData={pageData} initialMenuData={menuTree} />
+  <FlexibleLayout
+    client:only="vue"
+    initialPageData={pageData}
+    initialMenuData={menuTree}
+  />
 </Layout>

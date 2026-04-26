@@ -24,7 +24,7 @@
       </aside>
 
       <!-- Contenuto centrale -->
-      <div class="content">
+      <div :class="['content', { 'no-scroll': type === 'code' || type === 'chess' }]">
         <HomePage v-if="type === 'home'" />
         <TopicPage v-else />
       </div>
@@ -154,6 +154,12 @@ function onSelectMenu(item: any): void {
   position: relative;
   z-index: 10;
   view-transition-name: main-content;
+  display: flex;
+  flex-direction: column;
+}
+
+.content.no-scroll {
+  overflow: hidden;
 }
 
 /* 🌀 Caricamento */

@@ -23,14 +23,14 @@
     box-shadow: none;
 }
 
-.page div {
+.page > div {
     display: block;
     max-width: 65rem;
     font-family: 'New Tegomin', serif;
     font-size: 1.15rem;
     background-color: #ffffff;
     color: #222;
-    padding: 2.5rem; /* Base padding for all divs */
+    padding: 2.5rem; /* Base padding for all sections */
     margin: 2.5rem auto;
     text-align: left;
     line-height: 1.7;
