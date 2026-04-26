@@ -7,6 +7,9 @@
       <h1 class="hero-title">Benvenuto nei miei <span class="highlight">Appunti</span></h1>
       <p class="hero-subtitle">Esplora la mia raccolta di note tecniche e linguaggi</p>
       
+      <!-- Firma calligrafica -->
+      <p class="firma"><span class="firma-by">by</span> Domenico della Peruta</p>
+      
       <!--
       <div class="category-grid">
         <a href="/topic/html-dictionary" class="category-card html">
@@ -228,6 +231,74 @@ canvas {
   margin: 0;
   font-weight: lighter;
   animation: fadeInUp 0.8s ease-out 0.3s both;
+}
+
+/* Firma calligrafica */
+@font-face {
+  font-family: 'Allura';
+  src: url('/fonts/Allura-latin-ext.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Allura';
+  src: url('/fonts/Allura-latin.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+  .firma {
+    font-family: 'Allura', cursive;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    color: rgba(207, 255, 4, 0.75);
+    margin: 0.5rem 0 0 0;
+    letter-spacing: 2px;
+    position: relative;
+    display: inline-block;
+    /* base rotation */
+    transform: rotate(-3deg);
+    /* apparizione */
+    animation: firmaAppear 2s ease-out 0.8s both, firmaRotate 4s ease-in-out infinite alternate 2.8s;
+    text-shadow: 0 0 30px rgba(207, 255, 4, 0.2);
+    transform-origin: center;
+  }
+
+  @keyframes firmaRotate {
+    0%   { transform: rotate(-3deg); }
+    50%  { transform: rotate(-1deg); }
+    100% { transform: rotate(-3deg); }
+  }
+
+.firma-by {
+  color: rgba(180, 180, 180, 0.5);
+  font-size: 0.8em;
+  text-shadow: none;
+}
+
+.firma::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 10%;
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(207, 255, 4, 0.5), transparent);
+  animation: lineExpand 1.5s ease-out 1.8s both;
+  transform-origin: center;
+}
+
+@keyframes firmaAppear {
+  0%   { opacity: 0; transform: translateY(10px) skewX(-5deg); filter: blur(4px); }
+  60%  { filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0) skewX(0deg); }
+}
+
+@keyframes lineExpand {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
 }
 
 /* Footer Links */
