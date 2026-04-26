@@ -498,13 +498,17 @@ const moveAnnotation = computed(() => {
   
   let annotation = null
   if (moveText.includes('!!')) {
-    annotation = { text: '!!', color: '#1bcaac' }
+    annotation = { text: '!!', color: '#1bcaac' } // Smeraldo
   } else if (moveText.includes('??')) {
-    annotation = { text: '??', color: '#f44336' }
+    annotation = { text: '??', color: '#f44336' } // Rosso
+  } else if (moveText.includes('?!')) {
+    annotation = { text: '?!', color: '#f39c12' } // Giallo scuro
+  } else if (moveText.includes('!?')) {
+    annotation = { text: '!?', color: '#9b59b6' } // Viola
   } else if (moveText.includes('!')) {
-    annotation = { text: '!', color: '#2196f3' }
+    annotation = { text: '!', color: '#2196f3' }  // Blu
   } else if (moveText.includes('?')) {
-    annotation = { text: '?', color: '#ff9800' }
+    annotation = { text: '?', color: '#ff9800' }  // Arancione
   }
   
   if (annotation && move.to) {
