@@ -25,6 +25,7 @@ const audio = ref('')
 const chessCurrentMove = ref(0)
 const chessTotalMoves = ref(0)
 const chessFlipped = ref(false)
+const chessMove = ref<string | null>(null)
 
 const setPageData = (data: any) => {
     // Reset pathFile prima di tutto per evitare valori residui
@@ -86,9 +87,8 @@ const toggleChessFlip = () => {
     chessFlipped.value = !chessFlipped.value
 }
 
-const setChessMove = (action: string) => {
-    // Gestito dal componente ChessBoard
-    console.log('setChessMove:', action)
+const setChessMove = (action: string | null) => {
+    chessMove.value = action
 }
 
 export const usePageStore = () => {
@@ -111,6 +111,7 @@ export const usePageStore = () => {
         chessCurrentMove,
         chessTotalMoves,
         chessFlipped,
+        chessMove,
         setPageData,
         navigateToPage,
         navigateToHome,

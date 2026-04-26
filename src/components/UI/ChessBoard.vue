@@ -59,6 +59,49 @@
           class="arrow arrow-attack"
           marker-end="url(#arrowhead-red)"
         />
+
+        <!-- Quadrato Rosso per lo Scacco -->
+        <rect 
+          v-if="checkSquareCoords" 
+          class="check-marker"
+          :x="checkSquareCoords.x - 48" :y="checkSquareCoords.y - 48" 
+          width="96" height="96"
+        />
+
+        <!-- X Rossa per lo Scacco Matto -->
+        <g 
+          v-if="checkmateSquareCoords" 
+          class="checkmate-marker"
+          :style="{ transformOrigin: `${checkmateSquareCoords.x}px ${checkmateSquareCoords.y}px` }"
+        >
+          <line 
+            :x1="checkmateSquareCoords.x - 35" :y1="checkmateSquareCoords.y - 35" 
+            :x2="checkmateSquareCoords.x + 35" :y2="checkmateSquareCoords.y + 35" 
+          />
+          <line 
+            :x1="checkmateSquareCoords.x + 35" :y1="checkmateSquareCoords.y - 35" 
+            :x2="checkmateSquareCoords.x - 35" :y2="checkmateSquareCoords.y + 35" 
+          />
+        </g>
+
+        <!-- Annotazioni delle mosse (!!, ??, !, ?) -->
+        <g v-if="moveAnnotation" class="annotation-badge">
+          <circle 
+            :cx="moveAnnotation.coords.x + 35" 
+            :cy="moveAnnotation.coords.y - 35" 
+            r="24" 
+            :fill="moveAnnotation.color" 
+            stroke="white"
+            stroke-width="2"
+          />
+          <text 
+            :x="moveAnnotation.coords.x + 35" 
+            :y="moveAnnotation.coords.y - 35" 
+            dy=".35em"
+          >
+            {{ moveAnnotation.text }}
+          </text>
+        </g>
       </svg>
     </div>
   </div>  
@@ -94,7 +137,11 @@ const currentMoveIndex = ref(0) // 0 means start position
 const italianToEnglish = (pgn: string): string => {
   if (!pgn) return ''
 
-  const map: Record<'T' | 'C' | 'A' | 'D' | 'R', string> = {
+  // Se il PGN contiene già pezzi inglesi univoci (N, B, Q, K), 
+  // probabilmente è già in inglese e non dobbiamo toccare le 'R' (Rook).
+  if (/[NBQK]/.test(pgn)) return pgn
+
+  const map: Record<string, string> = {
     T: 'R', // Torre
     C: 'N', // Cavallo
     A: 'B', // Alfiere
@@ -108,8 +155,8 @@ const italianToEnglish = (pgn: string): string => {
 
 // Update store with move info
 const syncStore = () => {
-    page.chessCurrentMove = currentMoveIndex.value
-    page.chessTotalMoves = history.value.length
+    page.chessCurrentMove.value = currentMoveIndex.value
+    page.chessTotalMoves.value = history.value.length
 }
 
 const loadGame = () => {
@@ -175,7 +222,7 @@ const end = () => {
 }
 
 // Watch navigation events from store
-watch(() => page.chessMove, (newMove) => {
+watch(page.chessMove, (newMove) => {
     if (!newMove) return
     
     switch(newMove) {
@@ -368,13 +415,106 @@ const attackArrows = computed(() => {
   
   const attackedSquares = getAttackedSquares(currentMove.value.to)
   
-  console.log('Current move to:', currentMove.value.to, 'Attacked squares:', attackedSquares)
-  
   return attackedSquares.map(targetSquare => ({
     from: currentMove.value!.to,
     to: targetSquare,
     path: createArrowPath(currentMove.value!.to, targetSquare)
   }))
+})
+
+// Rilevamento Scacco (non matto)
+const isInCheck = computed(() => {
+  currentMoveIndex.value
+  return chess.inCheck() && !chess.isCheckmate()
+})
+
+const checkSquareCoords = computed(() => {
+  currentMoveIndex.value
+  if (!isInCheck.value) return null
+  
+  const turn = chess.turn()
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = board.value[r][c]
+      if (piece && piece.type === 'k' && piece.color === turn) {
+        const square = String.fromCharCode(97 + c) + (8 - r)
+        return squareToCoords(square)
+      }
+    }
+  }
+  return null
+})
+
+// Rilevamento Scacco Matto
+const isCheckmate = computed(() => {
+  // Dipendenza da currentMoveIndex per forzare il ricalcolo
+  currentMoveIndex.value
+  return chess.isCheckmate()
+})
+
+const checkmateSquareCoords = computed(() => {
+  currentMoveIndex.value
+  
+  if (!isCheckmate.value) return null
+  
+  // Troviamo il re del colore a cui tocca muovere (quello che ha subito il matto)
+  const turn = chess.turn()
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = board.value[r][c]
+      if (piece && piece.type === 'k' && piece.color === turn) {
+        const square = String.fromCharCode(97 + c) + (8 - r)
+        return squareToCoords(square)
+      }
+    }
+  }
+  return null
+})
+
+// Rilevamento Annotazioni (!!, ??, !, ?)
+// Estraiamo le annotazioni dal PGN grezzo perché chess.js spesso le rimuove dalla cronologia
+const moveAnnotation = computed(() => {
+  if (currentMoveIndex.value === 0 || !props.pgn) return null
+  
+  const move = history.value[currentMoveIndex.value - 1]
+  if (!move) return null
+  
+  // Cerchiamo la mossa corrispondente nel PGN originale
+  // Un approccio semplice: cerchiamo la stringa della mossa seguita dai simboli
+  const pgnRaw = props.pgn
+  
+  // Cerchiamo l'indice della mossa (es. "17.")
+  const moveNum = Math.ceil(currentMoveIndex.value / 2)
+  const isWhite = currentMoveIndex.value % 2 !== 0
+  
+  // Regex per trovare la mossa specifica nel PGN
+  // Es: "17. Nf6+!!" o "19... Qxf3??"
+  const movePattern = isWhite 
+    ? new RegExp(`${moveNum}\\.\\s*(\\S+)`)
+    : new RegExp(`${moveNum}\\.\\s*\\S+\\s+(\\S+)|${moveNum}\\.\\.\\.\\s*(\\S+)`)
+    
+  const match = pgnRaw.match(movePattern)
+  const moveText = match ? (match[1] || match[2]) : ''
+  
+  let annotation = null
+  if (moveText.includes('!!')) {
+    annotation = { text: '!!', color: '#1bcaac' }
+  } else if (moveText.includes('??')) {
+    annotation = { text: '??', color: '#f44336' }
+  } else if (moveText.includes('!')) {
+    annotation = { text: '!', color: '#2196f3' }
+  } else if (moveText.includes('?')) {
+    annotation = { text: '?', color: '#ff9800' }
+  }
+  
+  if (annotation && move.to) {
+    return {
+      ...annotation,
+      coords: squareToCoords(move.to)
+    }
+  }
+  
+  return null
 })
 
 watch(() => props.pgn, () => {
@@ -443,6 +583,62 @@ onMounted(() => {
 .arrow-attack {
   stroke: #f44336;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.checkmate-marker line {
+  stroke: #f44336;
+  stroke-width: 12;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 10px rgba(244, 67, 54, 0.8));
+  opacity: 0;
+  animation: checkmatePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes checkmatePop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.check-marker {
+  fill: none;
+  stroke: #f44336;
+  stroke-width: 6;
+  stroke-dasharray: 10, 5;
+  filter: drop-shadow(0 0 5px rgba(244, 67, 54, 0.6));
+  animation: checkPulse 1s infinite ease-in-out;
+}
+
+@keyframes checkPulse {
+  0%, 100% { opacity: 0.4; stroke-width: 4; }
+  50% { opacity: 1; stroke-width: 8; }
+}
+
+.annotation-badge {
+  pointer-events: none;
+  animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.annotation-badge circle {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.annotation-badge text {
+  fill: white;
+  font-size: 18px;
+  font-weight: 900;
+  text-anchor: middle;
+  font-family: Arial, sans-serif;
+}
+
+@keyframes badgePop {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 @keyframes fadeIn {
