@@ -14,33 +14,14 @@ const { title = "Astro Basics" } = Astro.props;
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
-
     <!-- [inizio] iubenda.com  -->
-    <link
-      rel="preload"
-      as="script"
-      href="https://cdn.iubenda.com/cs/iubenda_cs.js"
-    />
-    <link
-      rel="preload"
-      as="script"
-      href="https://cdn.iubenda.com/cs/tcf/stub-v2.js"
-    />
-    <script is:inline src="https://cdn.iubenda.com/cs/tcf/stub-v2.js"></script>
-
     <script is:inline>
       var _iub = _iub || [];
-      if (window.location.hostname != "localhost") {
+      if (window.location.hostname !== "localhost") {
         _iub.csConfiguration = {
           cookiePolicyId: 63164304,
           siteId: 3730307,
-          localConsentDomain: "note.altervista.org",
+          // Rimosso localConsentDomain per permettere l'autorilevamento su Altervista
           timeoutLoadConfiguration: 30000,
           lang: "it",
           enableTcf: true,
@@ -56,7 +37,7 @@ const { title = "Astro Basics" } = Astro.props;
             "9": "consent_only",
             "10": "consent_only",
           },
-          invalidateConsentWithoutLog: true,
+          invalidateConsentWithoutLog: false, // Impostato a false per evitare reset non necessari
           googleAdditionalConsentMode: true,
           consentOnContinuedBrowsing: false,
           banner: {
@@ -70,9 +51,17 @@ const { title = "Astro Basics" } = Astro.props;
         };
       }
     </script>
+    <script is:inline src="https://cdn.iubenda.com/cs/tcf/stub-v2.js"></script>
     <script is:inline async src="https://cdn.iubenda.com/cs/iubenda_cs.js"
     ></script>
     <!-- [fine] iubenda.com  -->
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
   </head>
 
   <body>
