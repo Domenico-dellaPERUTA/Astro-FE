@@ -561,6 +561,20 @@ onMounted(() => {
   position: relative;
 }
 
+/* Mobile responsive: use width instead of height */
+@media (max-width: 768px) {
+  .chess-board {
+    width: 92vw;
+    height: auto;
+    max-width: 92vw;
+    max-height: 92vw;
+  }
+  
+  .chess-container {
+    padding: 0.5rem;
+  }
+}
+
 .arrows-layer {
   position: absolute;
   top: 0;

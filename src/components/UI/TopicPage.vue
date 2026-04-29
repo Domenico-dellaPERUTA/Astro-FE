@@ -699,4 +699,20 @@ watch(
   line-height: 1.6;
 }
 
+/* Chess wrapper responsive */
+.chess-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+/* Mobile responsive for chess */
+@media (max-width: 768px) {
+  .chess-wrapper {
+    padding: 0.25rem;
+  }
+}
+
 </style>

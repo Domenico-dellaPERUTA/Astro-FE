@@ -250,27 +250,19 @@ canvas {
   font-display: swap;
 }
 
-  .firma {
-    font-family: 'Allura', cursive;
-    font-size: clamp(2rem, 5vw, 3.2rem);
-    color: rgba(207, 255, 4, 0.75);
-    margin: 0.5rem 0 0 0;
-    letter-spacing: 2px;
-    position: relative;
-    display: inline-block;
-    /* base rotation */
-    transform: rotate(-3deg);
-    /* apparizione */
-    animation: firmaAppear 2s ease-out 0.8s both, firmaRotate 4s ease-in-out infinite alternate 2.8s;
-    text-shadow: 0 0 30px rgba(207, 255, 4, 0.2);
-    transform-origin: center;
-  }
-
-  @keyframes firmaRotate {
-    0%   { transform: rotate(-3deg); }
-    50%  { transform: rotate(-1deg); }
-    100% { transform: rotate(-3deg); }
-  }
+.firma {
+  font-family: 'Allura', cursive;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  color: rgba(207, 255, 4, 0.75);
+  margin: 0.5rem 0 0 0;
+  letter-spacing: 2px;
+  position: relative;
+  display: inline-block;
+  text-shadow: 0 0 30px rgba(207, 255, 4, 0.2);
+  transform-origin: center;
+  /* firmaAppear finisce a rotate(-3deg), firmaRotate parte da lì → nessuno scatto */
+  animation: firmaAppear 2s ease-out 0.8s both, firmaRotate 8s ease-in-out infinite 2.8s;
+}
 
 .firma-by {
   color: rgba(180, 180, 180, 0.5);
@@ -290,16 +282,25 @@ canvas {
   transform-origin: center;
 }
 
+/* Appare con blur e skew, poi si stabilizza SEMPRE a rotate(-3deg) */
 @keyframes firmaAppear {
-  0%   { opacity: 0; transform: translateY(10px) skewX(-5deg); filter: blur(4px); }
-  60%  { filter: blur(0); }
-  100% { opacity: 1; transform: translateY(0) skewX(0deg); }
+  0%   { opacity: 0; transform: rotate(-3deg) translateY(12px) skewX(-6deg); filter: blur(5px); }
+  70%  { filter: blur(0); }
+  100% { opacity: 1; transform: rotate(-3deg) translateY(0)    skewX(0deg);  filter: blur(0); }
+}
+
+/* Parte da -3deg (uguale a dove finisce firmaAppear) → nessun salto */
+@keyframes firmaRotate {
+  0%   { transform: rotate(-3deg); }
+  50%  { transform: rotate(-1deg); }
+  100% { transform: rotate(-3deg); }
 }
 
 @keyframes lineExpand {
   from { transform: scaleX(0); opacity: 0; }
   to   { transform: scaleX(1); opacity: 1; }
 }
+
 
 /* Footer Links */
 .footer-links {
