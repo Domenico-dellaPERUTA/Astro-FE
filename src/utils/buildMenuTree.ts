@@ -137,10 +137,10 @@ function addLinksToLeafFolders(
 }
 
 function sortRecursive(nodes: TreeNode[]) {
-  // Ordiniamo il livello corrente: cartelle prima per nome, poi foglie per index
+  // Ordiniamo il livello corrente: foglie per index prima, poi cartelle per nome
   nodes.sort((a, b) => {
-    if (a.isFolder && !b.isFolder) return -1;
-    if (!a.isFolder && b.isFolder) return 1;
+    if (!a.isFolder && b.isFolder) return -1;
+    if (a.isFolder && !b.isFolder) return 1;
     if (a.isFolder && b.isFolder) return a.name.localeCompare(b.name);
     return (a as TreeNodeLeaf).index - (b as TreeNodeLeaf).index;
   });
