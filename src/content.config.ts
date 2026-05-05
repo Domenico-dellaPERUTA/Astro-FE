@@ -12,7 +12,14 @@ const topicsCollection = defineCollection({
     index: z.number().optional().default(1),              // Ordinamento
 
     // Dati specifici per il carousel (es. lista immagini)
-    images: z.array(z.string()).optional(),
+    images: z.array(z.union([
+      z.string(),
+      z.object({
+        image: z.string(),
+        title: z.string().optional(),
+        text: z.string().optional()
+      })
+    ])).optional(),
     
     // Dati specifici per gli scacchi (pgn)
     pgn: z.string().optional(),

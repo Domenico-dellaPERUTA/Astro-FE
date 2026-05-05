@@ -20,6 +20,7 @@ const showAvatar = ref('stop')
 const pathFile = ref('')
 const carouselRef = ref<any>(null)
 const audio = ref('')
+const isInfoOpen = ref(false)
 
 // Chess state
 const chessCurrentMove = ref(0)
@@ -91,6 +92,18 @@ const setChessMove = (action: string | null) => {
     chessMove.value = action
 }
 
+const getCarouselSlideInfo = () => {
+    const item = items.value[currentIndex.value]
+    if (item && typeof item === 'object') {
+        return {
+            title: item.title,
+            text: item.text,
+            hasInfo: !!(item.title || item.text)
+        }
+    }
+    return { hasInfo: false }
+}
+
 export const usePageStore = () => {
     return {
         type,
@@ -112,6 +125,8 @@ export const usePageStore = () => {
         chessTotalMoves,
         chessFlipped,
         chessMove,
+        isInfoOpen,
+        getCarouselSlideInfo,
         setPageData,
         navigateToPage,
         navigateToHome,

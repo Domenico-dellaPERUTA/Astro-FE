@@ -1,7 +1,7 @@
 <!-- app/components/UI/ActionButton.vue -->
  
 <template>
-  <div class="action-button popover-container">
+  <div :class="['action-button', 'popover-container', customClass]">
     <!-- Bottone principale -->
     <button
       class="btn-small"
@@ -47,6 +47,7 @@ const props = defineProps<{
   onSelect?: (item: any) => void
   onClick?: () => void
   disabled?: boolean
+  customClass?: string
 }>()
 
 const isOpen = ref(false)

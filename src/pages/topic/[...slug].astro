@@ -130,15 +130,22 @@ resolvedBody = resolvedBody.replace(
 let resolvedItems = [];
 if (topic.data.type === "carousel") {
   resolvedItems = (topic.data.images || []).map((img) => {
+    // Supporta sia stringhe semplici che oggetti con image, title, text
+    const imgPath = typeof img === "object" ? img.image : img;
+    const imgTitle = typeof img === "object" ? img.title : undefined;
+    const imgText = typeof img === "object" ? img.text : undefined;
+
     // Risolviamo l'immagine
-    const resolvedImg = resolveAsset(img);
+    const resolvedImg = resolveAsset(imgPath);
     // Risolviamo l'audio corrispondente (sostituendo l'estensione nel path originale)
-    const audioPath = String(img).replace(/\.(png|jpg|jpeg)$/i, ".mp3");
+    const audioPath = String(imgPath).replace(/\.(png|jpg|jpeg)$/i, ".mp3");
     const resolvedAud = resolveAudio(audioPath);
     return {
       image: resolvedImg,
       audio: resolvedAud,
-      originalPath: img, // teniamolo per compatibilità o debug
+      title: imgTitle,
+      text: imgText,
+      originalPath: imgPath, // teniamolo per compatibilità o debug
     };
   });
 } else if (topic.data.type === "dictionary" && topic.data.dictionary) {

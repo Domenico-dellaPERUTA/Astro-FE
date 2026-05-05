@@ -134,18 +134,27 @@
           </template>
         </ActionButton>
 
-        <!-- NAVIGAZIONE -->
-        <ActionButton :disabled="type !== 'chess' && (type === 'carousel' || infoPageNum < 2)" :onClick="firstPage">
+        <!-- Pulsante Info per carousel -->
+        <ActionButton 
+          v-if="type === 'carousel' && carouselSlideInfo.hasInfo" 
+          customClass="info-btn-blink"
+          :onClick="() => isInfoOpen = true"
+        >
           <template #icon>
-            <ChevronsLeft  v-if="type !== 'carousel'"  class="icon-small" />
-            <Image  v-else class="icon-small" />
+            <Info class="icon-small" />
           </template>
         </ActionButton>
 
-        <ActionButton :disabled="type !== 'chess' && (type === 'carousel' || infoPageNum < 2)" :onClick="prevPage">
+        <!-- NAVIGAZIONE -->
+        <ActionButton :disabled="type !== 'chess' && infoPageNum < 2" :onClick="firstPage">
           <template #icon>
-            <ChevronLeft v-if="type !== 'carousel'"  class="icon-small" />
-            <Dot  v-else class="icon-small" />
+            <ChevronsLeft class="icon-small" />
+          </template>
+        </ActionButton>
+
+        <ActionButton :disabled="type !== 'chess' && infoPageNum < 2" :onClick="prevPage">
+          <template #icon>
+            <ChevronLeft class="icon-small" />
           </template>
         </ActionButton>
 
@@ -158,17 +167,15 @@
           </template>
         </span>
 
-        <ActionButton :disabled="type !== 'chess' && (type === 'carousel' || infoPageNum >= infoMaxPageNum)"  :onClick="nextPage">
+        <ActionButton :disabled="type !== 'chess' && infoPageNum >= infoMaxPageNum" :onClick="nextPage">
           <template #icon>
-            <ChevronRight v-if="type !== 'carousel'" class="icon-small" />
-            <Dot v-else class="icon-small" />
+            <ChevronRight class="icon-small" />
           </template>
         </ActionButton>
 
-        <ActionButton :disabled="type !== 'chess' && (type === 'carousel' || infoPageNum >= infoMaxPageNum)"  :onClick="lastPage">
+        <ActionButton :disabled="type !== 'chess' && infoPageNum >= infoMaxPageNum" :onClick="lastPage">
           <template #icon>
-            <ChevronsRight v-if="type !== 'carousel'" class="icon-small" />
-            <GalleryThumbnails v-else class="icon-small" />
+            <ChevronsRight class="icon-small" />
           </template>
         </ActionButton>
       </div>
@@ -181,7 +188,7 @@
 import { 
   Menu, Home, Volume2, VolumeOff, Link,CircleSlash2,Scale,NotebookPen,EyeOff, User2,Castle,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,Image, Dot,GalleryThumbnails,Eye,
-  RefreshCw
+  RefreshCw, Info
 } from 'lucide-vue-next'
 import { computed, ref, onUnmounted } from 'vue'
 
@@ -192,11 +199,14 @@ import ActionButton from './ActionButton.vue'
 const pageStore = usePageStore()
 const { 
   topic, type, items, currentIndex, pathFile, showAvatar, chessCurrentMove, chessTotalMoves,
-  navigateToHome, navigateToPage, navigateToSibling, toggleChessFlip, setChessMove
+  navigateToHome, navigateToPage, navigateToSibling, toggleChessFlip, setChessMove,
+  isInfoOpen, getCarouselSlideInfo
 } = pageStore
 
 const infoStore = useInfoStore()
 const { title: infoTitle, page: infoPageNum, maxPage: infoMaxPageNum } = infoStore
+
+const carouselSlideInfo = computed(() => getCarouselSlideInfo())
 
 const currentIcon = computed(() => playAudio.value ? Volume2 : VolumeOff)
 
@@ -647,5 +657,17 @@ const onLinkSelect = (item: Link) => {
   height: 1.4rem;
 }
 
+/* Info button blinking blue effect */
+.info-btn-blink {
+  animation: bluePulse 2s infinite;
+}
 
+@keyframes bluePulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.9), 0 0 30px rgba(59, 130, 246, 0.5);
+  }
+}
 </style>

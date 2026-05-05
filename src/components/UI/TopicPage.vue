@@ -68,6 +68,23 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>
+
+        <!-- Finestra Dialog Info -->
+        <div v-if="isInfoOpen" class="info-dialog-overlay" @click="isInfoOpen = false">
+          <div class="info-dialog" @click.stop>
+            <button class="close-btn" @click="isInfoOpen = false">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+            <div class="info-dialog-header">
+              <h3>{{ currentSlideInfo.title || 'Informazioni' }}</h3>
+            </div>
+            <div class="info-dialog-body">
+              <p>{{ currentSlideInfo.text }}</p>
+            </div>
+          </div>
+        </div>
       </div>
       <div v-else class="image-placeholder">
         <img src="/await.gif" alt="loading">
@@ -179,6 +196,9 @@ const carouselRef = ref<any>(null)
 const carouselImages = ref<Record<string, string>>({})
 const initialLoading = ref<boolean>(false)
 const loadingImages = ref<Set<string>>(new Set())
+
+const { isInfoOpen, getCarouselSlideInfo } = pageStore
+const currentSlideInfo = computed(() => getCarouselSlideInfo())
 
 /** 🧹 Pulisce il codice dai tag personalizzati /_ _/ e dai triple backticks */
 const cleanCode = (rawCode: string): string => {
@@ -313,6 +333,7 @@ async function preloadAdjacentImages(currentIndexArg: number) {
 /** 🎯 Evento cambio slide dal carousel */
 async function onSlideChange(data: any) {
   const newIndex = data?.currentSlideIndex ?? 0
+  currentIndex.value = newIndex
   await preloadAdjacentImages(newIndex)
 }
 
@@ -589,10 +610,113 @@ watch(
 }
 .nav-btn.left { left: 0.25rem; }
 .nav-btn.right { right: 0.25rem; }
+.nav-btn.info { 
+  right: 0.25rem; 
+  top: auto;
+  bottom: 0.25rem;
+  transform: none;
+  background: rgba(59, 130, 246, 0.9);
+  color: white;
+}
+.nav-btn.info:hover {
+  background: rgba(37, 99, 235, 1);
+  transform: scale(1.1);
+}
 .nav-btn:hover {
   background: rgba(255, 255, 255, 1);
   transform: translateY(-50%) scale(1.1);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* 💠 Info Dialog Styling */
+.info-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.info-dialog {
+  background: rgba(255, 255, 255, 0.95);
+  width: 90%;
+  max-width: 500px;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 1.5rem;
+  padding-top: 2.5rem;
+  position: relative;
+  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.info-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.info-dialog-header h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.close-btn {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  width: 36px !important;
+  height: 36px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  z-index: 10;
+  padding: 0;
+}
+
+.close-btn svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0;
+}
+
+.close-btn:hover {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  transform: scale(1.1);
+}
+
+.info-dialog-body {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Editor del codice con Monaco */
