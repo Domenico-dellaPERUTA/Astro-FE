@@ -146,13 +146,13 @@
         </ActionButton>
 
         <!-- NAVIGAZIONE -->
-        <ActionButton :disabled="type !== 'chess' && infoPageNum < 2" :onClick="firstPage">
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel') && infoPageNum < 2" :onClick="firstPage">
           <template #icon>
             <ChevronsLeft class="icon-small" />
           </template>
         </ActionButton>
 
-        <ActionButton :disabled="type !== 'chess' && infoPageNum < 2" :onClick="prevPage">
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel') && infoPageNum < 2" :onClick="prevPage">
           <template #icon>
             <ChevronLeft class="icon-small" />
           </template>
@@ -162,18 +162,21 @@
           <template v-if="type === 'chess'">
             Mossa {{ chessCurrentMove }} / {{ chessTotalMoves }}
           </template>
+          <template v-else-if="type === 'carousel'">
+            {{ currentIndex + 1 }} / {{ items.length }}
+          </template>
           <template v-else>
             {{ infoPageNum }} / {{ infoMaxPageNum }}
           </template>
         </span>
 
-        <ActionButton :disabled="type !== 'chess' && infoPageNum >= infoMaxPageNum" :onClick="nextPage">
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel') && infoPageNum >= infoMaxPageNum" :onClick="nextPage">
           <template #icon>
             <ChevronRight class="icon-small" />
           </template>
         </ActionButton>
 
-        <ActionButton :disabled="type !== 'chess' && infoPageNum >= infoMaxPageNum" :onClick="lastPage">
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel') && infoPageNum >= infoMaxPageNum" :onClick="lastPage">
           <template #icon>
             <ChevronsRight class="icon-small" />
           </template>
@@ -198,8 +201,8 @@ import ActionButton from './ActionButton.vue'
 
 const pageStore = usePageStore()
 const { 
-  topic, type, items, currentIndex, pathFile, showAvatar, chessCurrentMove, chessTotalMoves,
-  navigateToHome, navigateToPage, navigateToSibling, toggleChessFlip, setChessMove,
+  topic, type, items, currentIndex, pathFile, showAvatar, chessCurrentMove, chessTotalMoves, carouselRef,
+  navigateToHome, navigateToPage, navigateToSibling, toggleChessFlip, setChessMove, setCarouselAction,
   isInfoOpen, getCarouselSlideInfo
 } = pageStore
 
@@ -261,6 +264,10 @@ const nextPage = () => {
     setChessMove('next')
     return
   }
+  if (type.value === 'carousel') {
+    setCarouselAction('next')
+    return
+  }
   if (infoStore.page.value < infoStore.maxPage.value) {
     const nextIndex = infoStore.page.value
     navigateToSibling(nextIndex)
@@ -270,6 +277,10 @@ const nextPage = () => {
 const prevPage = () => {
   if (type.value === 'chess') {
     setChessMove('prev')
+    return
+  }
+  if (type.value === 'carousel') {
+    setCarouselAction('prev')
     return
   }
   if (infoStore.page.value > 1) {
@@ -283,6 +294,10 @@ const firstPage = () => {
     setChessMove('start')
     return
   }
+  if (type.value === 'carousel') {
+    setCarouselAction('first')
+    return
+  }
   if (infoStore.page.value > 1) {
     navigateToSibling(0)
   }
@@ -291,6 +306,10 @@ const firstPage = () => {
 const lastPage = () => {
   if (type.value === 'chess') {
     setChessMove('end')
+    return
+  }
+  if (type.value === 'carousel') {
+    setCarouselAction('last')
     return
   }
   if (infoStore.page.value < infoStore.maxPage.value) {

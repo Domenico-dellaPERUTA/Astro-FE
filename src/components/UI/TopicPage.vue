@@ -169,7 +169,19 @@ if (typeof window !== 'undefined') {
 
 
 const pageStore = usePageStore()
-const { topic, type, items, code, pgn, currentIndex, showAvatar, setCarouselRef, navigateToPage, audio } = pageStore
+const { topic, type, items, code, pgn, currentIndex, showAvatar, setCarouselRef, navigateToPage, audio, carouselAction, setCarouselAction } = pageStore
+
+watch(carouselAction, async (action) => {
+  if (!action || !carouselRef.value) return
+  
+  if (action === 'next') await carouselRef.value.next()
+  else if (action === 'prev') await carouselRef.value.prev()
+  else if (action === 'first') await carouselRef.value.slideTo(0)
+  else if (action === 'last') await carouselRef.value.slideTo(items.value.length - 1)
+  
+  // Reset l'azione dopo l'esecuzione
+  setCarouselAction(null)
+})
 
 const infoStore = useInfoStore()
 const { page: infoPageNum, maxPage: infoMaxPageNum } = infoStore
@@ -398,8 +410,11 @@ watch(
 watch(
   () => type.value,
   async (newType) => {
-    if (newType === 'carousel' && carouselRef.value) {
-      setCarouselRef(carouselRef.value)
+    if (newType === 'carousel') {
+      await nextTick()
+      if (carouselRef.value) {
+        setCarouselRef(carouselRef.value)
+      }
     } else if (newType === 'code' || newType === 'dictionary') {
       await nextTick()
       if (!codeEditor) await initializeCodeEditor(newType)

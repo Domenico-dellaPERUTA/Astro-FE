@@ -27,6 +27,7 @@ const chessCurrentMove = ref(0)
 const chessTotalMoves = ref(0)
 const chessFlipped = ref(false)
 const chessMove = ref<string | null>(null)
+const carouselAction = ref<string | null>(null)
 
 const setPageData = (data: any) => {
     // Reset pathFile prima di tutto per evitare valori residui
@@ -92,6 +93,10 @@ const setChessMove = (action: string | null) => {
     chessMove.value = action
 }
 
+const setCarouselAction = (action: string | null) => {
+    carouselAction.value = action
+}
+
 const getCarouselSlideInfo = () => {
     const item = items.value[currentIndex.value]
     if (item && typeof item === 'object') {
@@ -133,6 +138,8 @@ export const usePageStore = () => {
         navigateToSibling,
         setCarouselRef,
         toggleChessFlip,
-        setChessMove
+        setChessMove,
+        carouselAction,
+        setCarouselAction
     }
 }
