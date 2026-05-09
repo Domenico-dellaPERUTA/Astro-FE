@@ -39,6 +39,7 @@ const topicsCollection = defineCollection({
       synonyms: z.string().optional(),
       opposites: z.string().optional(),
       note: z.string().optional(),
+      codeView: z.string().optional(),
     })).optional()
   }),
 });

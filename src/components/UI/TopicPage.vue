@@ -132,7 +132,15 @@
           <p v-if="dictionary?.fonetic" class="fonetic">{{ dictionary?.fonetic }}</p>
           <h4 class="description"><span>{{ dictionary?.description }}</span></h4>
         
-          <div v-if="dictionary?.codeDescription && dictionary?.type === 'html'" v-html="dictionary?.codeDescription" class="dictionary-code" />
+          <!-- Visual Preview (codeView) -->
+          <div v-if="dictionary?.codeView" class="dictionary-preview">
+            <div v-html="dictionary?.codeView" class="preview-scale-wrapper"></div>
+          </div>
+          
+          <!-- Legacy HTML rendering for codeDescription (backward compatibility) -->
+          <div v-else-if="dictionary?.codeDescription && dictionary?.type === 'html'" v-html="dictionary?.codeDescription" class="dictionary-code" />
+
+          <!-- Monaco Editor for Code Snippet (codeDescription) -->
           <div v-if="dictionary?.codeDescription" class="dictionary-code-wrapper">
               <div ref="dictionaryCodeContainer" class="dictionary-code-container"></div>
           </div>
@@ -258,6 +266,7 @@ interface DictionaryItem {
   description: string
   path?: string
   codeDescription?: string
+  codeView?: string
   links?: string
   synonyms?: string
   opposites?: string
@@ -281,6 +290,7 @@ const colorTextDictionary = (sType: string): string => {
   else if (sType.startsWith('conj')) { sColor3 = sColor2 = "#58FAF4"; sColor1 = "#61380B" }
   else if (sType.startsWith('art')) sColor3 = "#000000"
   else if (sType.startsWith('html')) sColor3 = sColor2 = sColor1 = "#e34c26"
+  else if (sType.startsWith('css')) sColor3 = sColor2 = sColor1 = "#3498db"
   return `color: ${sColor3};`
 }
 
@@ -1006,8 +1016,8 @@ watch(
 
 .description span { 
   font-family: 'New Tegomin', serif;
-  padding: 0.5rem; 
-  font-size: 2rem; 
+  padding: 0.3rem 0.5rem; 
+  font-size: 1.2rem; 
   color: #334155;
   border-bottom: 2px dashed #e2e8f0;
 }
@@ -1057,6 +1067,28 @@ watch(
   flex-shrink: 0;
   max-height: 100px;
   overflow-y: auto;
+}
+
+.dictionary-preview {
+  margin: 1rem auto;
+  padding: 1.5rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 180px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.preview-scale-wrapper {
+  transform: scale(2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Chess wrapper responsive */
