@@ -14,7 +14,7 @@
       class="right-menu-item"
       @click="selectSibling(index)"
     >
-      <div :class="isCurrent(sibling) ? 'item-content bookmark-icon' : 'item-content'">
+      <div :class="isCurrent(sibling, index) ? 'item-content bookmark-icon' : 'item-content'">
         <span>{{ sibling.name }}</span>
 
         <!-- Mostra segnalibro solo per il sibling corrente -->
@@ -41,20 +41,33 @@ interface Sibling {
 }
 
 const pageStore = usePageStore()
-const { siblings, topic, showAvatar, navigateToSibling } = pageStore
+const { siblings, topic, type, items, showAvatar, navigateToSibling, navigateToPage, currentIndex } = pageStore
 
-const siblingsList = computed<Sibling[]>(() => 
-  (siblings.value || []) as Sibling[]
-)
+const siblingsList = computed<any[]>(() => {
+  if (type.value === 'dictionary') {
+    return items.value.map((item, index) => ({
+      name: item.item,
+      link: '#', // Non serve un link reale per il dizionario dinamico
+      type: 'dictionary',
+      index
+    }))
+  }
+  return (siblings.value || [])
+})
 
-function isCurrent(sibling: Sibling): boolean {
+function isCurrent(sibling: any, index: number): boolean {
+  if (type.value === 'dictionary') {
+    return index === currentIndex.value
+  }
   return sibling.name === topic.value
 }
 
 function selectSibling(index: number) {
-  const sibling = siblingsList.value[index]
-  if (!sibling) return
-  navigateToSibling(index)
+  if (type.value === 'dictionary') {
+    navigateToPage(index)
+  } else {
+    navigateToSibling(index)
+  }
 }
 </script>
 

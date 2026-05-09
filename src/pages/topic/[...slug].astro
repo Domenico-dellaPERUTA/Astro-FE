@@ -15,42 +15,14 @@ export async function getStaticPaths() {
     const siblings = findSiblings(topicsInfo, topic.data.menu);
 
     if (topic.data.type === "dictionary" && topic.data.dictionary) {
-      // Crea una pagina per ogni item del dizionario
-      topic.data.dictionary.forEach((item, index) => {
-        // I "siblings" per queste pagine virtuali sono gli item stessi del dizionario
-        const virtualSiblings = topic.data.dictionary.map((d, i) => ({
-          name: d.item,
-          link: `/topic/${topic.id}/${d.item}`,
-          type: "dictionary",
-          index: i,
-        }));
-
-        paths.push({
-          params: { slug: `${topic.id}/${item.item}` },
-          props: {
-            topic,
-            menuTree,
-            siblings: virtualSiblings,
-            currentIndex: index,
-            virtualTitle: item.item,
-          },
-        });
-      });
-
-      // Pagina base che punta al primo item
+      // Pagina base del dizionario (ora l'unica)
       paths.push({
         params: { slug: topic.id },
         props: {
           topic,
           menuTree,
-          siblings: topic.data.dictionary.map((d, i) => ({
-            name: d.item,
-            link: `/topic/${topic.id}/${d.item}`,
-            type: "dictionary",
-            index: i,
-          })),
+          siblings, // I siblings normali (altri topic nel menu)
           currentIndex: 0,
-          virtualTitle: topic.data.dictionary[0].item,
         },
       });
     } else {
@@ -149,19 +121,16 @@ if (topic.data.type === "carousel") {
     };
   });
 } else if (topic.data.type === "dictionary" && topic.data.dictionary) {
-  // Risolviamo gli asset solo per l'elemento corrente per performance
-  resolvedItems = topic.data.dictionary.map((item, idx) => {
-    if (idx === currentIndex) {
-      const path = item.path || "";
-      return {
-        ...item,
-        // Aggiungiamo campi risolti che TopicPage.vue possa usare
-        resolvedImageJpg: resolveAsset(`${path}${item.item}.jpg`),
-        resolvedImagePng: resolveAsset(`${path}${item.item}.png`),
-        resolvedAudio: resolveAudio(`${path}${item.item}.mp3`),
-      };
-    }
-    return item;
+  // Risolviamo gli asset per tutti gli elementi del dizionario
+  resolvedItems = topic.data.dictionary.map((item) => {
+    const path = item.path || "";
+    return {
+      ...item,
+      // Aggiungiamo campi risolti che TopicPage.vue possa usare
+      resolvedImageJpg: resolveAsset(`${path}${item.item}.jpg`),
+      resolvedImagePng: resolveAsset(`${path}${item.item}.png`),
+      resolvedAudio: resolveAudio(`${path}${item.item}.mp3`),
+    };
   });
 }
 

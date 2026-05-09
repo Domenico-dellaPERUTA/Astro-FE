@@ -92,38 +92,76 @@
     </div>
 
     <!-------------------------- 🧩 DICTIONARY ---------------------------------->
-    <div v-else-if="type === 'dictionary'" class="dictionary">
-      <h3 :style="colorTextDictionary(dictionary?.type ?? '')">{{ dictionary?.item }}</h3>
-      <p v-if="dictionary?.fonetic">{{ dictionary?.fonetic }}</p>
-      <h4><span>{{ dictionary?.description }}</span></h4>
-     
-      <div v-if="dictionary?.codeDescription && dictionary?.type === 'html'" v-html="dictionary?.codeDescription" class="dictionary-code" />
-      <div v-if="dictionary?.codeDescription" class="dictionary-code-wrapper">
-          <div ref="dictionaryCodeContainer" class="dictionary-code-container"></div>
+    <div v-else-if="type === 'dictionary'" class="dictionary-view">
+      <!-- Search Bar -->
+      <div class="dictionary-search">
+        <div class="search-input-wrapper">
+          <input 
+            v-model="searchTerm" 
+            type="text" 
+            placeholder="Cerca una parola..." 
+            class="search-input"
+            @focus="showResults = true"
+          />
+          <svg xmlns="http://www.w3.org/2000/svg" class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        
+        <!-- Search Results Dropdown -->
+        <div v-if="showResults && searchTerm" class="search-results">
+          <div 
+            v-for="result in filteredResults" 
+            :key="result.index"
+            class="search-result-item"
+            @click="selectDictionaryItem(result.index)"
+          >
+            <span class="result-word">{{ result.item }}</span>
+            <span class="result-desc">{{ result.description }}</span>
+          </div>
+          <div v-if="filteredResults.length === 0" class="no-results">
+            Nessun risultato trovato per "{{ searchTerm }}"
+          </div>
+        </div>
       </div>
 
-      <div v-if="dictionary?.synonyms" class="dictionary-extra">
-        <strong>Sinonimi:</strong> {{ dictionary.synonyms }}
-      </div>
-      <div v-if="dictionary?.opposites" class="dictionary-extra">
-        <strong>Opposti:</strong> {{ dictionary.opposites }}
-      </div>
-      <div v-if="dictionary?.note" class="dictionary-note">
-        {{ dictionary.note }}
-      </div>
+      <!-- Word Content -->
+      <div class="dictionary-content">
+        <div class="dictionary-card">
+          <h3 :style="colorTextDictionary(dictionary?.type ?? '')">{{ dictionary?.item }}</h3>
+          <p v-if="dictionary?.fonetic" class="fonetic">{{ dictionary?.fonetic }}</p>
+          <h4 class="description"><span>{{ dictionary?.description }}</span></h4>
+        
+          <div v-if="dictionary?.codeDescription && dictionary?.type === 'html'" v-html="dictionary?.codeDescription" class="dictionary-code" />
+          <div v-if="dictionary?.codeDescription" class="dictionary-code-wrapper">
+              <div ref="dictionaryCodeContainer" class="dictionary-code-container"></div>
+          </div>
 
-      <img 
-        :src="dictionary?.resolvedImageJpg || `/${dictionary?.path}${dictionary?.item}.jpg`" 
-        @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
-        class="img-centrata" 
-      />
-      <img 
-        :src="dictionary?.resolvedImagePng || `/${dictionary?.path}${dictionary?.item}.png`" 
-        @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
-        class="img-centrata" 
-      />
-      <audio :key="dictionary?.item" :src="dictionary?.resolvedAudio || `/${dictionary?.path}${dictionary?.item}.mp3`" autoplay></audio>
-      
+          <div v-if="dictionary?.synonyms" class="dictionary-extra">
+            <strong>Sinonimi:</strong> {{ dictionary.synonyms }}
+          </div>
+          <div v-if="dictionary?.opposites" class="dictionary-extra">
+            <strong>Opposti:</strong> {{ dictionary.opposites }}
+          </div>
+          <div v-if="dictionary?.note" class="dictionary-note">
+            {{ dictionary.note }}
+          </div>
+
+          <div class="dictionary-images">
+            <img 
+              :src="dictionary?.resolvedImageJpg || `/${dictionary?.path}${dictionary?.item}.jpg`" 
+              @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
+              class="img-centrata" 
+            />
+            <img 
+              :src="dictionary?.resolvedImagePng || `/${dictionary?.path}${dictionary?.item}.png`" 
+              @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
+              class="img-centrata" 
+            />
+          </div>
+          <audio :key="dictionary?.item" :src="dictionary?.resolvedAudio || `/${dictionary?.path}${dictionary?.item}.mp3`" autoplay></audio>
+        </div>
+      </div>
     </div>
 
     <!-------------------------- ♟️ CHESS -------------------------------------->
@@ -139,7 +177,7 @@
 <script setup lang="ts">
 import 'vue3-carousel/dist/carousel.css'
 import { Carousel, Slide } from 'vue3-carousel'
-import { ref, onMounted, watch, computed, nextTick, onBeforeUnmount } from 'vue'
+import { ref, onMounted, watch, computed, nextTick, onBeforeUnmount, onUnmounted } from 'vue'
 import { usePageStore } from '../../store/page'
 import { useInfoStore } from '../../store/info'
 import { useAuthStore } from '../../store/auth'
@@ -212,6 +250,40 @@ const loadingImages = ref<Set<string>>(new Set())
 const { isInfoOpen, getCarouselSlideInfo } = pageStore
 const currentSlideInfo = computed(() => getCarouselSlideInfo())
 
+/** 📚 Dictionary interface and computed */
+interface DictionaryItem {
+  type: string
+  item: string
+  fonetic?: string
+  description: string
+  path?: string
+  codeDescription?: string
+  links?: string
+  synonyms?: string
+  opposites?: string
+  note?: string
+  resolvedImageJpg?: string
+  resolvedImagePng?: string
+  resolvedAudio?: string
+}
+const dictionary = computed<DictionaryItem | undefined>(() => items.value[currentIndex.value] as DictionaryItem)
+
+const colorTextDictionary = (sType: string): string => {
+  if (!sType) return ''
+  let sColor1 = "#ffffff", sColor2 = "#ffffff", sColor3 = "#ffffff"
+  if (sType.startsWith('n')) sColor3 = sColor2 = sColor1 = "#0000ff"
+  else if (sType.startsWith('v.past')) sColor3 = sColor2 = sColor1 = "#2e8b57"
+  else if (sType.startsWith('v')) sColor3 = sColor2 = sColor1 = "#7cfc00"
+  else if (sType.startsWith('adj')) sColor3 = sColor2 = sColor1 = "#ff0000"
+  else if (sType.startsWith('adv')) sColor3 = sColor2 = sColor1 = "#ffff00"
+  else if (sType.startsWith('prep')) sColor3 = sColor2 = sColor1 = "#800080"
+  else if (sType.startsWith('pron')) sColor3 = "#000080"
+  else if (sType.startsWith('conj')) { sColor3 = sColor2 = "#58FAF4"; sColor1 = "#61380B" }
+  else if (sType.startsWith('art')) sColor3 = "#000000"
+  else if (sType.startsWith('html')) sColor3 = sColor2 = sColor1 = "#e34c26"
+  return `color: ${sColor3};`
+}
+
 /** 🧹 Pulisce il codice dai tag personalizzati /_ _/ e dai triple backticks */
 const cleanCode = (rawCode: string): string => {
   if (!rawCode) return ''
@@ -242,7 +314,7 @@ const initializeCodeEditor = async (typeArg: string) => {
   // Crea nuovo editor
   const editorOptions = {
     value: typeArg === 'code' ? cleanCode(code.value) : (dictionary.value?.codeDescription || ''),
-    language: typeArg === 'code' ? detectLanguage(code.value || '') : (dictionary.value?.type || detectLanguage(dictionary.value?.codeDescription || '')),
+    language: typeArg === 'code' ? detectLanguage(code.value || '') : ((dictionary.value?.type === 'html' || dictionary.value?.type === 'css') ? dictionary.value.type : detectLanguage(dictionary.value?.codeDescription || '')),
     theme: 'vs-dark',
     automaticLayout: true,
     fontSize: 16,
@@ -431,6 +503,18 @@ watch(
   }
 )
 
+/** 🔧 Aggiorna editor dizionario al cambio voce */
+watch(
+  () => dictionary.value,
+  async (newDict) => {
+    if (type.value === 'dictionary' && codeEditor && newDict) {
+      codeEditor.setValue(newDict.codeDescription || '')
+      const language = (newDict.type === 'html' || newDict.type === 'css') ? newDict.type : detectLanguage(newDict.codeDescription || '')
+      monaco.editor.setModelLanguage(codeEditor.getModel(), language)
+    }
+  }
+)
+
 /** ⬅️➡️ Navigazione carosello con preload */
 const prevSlide = async () => {
   if (!carouselRef.value) {
@@ -461,38 +545,43 @@ const runAvatar = () => (showAvatar.value = 'run')
 const stopAvatar = () => (showAvatar.value = 'stop')
 const pauseAvatar = () => (showAvatar.value = 'stop')
 
-/** 📚 Dictionary */
-interface DictionaryItem {
-  type: string
-  item: string
-  fonetic?: string
-  description: string
-  path?: string
-  codeDescription?: string
-  links?: string
-  synonyms?: string
-  opposites?: string
-  note?: string
-  resolvedImageJpg?: string
-  resolvedImagePng?: string
-  resolvedAudio?: string
+/** 📚 Dictionary Logic */
+const searchTerm = ref('')
+const showResults = ref(false)
+
+const filteredResults = computed(() => {
+  if (!searchTerm.value) return []
+  const query = searchTerm.value.toLowerCase()
+  return (items.value as DictionaryItem[])
+    .map((item, index) => ({ ...item, index }))
+    .filter(item => 
+      item.item.toLowerCase().includes(query) || 
+      item.description.toLowerCase().includes(query)
+    )
+    .slice(0, 10) // Limit to 10 results for performance
+})
+
+const selectDictionaryItem = (index: number) => {
+  currentIndex.value = index
+  searchTerm.value = ''
+  showResults.value = false
 }
-const dictionary = computed<DictionaryItem | undefined>(() => items.value[currentIndex.value] as DictionaryItem)
-const colorTextDictionary = (sType: string): string => {
-  if (!sType) return ''
-  let sColor1 = "#ffffff", sColor2 = "#ffffff", sColor3 = "#ffffff"
-  if (sType.startsWith('n')) sColor3 = sColor2 = sColor1 = "#0000ff"
-  else if (sType.startsWith('v.past')) sColor3 = sColor2 = sColor1 = "#2e8b57"
-  else if (sType.startsWith('v')) sColor3 = sColor2 = sColor1 = "#7cfc00"
-  else if (sType.startsWith('adj')) sColor3 = sColor2 = sColor1 = "#ff0000"
-  else if (sType.startsWith('adv')) sColor3 = sColor2 = sColor1 = "#ffff00"
-  else if (sType.startsWith('prep')) sColor3 = sColor2 = sColor1 = "#800080"
-  else if (sType.startsWith('pron')) sColor3 = "#000080"
-  else if (sType.startsWith('conj')) { sColor3 = sColor2 = "#58FAF4"; sColor1 = "#61380B" }
-  else if (sType.startsWith('art')) sColor3 = "#000000"
-  else if (sType.startsWith('html')) sColor3 = sColor2 = sColor1 = "#e34c26"
-  return `color: ${sColor3};`
+
+// Close results when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  if (!target.closest('.dictionary-search')) {
+    showResults.value = false
+  }
 }
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 /** 🧹 Cleanup */
 onBeforeUnmount(() => {
@@ -773,69 +862,201 @@ watch(
   text-align: left !important; 
 }
 
-/* Dictionary */
-.dictionary { 
+/* Dictionary View (Dynamic) */
+.dictionary-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1rem;
+  background-color: #f1f5f9;
+}
+
+.dictionary-search {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 40rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.8rem 1rem 0.8rem 3rem;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+  background-color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  color: #94a3b8;
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.5rem;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.search-result-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.2s ease;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background-color: #f8fafc;
+}
+
+.result-word {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.result-desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-results {
+  padding: 1rem;
+  color: #64748b;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.dictionary-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.dictionary-card { 
   background-color: white; 
   text-align: center;
-  max-width: 60rem;
-  margin: 1.5rem auto;
-  padding: 3rem;
+  width: 100%;
+  max-width: 50rem;
+  padding: 1.5rem 2rem;
   border-radius: 24px;
-  box-shadow: 0 10px 50px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.dictionary h3 { 
+.dictionary-card h3 { 
   font-family: 'Fredericka the Great', cursive;
-  font-size: 3.5rem; 
-  margin: 0 0 1rem 0; 
+  font-size: 3rem; 
+  margin: 0 0 0.5rem 0; 
   color: #1e293b;
-  text-shadow: none;
+  flex-shrink: 0;
 }
 
-.dictionary p { 
+.fonetic { 
   text-align: center; 
   font-family: 'Julee', cursive; 
   font-size: 1.4rem; 
   color: #64748b;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1rem;
   font-style: italic;
+  flex-shrink: 0;
 }
 
-.dictionary h4 span { 
+.description span { 
   font-family: 'New Tegomin', serif;
   padding: 0.5rem; 
-  font-size: 1.8rem; 
+  font-size: 2rem; 
   color: #334155;
   border-bottom: 2px dashed #e2e8f0;
 }
 
-.dictionary img { 
-  height: auto; 
-  width: 85%;
-  margin: 2rem auto;
-  border-radius: 1.5rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+.dictionary-images {
+  margin-top: 1rem;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.dictionary-images img { 
+  max-height: 100%; 
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 1rem;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
 }
 
 .dictionary-extra {
-  margin: 1rem 0;
+  margin: 0.5rem 0;
   font-size: 1.1rem;
-  color: #777;
+  color: #64748b;
   font-style: italic;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .dictionary-note {
-  margin: 2rem auto;
-  padding: 1.5rem;
+  margin: 1rem auto 0 auto;
+  padding: 1rem;
   background-color: #fffde7;
-  border-left: 6px solid #fdd835;
+  border-left: 4px solid #fdd835;
   color: #444;
-  width: 95%;
+  width: 100%;
   text-align: left;
   font-style: normal;
   border-radius: 8px;
-  line-height: 1.6;
+  line-height: 1.5;
+  font-size: 1rem;
+  flex-shrink: 0;
+  max-height: 100px;
+  overflow-y: auto;
 }
 
 /* Chess wrapper responsive */

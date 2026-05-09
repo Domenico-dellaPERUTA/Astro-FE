@@ -145,38 +145,37 @@
           </template>
         </ActionButton>
 
-        <!-- NAVIGAZIONE -->
-        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel') && infoPageNum < 2" :onClick="firstPage">
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'dictionary') && infoPageNum < 2" :onClick="firstPage">
           <template #icon>
             <ChevronsLeft class="icon-small" />
           </template>
         </ActionButton>
-
-        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel') && infoPageNum < 2" :onClick="prevPage">
+ 
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'dictionary') && infoPageNum < 2" :onClick="prevPage">
           <template #icon>
             <ChevronLeft class="icon-small" />
           </template>
         </ActionButton>
-
-        <span :class="type !== 'carousel' ? 'page-info' : 'page-info-carousel'">
+ 
+        <span :class="(type !== 'carousel' && type !== 'dictionary') ? 'page-info' : 'page-info-carousel'">
           <template v-if="type === 'chess'">
             Mossa {{ chessCurrentMove }} / {{ chessTotalMoves }}
           </template>
-          <template v-else-if="type === 'carousel'">
+          <template v-else-if="type === 'carousel' || type === 'dictionary'">
             {{ currentIndex + 1 }} / {{ items.length }}
           </template>
           <template v-else>
             {{ infoPageNum }} / {{ infoMaxPageNum }}
           </template>
         </span>
-
-        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel') && infoPageNum >= infoMaxPageNum" :onClick="nextPage">
+ 
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'dictionary') && infoPageNum >= infoMaxPageNum" :onClick="nextPage">
           <template #icon>
             <ChevronRight class="icon-small" />
           </template>
         </ActionButton>
-
-        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel') && infoPageNum >= infoMaxPageNum" :onClick="lastPage">
+ 
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'dictionary') && infoPageNum >= infoMaxPageNum" :onClick="lastPage">
           <template #icon>
             <ChevronsRight class="icon-small" />
           </template>
@@ -193,7 +192,7 @@ import {
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,Image, Dot,GalleryThumbnails,Eye,
   RefreshCw, Info
 } from 'lucide-vue-next'
-import { computed, ref, onUnmounted } from 'vue'
+import { computed, ref, onUnmounted, watch } from 'vue'
 
 import { useInfoStore } from '../../store/info'
 import { usePageStore } from '../../store/page'
@@ -210,6 +209,16 @@ const infoStore = useInfoStore()
 const { title: infoTitle, page: infoPageNum, maxPage: infoMaxPageNum } = infoStore
 
 const carouselSlideInfo = computed(() => getCarouselSlideInfo())
+
+watch(currentIndex, (newIdx) => {
+  if (type.value === 'dictionary') {
+    infoStore.page.value = newIdx + 1
+    const currentItem = items.value[newIdx]
+    if (currentItem?.item) {
+      infoStore.title.value = currentItem.item
+    }
+  }
+})
 
 const currentIcon = computed(() => playAudio.value ? Volume2 : VolumeOff)
 
@@ -268,6 +277,12 @@ const nextPage = () => {
     setCarouselAction('next')
     return
   }
+  if (type.value === 'dictionary') {
+    if (currentIndex.value < items.value.length - 1) {
+      navigateToPage(currentIndex.value + 1)
+    }
+    return
+  }
   if (infoStore.page.value < infoStore.maxPage.value) {
     const nextIndex = infoStore.page.value
     navigateToSibling(nextIndex)
@@ -281,6 +296,12 @@ const prevPage = () => {
   }
   if (type.value === 'carousel') {
     setCarouselAction('prev')
+    return
+  }
+  if (type.value === 'dictionary') {
+    if (currentIndex.value > 0) {
+      navigateToPage(currentIndex.value - 1)
+    }
     return
   }
   if (infoStore.page.value > 1) {
@@ -298,6 +319,10 @@ const firstPage = () => {
     setCarouselAction('first')
     return
   }
+  if (type.value === 'dictionary') {
+    navigateToPage(0)
+    return
+  }
   if (infoStore.page.value > 1) {
     navigateToSibling(0)
   }
@@ -310,6 +335,10 @@ const lastPage = () => {
   }
   if (type.value === 'carousel') {
     setCarouselAction('last')
+    return
+  }
+  if (type.value === 'dictionary') {
+    navigateToPage(items.value.length - 1)
     return
   }
   if (infoStore.page.value < infoStore.maxPage.value) {
@@ -486,15 +515,26 @@ const getLinks = (type:string): Link[] => {
 }
 
 const onLinkSelect = (item: Link) => {
-    // Chiudi il popover
+  // Chiudi il popover
   isOpenOpposites.value = false
   isOpenLinks.value = false
+  
   setTimeout(() => {
+    // Se siamo in un dizionario, cerchiamo prima tra le voci del dizionario stesso
+    if (type.value === 'dictionary') {
+      const itemIndex = items.value.findIndex((i: any) => i.item === item.name)
+      if (itemIndex >= 0) {
+        navigateToPage(itemIndex)
+        return
+      }
+    }
+
+    // Altrimenti cerchiamo tra i siblings (altri topic)
     const sibling = siblings.value.find((s: any) => s.name === item.name)
     if (sibling?.link) {
       window.location.assign(sibling.link)
     }
-  },250)
+  }, 250)
 }
 
 </script>

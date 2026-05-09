@@ -31,7 +31,7 @@
 
       <!-- Sidebar destra -->
       <aside
-        v-if="siblings?.length >= 1"
+        v-if="siblings?.length >= 1 || type === 'dictionary'"
         class="sidebar-right"
       >
         <MenuPage />

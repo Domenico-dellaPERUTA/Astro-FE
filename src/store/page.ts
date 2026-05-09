@@ -52,21 +52,33 @@ const setPageData = (data: any) => {
     
     // Sincronizza Info Store
     const info = useInfoStore()
-    // La paginazione mostra la posizione tra i siblings
-    const siblingCount = siblings.value.length || 1
-    const currentSiblingIdx = siblings.value.findIndex(
-      (s: any) => s.link === data.route
-    )
-    info.setPage(topic.value, currentSiblingIdx >= 0 ? currentSiblingIdx + 1 : 1, siblingCount)
+    if (data.type === 'dictionary') {
+        // Per i dizionari, la paginazione riflette gli item interni
+        const currentItem = (data.items || [])[data.currentIndex || 0]
+        const displayTitle = currentItem?.item || data.topic || ''
+        info.setPage(displayTitle, (data.currentIndex || 0) + 1, (data.items || []).length || 1)
+    } else {
+        // La paginazione standard mostra la posizione tra i siblings (altri topic)
+        const siblingCount = siblings.value.length || 1
+        const currentSiblingIdx = siblings.value.findIndex(
+          (s: any) => s.link === data.route
+        )
+        info.setPage(topic.value, currentSiblingIdx >= 0 ? currentSiblingIdx + 1 : 1, siblingCount)
+    }
 }
 
-const navigateToPage = (index: number, updateUrl = false) => {
+const navigateToPage = (index: number) => {
     currentIndex.value = index
-    const info = useInfoStore()
-    info.page.value = index + 1
+    const infoStore = useInfoStore()
     
-    if (updateUrl) {
-       console.log('Navigate to page:', index)
+    if (type.value === 'dictionary') {
+        infoStore.page.value = index + 1
+        const currentItem = items.value[index]
+        if (currentItem?.item) {
+            infoStore.title.value = currentItem.item
+        }
+    } else {
+        infoStore.page.value = index + 1
     }
 }
 
