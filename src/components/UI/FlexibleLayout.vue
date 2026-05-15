@@ -100,6 +100,17 @@ onMounted(() => {
   window.addEventListener('resize', checkLayout)
 })
 
+// Watch for type changes (navigation) to reset menu state on desktop
+watch(type, (newType) => {
+  if (window.innerWidth > 1024) {
+    if (newType === 'home') {
+      showMenu.value = false
+    } else {
+      showMenu.value = true
+    }
+  }
+})
+
 function onSelectMenu(item: any): void {
   if (item.link && window.innerWidth <= 1024) {
     showMenu.value = false
@@ -137,7 +148,7 @@ function onSelectMenu(item: any): void {
 .sidebar-left {
   background-color: #121212 !important; /* Force solid carbon */
   overflow-y: auto;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, margin-left 0.3s ease;
   flex-shrink: 0;
   width: 20rem; 
   z-index: 10; /* Lower than content */
@@ -218,8 +229,11 @@ function onSelectMenu(item: any): void {
 @media (min-width: 1025px) {
   .sidebar-left {
     width: 20rem;
-    transform: none !important;
     z-index: 10;
+  }
+  
+  .sidebar-left:not(.is-open) {
+    margin-left: -20rem;
   }
 }
 

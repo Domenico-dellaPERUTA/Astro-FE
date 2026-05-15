@@ -161,11 +161,14 @@
           <template v-if="type === 'chess'">
             Mossa {{ chessCurrentMove }} / {{ chessTotalMoves }}
           </template>
-          <template v-else-if="type === 'carousel' || type === 'dictionary'">
-            {{ currentIndex + 1 }} / {{ items.length }}
+          <template v-else-if="type === 'carousel'">
+            Slide {{ currentIndex + 1 }} / {{ items.length }}
+          </template>
+          <template v-else-if="type === 'dictionary'">
+            Pagina {{ currentIndex + 1 }} / {{ items.length }}
           </template>
           <template v-else>
-            {{ infoPageNum }} / {{ infoMaxPageNum }}
+            Pagina {{ infoPageNum }} / {{ infoMaxPageNum }}
           </template>
         </span>
  
@@ -684,7 +687,17 @@ const onLinkSelect = (item: Link) => {
     padding: 0 0.5rem;
   }
   .header-secondary {
-    padding: 0 0.5rem;
+    flex-direction: column;
+    height: auto;
+    min-height: 5.5rem;
+    padding: 0.8rem 0.5rem;
+    gap: 0.6rem;
+    justify-content: center;
+  }
+  .page-nav {
+    width: 100%;
+    justify-content: center;
+    gap: 0.8rem;
   }
 }
 
