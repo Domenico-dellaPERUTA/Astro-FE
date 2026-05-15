@@ -400,8 +400,24 @@ function audioSrc(input: any) {
 /** 🔄 Gestione immagini statica */
 async function fetchImageIfNeeded(item: any) {
   const path = typeof item === 'object' ? item.image : item
-  if (!path || carouselImages.value[path]) return
-  carouselImages.value[path] = path
+  if (!path || carouselImages.value[path] || loadingImages.value.has(path)) return
+
+  loadingImages.value.add(path)
+  
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      carouselImages.value[path] = path
+      loadingImages.value.delete(path)
+      resolve(true)
+    }
+    img.onerror = () => {
+      carouselImages.value[path] = path
+      loadingImages.value.delete(path)
+      resolve(false)
+    }
+    img.src = path
+  })
 }
 
 /** 📥 Precarica immagini adiacenti all'indice corrente */
