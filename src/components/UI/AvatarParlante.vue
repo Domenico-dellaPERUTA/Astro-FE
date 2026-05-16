@@ -298,8 +298,21 @@ onMounted(() => {
 
   renderer = new THREE.WebGLRenderer({ canvas: canvasRef.value, antialias: true, alpha: true })
   renderer.setPixelRatio(window.devicePixelRatio)
-  renderer.setSize(280, 490)
   renderer.setClearColor(0x000000, 0)
+
+  // 📐 Gestione ridimensionamento responsive
+  const resizeObserver = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const width = entry.contentRect.width
+      const height = width / 0.57 // Mantiene l'aspect ratio originale
+      renderer.setSize(width, height)
+      camera.aspect = 0.57
+      camera.updateProjectionMatrix()
+    }
+  })
+  if (canvasRef.value.parentElement) {
+    resizeObserver.observe(canvasRef.value.parentElement)
+  }
 
   const ambientLight = new THREE.AmbientLight(0xffffff, 1.0)
   scene.add(ambientLight)
@@ -340,8 +353,8 @@ onBeforeUnmount(() => {
 }
 
 .avatar-canvas {
-  width: 280px;
-  height: 490px;
+  width: 100%;
+  height: auto;
   display: block;
   border-radius: 12px;
   background: transparent;

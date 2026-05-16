@@ -1,0 +1,33 @@
+# Abilita mod_rewrite
+RewriteEngine On
+
+# Base directory
+RewriteBase /
+
+# Supporto MIME types per modelli 3D e font
+AddType model/gltf-binary .glb
+AddType model/gltf+json .gltf
+AddType font/woff2 .woff2
+
+# Non reindirizzare file e directory esistenti (immagini, modelli, ecc)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Lista esplicita di estensioni da non reindirizzare
+RewriteCond %{REQUEST_URI} !^/.*\.(jpg|jpeg|png|gif|svg|webp|ico|css|js|json|woff|woff2|ttf|eot|mp3|mp4|webm|pdf|glb|gltf)$ [NC]
+
+# Reindirizza tutto il resto a index.html (per il routing Vue)
+RewriteRule ^(.*)$ index.html [L,QSA,NE]
+
+# Configurazione PHP Altervista
+AddHandler av-php8 .php
+
+# Headers per la gestione della cache della SPA
+<IfModule mod_headers.c>
+  # Evita il caching dell'index.html per garantire che l'utente veda sempre l'ultima versione dell'app
+  <FilesMatch "index\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+  </FilesMatch>
+</IfModule>

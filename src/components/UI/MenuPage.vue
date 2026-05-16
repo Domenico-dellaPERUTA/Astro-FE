@@ -94,9 +94,12 @@ function selectSibling(index: number) {
 
 <style scoped>
 
+.avatar-area {
+  width: 100%;
+}
+
 .avatar-3d {
   width: 100%;
-  max-width: 280px;
   margin: 0 auto 0.5rem auto;
   display: block;
 }
