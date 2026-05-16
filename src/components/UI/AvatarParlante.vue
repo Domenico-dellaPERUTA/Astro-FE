@@ -13,7 +13,7 @@ import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { usePageStore } from '../../store/page'
 
 // --- Props ---
-const props = defineProps<{
+const props = defineProps<{ 
   isSpeaking?: boolean
   modelPath?: string
 }>()
