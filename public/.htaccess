@@ -4,6 +4,11 @@ RewriteEngine On
 # Base directory
 RewriteBase /
 
+# Forza HTTPS
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteCond %{HTTPS} off
+RewriteRule .* https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
 # Supporto MIME types per modelli 3D e font
 AddType model/gltf-binary .glb
 AddType model/gltf+json .gltf
