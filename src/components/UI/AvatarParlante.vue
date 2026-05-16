@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { usePageStore } from '../../store/page'
 
@@ -80,6 +81,7 @@ function loadModel(path: string) {
   allBones.length = 0
 
   const loader = new GLTFLoader()
+  loader.setMeshoptDecoder(MeshoptDecoder)
   loader.load(path, (gltf) => {
     model = gltf.scene
     scene.add(model)
