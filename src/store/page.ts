@@ -17,6 +17,7 @@ const menuPath = ref('')
 
 // Parametri extra usati dai componenti
 const showAvatar = ref('stop')
+const avatarReady = ref(true)   // false mentre il modello 3D è in download
 const pathFile = ref('')
 const carouselRef = ref<any>(null)
 const audio = ref('')
@@ -132,6 +133,7 @@ export const usePageStore = () => {
         loading,
         error,
         showAvatar,
+        avatarReady,
         pathFile,
         carouselRef,
         siblings,

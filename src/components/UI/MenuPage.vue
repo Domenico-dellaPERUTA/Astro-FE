@@ -1,11 +1,19 @@
 <!-- app/components/UI/MenuPage.vue -->
 <template>
-  <img 
-    v-if="showAvatar == 'run'"
-    class="avatar" 
-    src="/avatar.gif"
-    alt="avatar animato"
-  />
+  <!-- Avatar 3D: sempre montato su desktop (scarica il modello una sola volta) -->
+  <div v-if="isDesktop" v-show="showAvatar === 'run'" class="avatar-area">
+    <!-- Loading indicator durante il download -->
+    <div v-if="showAvatar === 'run' && !avatarReady" class="avatar-loading">
+      <img src="/await.gif" alt="Caricamento avatar..." />
+      <p class="avatar-loading-label">Caricamento avatar...</p>
+    </div>
+    <!-- Canvas 3D: montato ma nascosto mentre il modello arriva -->
+    <AvatarParlante
+      :is-speaking="showAvatar === 'run'"
+      :style="showAvatar === 'run' && !avatarReady ? 'visibility:hidden;height:0;overflow:hidden' : ''"
+      class="avatar-3d"
+    />
+  </div>
 
   <ul class="right-menu">
     <li
@@ -29,9 +37,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { usePageStore } from '../../store/page'
 import { Bookmark } from 'lucide-vue-next'
+import AvatarParlante from './AvatarParlante.vue'
 
 interface Sibling {
   name: string;
@@ -41,7 +50,19 @@ interface Sibling {
 }
 
 const pageStore = usePageStore()
-const { siblings, topic, type, items, showAvatar, navigateToSibling, navigateToPage, currentIndex } = pageStore
+const { siblings, topic, type, items, showAvatar, avatarReady, navigateToSibling, navigateToPage, currentIndex } = pageStore
+
+// --- Desktop detection (sidebar destra visibile solo >=1501px) ---
+const isDesktop = ref(false)
+let resizeHandler: () => void
+onMounted(() => {
+  resizeHandler = () => { isDesktop.value = window.innerWidth >= 1501 }
+  resizeHandler()
+  window.addEventListener('resize', resizeHandler)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', resizeHandler)
+})
 
 const siblingsList = computed<any[]>(() => {
   if (type.value === 'dictionary') {
@@ -73,9 +94,32 @@ function selectSibling(index: number) {
 
 <style scoped>
 
-.avatar{
-  height: auto;
+.avatar-3d {
   width: 100%;
+  max-width: 280px;
+  margin: 0 auto 0.5rem auto;
+  display: block;
+}
+
+.avatar-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+}
+
+.avatar-loading img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+.avatar-loading-label {
+  font-size: 0.7rem;
+  color: #888;
+  font-family: sans-serif;
+  text-align: center;
 }
 
 .right-menu {

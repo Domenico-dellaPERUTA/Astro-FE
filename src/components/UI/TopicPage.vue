@@ -42,7 +42,7 @@
                   v-if="carouselImages[item.image || item]"
                   :id="`audio_${index}`"
                   :src="item.audio || audioSrc(item)"
-                  @play="runAvatar()"
+                  @play="runAvatar"
                   @ended="stopAvatar()"
                   @pause="pauseAvatar()"
                   controls
@@ -215,7 +215,7 @@ if (typeof window !== 'undefined') {
 
 
 const pageStore = usePageStore()
-const { topic, type, items, code, pgn, currentIndex, showAvatar, setCarouselRef, navigateToPage, audio, carouselAction, setCarouselAction } = pageStore
+const { topic, type, items, code, pgn, currentIndex, showAvatar, avatarReady, setCarouselRef, navigateToPage, audio, carouselAction, setCarouselAction } = pageStore
 
 watch(carouselAction, async (action) => {
   if (!action || !carouselRef.value) return
@@ -567,7 +567,13 @@ const nextSlide = async () => {
 }
 
 /** 🔊 Eventi audio/avatar */
-const runAvatar = () => (showAvatar.value = 'run')
+const runAvatar = (event: Event) => {
+  showAvatar.value = 'run'  // avvia sempre il download del modello
+  // Se il modello 3D è ancora in download su desktop, blocca l'audio
+  if (!avatarReady.value && window.innerWidth >= 1501) {
+    (event.target as HTMLAudioElement).pause()
+  }
+}
 const stopAvatar = () => (showAvatar.value = 'stop')
 const pauseAvatar = () => (showAvatar.value = 'stop')
 
