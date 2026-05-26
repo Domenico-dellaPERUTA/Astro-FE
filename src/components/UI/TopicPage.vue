@@ -188,7 +188,6 @@ import { Carousel, Slide } from 'vue3-carousel'
 import { ref, onMounted, watch, computed, nextTick, onBeforeUnmount, onUnmounted } from 'vue'
 import { usePageStore } from '../../store/page'
 import { useInfoStore } from '../../store/info'
-import { useAuthStore } from '../../store/auth'
 import ChessBoard from './ChessBoard.vue'
 
 
@@ -231,8 +230,6 @@ watch(carouselAction, async (action) => {
 
 const infoStore = useInfoStore()
 const { page: infoPageNum, maxPage: infoMaxPageNum } = infoStore
-
-const auth = useAuthStore()
 
 const renderedHtml = ref('')
 const renderedMarkdown = ref('')

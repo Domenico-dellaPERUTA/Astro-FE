@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@astrojs/vue": "^6.0.1",
-    "@nanostores/vue": "^1.1.0",
     "@tailwindcss/vite": "^4.2.2",
     "@types/three": "^0.184.1",
     "astro": "^6.1.7",
@@ -22,8 +21,6 @@
     "marked": "^18.0.2",
     "monaco-editor": "^0.53.0",
     "monaco-editor-vue3": "^1.0.5",
-    "nanostores": "^1.2.0",
-    "pinia": "^3.0.4",
     "tailwindcss": "^4.2.2",
     "three": "^0.184.0",
     "vue": "^3.5.32",
