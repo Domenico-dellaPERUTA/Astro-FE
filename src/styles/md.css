@@ -102,6 +102,34 @@
   color: #1a365d;
 }
 
+/* Link styles - same visual logic as .page a */
+.md a {
+  font-family: 'Julee', cursive;
+  font-weight: bold;
+  color: #265301;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.md a:hover {
+  color: #437a16;
+  border-bottom-color: #cfff04;
+  background: rgba(207, 255, 4, 0.05);
+}
+
+.md a[href^="https"], .md a[href^="http"] {
+  background: url("auto_stories.png") no-repeat 100% 0;
+  background-size: 1.2rem 1.2rem;
+  padding-right: 1.4rem;
+}
+
+.md a[href^="/"] {
+  background: url("tips_and_updates.png") no-repeat 100% 0;
+  background-size: 1.2rem 1.2rem;
+  padding-right: 1.5rem;
+}
+
 .md table {
   width: 100%;
   border-collapse: collapse;
