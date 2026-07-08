@@ -235,8 +235,33 @@ const renderedHtml = ref('')
 const renderedMarkdown = ref('')
 const markdownContainer = ref<HTMLElement | null>(null)
 
-// Import marked for Markdown rendering
-import { marked } from 'marked'
+// Import marked for Markdown rendering + syntax highlighting
+import { marked, Renderer } from 'marked'
+import hljs from 'highlight.js'
+
+// Configure marked with a custom renderer for syntax highlighting
+const mdRenderer = new Renderer()
+mdRenderer.code = function({ text, lang }: { text: string; lang?: string }) {
+  let highlighted: string
+  if (lang && hljs.getLanguage(lang)) {
+    try {
+      highlighted = hljs.highlight(text, { language: lang }).value
+    } catch (__) {
+      highlighted = text
+    }
+  } else {
+    // Auto-detect language if not specified
+    try {
+      highlighted = hljs.highlightAuto(text).value
+    } catch (__) {
+      highlighted = text
+    }
+  }
+  const langClass = lang ? ` language-${lang}` : ''
+  return `<pre class="hljs-pre"><code class="hljs${langClass}">${highlighted}</code></pre>`
+}
+
+marked.setOptions({ renderer: mdRenderer })
 
 
 
@@ -491,7 +516,7 @@ watch(
     } else if (type.value === 'md') {
       // Convert markdown to HTML using marked
       try {
-        renderedMarkdown.value = `<div class="md" > ${ marked(newCode || '') as string }</div>`
+        renderedMarkdown.value = marked(newCode || '') as string
       } catch (e) {
         console.error('[TopicPage] Markdown parse error:', e)
         renderedMarkdown.value = newCode || ''
@@ -517,7 +542,7 @@ watch(
       // Convert markdown to HTML
       await nextTick()
       try {
-        renderedMarkdown.value = `<div class="md" > ${ marked(code.value || '') as string }</div>`
+        renderedMarkdown.value = marked(code.value || '') as string
       } catch (e) {
         console.error('[TopicPage] Markdown parse error:', e)
         renderedMarkdown.value = code.value || ''

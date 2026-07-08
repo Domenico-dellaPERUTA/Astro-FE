@@ -38,14 +38,6 @@
     border-radius: 16px;
 }
 
-.md {
-    padding: 2.5rem;
-    background-color: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.06);
-    margin: 2.5rem auto;
-    max-width: 65rem;
-}
 
 .page div.testo {
     padding: 3rem;

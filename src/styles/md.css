@@ -1,48 +1,55 @@
 .md {
-  font-family: 'New Tegomin', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  line-height: 1.6;
-  font-size: 1.1rem;
-  color: #1a1a1a;
-  margin: 1rem;
-  padding: 1rem;
-  background-color: #fafafa;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  max-width: 950px;
-  margin-left: auto;
-  margin-right: auto;
+  font-family: 'New Tegomin', serif;
+  line-height: 1.7;
+  font-size: 1.15rem;
+  color: #222;
+  padding: 2.5rem;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+  width: 100%;
+  max-width: 65rem;
+  box-sizing: border-box;
+  margin: 2.5rem auto;
+  text-align: left;
 }
 
 .md h1 {
-  color: #1a365d;
+  font-family: 'Fredericka the Great', cursive;
   font-weight: normal;
-  font-size: 1.8rem;
-  margin: 1.5rem 0 1rem;
+  color: #0f172a;
+  font-size: 2.4rem;
+  margin: 2.5rem 0 1.25rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #4299e1;
+  border-bottom: 2px solid #e2e8f0;
+  line-height: 1.2;
 }
 
 .md h2 {
-  color: #2c5282;
+  font-family: 'Fredericka the Great', cursive;
   font-weight: normal;
-  font-size: 1.45rem;
-  margin: 1.25rem 0 0.75rem;
-  padding-left: 0.5rem;
-  border-left: 3px solid #4299e1;
+  color: #0f172a;
+  font-size: 1.8rem;
+  margin: 2.5rem 0 1.25rem;
+  padding-left: 1rem;
+  border-left: 4px solid #3b82f6;
+  line-height: 1.2;
 }
 
 .md h3 {
-  color: #2b6cb0;
+  font-family: 'Fredericka the Great', cursive;
   font-weight: normal;
-  font-size: 1.2rem;
-  margin: 1rem 0 0.5rem;
+  color: #0f172a;
+  font-size: 1.4rem;
+  margin: 1.5rem 0 0.75rem;
+  line-height: 1.2;
 }
 
 .md h4 {
-  color: #3182ce;
+  color: #0f172a;
   font-family: 'New Tegomin', sans-serif;
-  font-size: 1.15rem;
-  margin: 1rem 0 0.5rem;
+  font-size: 1.2rem;
+  margin: 1.25rem 0 0.5rem;
 }
 
 .md p {
@@ -58,28 +65,193 @@
   margin: 0.35rem 0;
 }
 
-.md pre {
-  background-color: #f7f6f6;
-  padding: 1rem;
-  border-radius: 4px;
-  overflow-x: auto;
-  margin: 1rem;
-  font-size: 0.95rem;
-}
+/* ══════════════════════════════════════════════════════════════
+   CODE BLOCKS — IDE-style with syntax highlighting (hljs)
+   ══════════════════════════════════════════════════════════════ */
 
-.md code {
-  font-family: 'Lucida Console', 'Courier New', monospace;
-  background-color: #edf2f7;
-  color: #1254fa;
-  padding: 0.15rem 0.35rem;
-  border-radius: 3px;
-  font-size: 0.9em;
-}
-
-.md pre code {
-  background-color: transparent;
-  color: #000000;
+.md pre.hljs-pre {
+  position: relative;
+  background: #1e1e2e;
+  border-radius: 10px;
+  margin: 1.25rem 0;
   padding: 0;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.25),
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.md pre.hljs-pre code.hljs {
+  display: block;
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', 'Consolas', 'Liberation Mono', 'Menlo', monospace;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  tab-size: 2;
+  color: #cdd6f4;
+  background: transparent;
+  border-radius: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar for code blocks */
+.md pre.hljs-pre code.hljs::-webkit-scrollbar {
+  height: 6px;
+}
+.md pre.hljs-pre code.hljs::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+.md pre.hljs-pre code.hljs::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+}
+.md pre.hljs-pre code.hljs::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Language badge decoration */
+.md pre.hljs-pre::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, #89b4fa, #cba6f7, #f38ba8, #fab387);
+  border-radius: 10px 10px 0 0;
+}
+
+/* Language-specific top bar colors */
+.md pre.hljs-pre:has(code.language-sql)::before { background: linear-gradient(90deg, #f9e2af, #fab387); }
+.md pre.hljs-pre:has(code.language-python)::before { background: linear-gradient(90deg, #89b4fa, #a6e3a1); }
+.md pre.hljs-pre:has(code.language-javascript)::before,
+.md pre.hljs-pre:has(code.language-js)::before { background: linear-gradient(90deg, #f9e2af, #fab387); }
+.md pre.hljs-pre:has(code.language-typescript)::before,
+.md pre.hljs-pre:has(code.language-ts)::before { background: linear-gradient(90deg, #89b4fa, #74c7ec); }
+.md pre.hljs-pre:has(code.language-html)::before { background: linear-gradient(90deg, #f38ba8, #fab387); }
+.md pre.hljs-pre:has(code.language-css)::before { background: linear-gradient(90deg, #89b4fa, #cba6f7); }
+.md pre.hljs-pre:has(code.language-java)::before { background: linear-gradient(90deg, #f38ba8, #fab387); }
+.md pre.hljs-pre:has(code.language-rust)::before { background: linear-gradient(90deg, #fab387, #f38ba8); }
+.md pre.hljs-pre:has(code.language-cpp)::before,
+.md pre.hljs-pre:has(code.language-c)::before { background: linear-gradient(90deg, #89b4fa, #74c7ec); }
+.md pre.hljs-pre:has(code.language-bash)::before,
+.md pre.hljs-pre:has(code.language-shell)::before { background: linear-gradient(90deg, #a6e3a1, #94e2d5); }
+.md pre.hljs-pre:has(code.language-json)::before { background: linear-gradient(90deg, #f9e2af, #a6e3a1); }
+.md pre.hljs-pre:has(code.language-text)::before { background: linear-gradient(90deg, #9399b2, #7f849c); }
+
+/* ═══ Highlight.js Token Colors (Catppuccin Mocha inspired) ═══ */
+
+/* Keywords: if, else, return, function, const, let, var, SELECT, FROM, WHERE, etc. */
+.md .hljs-keyword,
+.md .hljs-selector-tag { color: #cba6f7; }
+
+/* Built-in types, classes */
+.md .hljs-built_in,
+.md .hljs-type { color: #f9e2af; }
+
+/* Strings */
+.md .hljs-string,
+.md .hljs-template-variable,
+.md .hljs-addition { color: #a6e3a1; }
+
+/* Numbers & literals */
+.md .hljs-number,
+.md .hljs-literal { color: #fab387; }
+
+/* Comments */
+.md .hljs-comment,
+.md .hljs-quote { color: #6c7086; font-style: italic; }
+
+/* Function names */
+.md .hljs-title,
+.md .hljs-title.function_ { color: #89b4fa; }
+
+/* Class & type names */
+.md .hljs-title.class_ { color: #f9e2af; }
+
+/* Variables, parameters */
+.md .hljs-variable,
+.md .hljs-params { color: #f2cdcd; }
+
+/* Attributes (HTML), properties */
+.md .hljs-attr,
+.md .hljs-attribute { color: #89dceb; }
+
+/* Operators: =, +, -, >, <, etc. */
+.md .hljs-operator { color: #94e2d5; }
+
+/* Tags (HTML) */
+.md .hljs-tag { color: #f38ba8; }
+.md .hljs-name { color: #f38ba8; }
+
+/* Punctuation */
+.md .hljs-punctuation { color: #bac2de; }
+
+/* Symbols, regex */
+.md .hljs-symbol,
+.md .hljs-regexp { color: #f5c2e7; }
+
+/* Meta, preprocessor */
+.md .hljs-meta { color: #f38ba8; }
+.md .hljs-meta .hljs-keyword { color: #fab387; }
+.md .hljs-meta .hljs-string { color: #a6e3a1; }
+
+/* Deletion (diffs) */
+.md .hljs-deletion { color: #f38ba8; background: rgba(243, 139, 168, 0.1); }
+.md .hljs-addition { color: #a6e3a1; background: rgba(166, 227, 161, 0.1); }
+
+/* Selection highlight */
+.md .hljs-emphasis { font-style: italic; }
+.md .hljs-strong { font-weight: bold; }
+
+/* Section headers in code */
+.md .hljs-section { color: #89b4fa; font-weight: bold; }
+
+/* Link in code */
+.md .hljs-link { color: #89b4fa; text-decoration: underline; }
+
+/* ═══ Fallback plain pre (no highlight.js) ═══ */
+.md pre:not(.hljs-pre) {
+  background: #1e1e2e;
+  color: #cdd6f4;
+  padding: 1.25rem 1.5rem;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Inline code */
+.md code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  background-color: #e8eaed;
+  color: #d2386c;
+  padding: 0.15rem 0.45rem;
+  border-radius: 5px;
+  font-size: 0.88em;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Reset inline code styles inside code blocks */
+.md pre code,
+.md pre.hljs-pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  font-size: inherit;
 }
 
 .md blockquote {

@@ -17,6 +17,7 @@
     "@types/three": "^0.184.1",
     "astro": "^6.1.7",
     "chess.js": "^1.4.0",
+    "highlight.js": "^11.11.1",
     "lucide-vue-next": "^1.0.0",
     "marked": "^18.0.2",
     "monaco-editor": "^0.53.0",
