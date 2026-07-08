@@ -10,13 +10,13 @@
 }
 
 .page h2 {
-    font-size: 2.4rem;
+    font-size: 2.0rem;
     border-bottom: 2px solid #e2e8f0;
     padding-bottom: 0.5rem;
 }
 
 .page h3 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     border-left: 4px solid #3b82f6; /* Elegant blue accent */
     padding-left: 1rem;
     background: transparent;
@@ -129,3 +129,6 @@
     max-width: 100%;
     height: auto;
 }
+
+
+

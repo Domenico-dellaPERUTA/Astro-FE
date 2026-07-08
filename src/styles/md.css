@@ -18,7 +18,7 @@
   font-family: 'Fredericka the Great', cursive;
   font-weight: normal;
   color: #0f172a;
-  font-size: 2.4rem;
+  font-size: 2.0rem;
   margin: 2.5rem 0 1.25rem;
   padding-bottom: 0.5rem;
   border-bottom: 2px solid #e2e8f0;
@@ -29,7 +29,7 @@
   font-family: 'Fredericka the Great', cursive;
   font-weight: normal;
   color: #0f172a;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   margin: 2.5rem 0 1.25rem;
   padding-left: 1rem;
   border-left: 4px solid #3b82f6;
@@ -40,7 +40,7 @@
   font-family: 'Fredericka the Great', cursive;
   font-weight: normal;
   color: #0f172a;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   margin: 1.5rem 0 0.75rem;
   line-height: 1.2;
 }
@@ -48,7 +48,7 @@
 .md h4 {
   color: #0f172a;
   font-family: 'New Tegomin', sans-serif;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   margin: 1.25rem 0 0.5rem;
 }
 
@@ -322,3 +322,5 @@
   font-family: 'Lucida Console', 'Courier New', monospace;
   font-size: 1rem;
 }
+
+
