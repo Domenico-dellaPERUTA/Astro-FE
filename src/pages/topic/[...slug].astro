@@ -141,8 +141,8 @@ const pageData = {
   type: topic.data.type,
   topic: virtualTitle || topic.data.title,
   route: virtualTitle
-    ? `/topic/${topic.id}/${virtualTitle}`
-    : `/topic/${topic.id}`,
+    ? `/topic/${topic.id}/${virtualTitle}/`
+    : `/topic/${topic.id}/`,
   code: resolvedBody,
   items: resolvedItems,
   pgn: topic.data.pgn || "",

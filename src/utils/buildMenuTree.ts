@@ -81,7 +81,7 @@ export function buildMenuTree(topics: TopicEntry[]): TreeNode[] {
     // [MODIFICA] Aggiungi il topic stesso come nodo foglia nella cartella finale
     currentLevel.push({
       name: topic.data.title,
-      link: `/topic/${topic.id}`,
+      link: `/topic/${topic.id}/`,
       type: topic.data.type,
       index: topic.data.index ?? 1,
       isFolder: false
@@ -124,7 +124,7 @@ function addLinksToLeafFolders(
         const firstFile = filesInCategory.sort((a, b) => (a.data.index ?? 1) - (b.data.index ?? 1))[0];
         
         if (firstFile) {
-          (node as any).link = `/topic/${firstFile.id}`;
+          (node as any).link = `/topic/${firstFile.id}/`;
           (node as any).type = firstFile.data.type;
           (node as any).index = firstFile.data.index ?? 1;
         }
@@ -161,7 +161,7 @@ export function findSiblings(topics: TopicEntry[], currentMenuPath: string): Tre
     .filter(t => (t.data.menu || "") === (currentMenuPath || ""))
     .map(t => ({
       name: t.data.title,
-      link: `/topic/${t.id}`,
+      link: `/topic/${t.id}/`,
       type: t.data.type,
       index: t.data.index ?? 1,
       isFolder: false,
