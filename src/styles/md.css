@@ -56,13 +56,21 @@
   margin: 0.75rem 0;
 }
 
-.md ul, .md ol {
+.md ul {
   margin: 0.5rem 0;
   padding-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.md ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+  list-style-type: decimal;
 }
 
 .md li {
   margin: 0.35rem 0;
+  display: list-item;
 }
 
 /* ══════════════════════════════════════════════════════════════
