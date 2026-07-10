@@ -101,7 +101,7 @@
 
         <!-- AUDIO -->
         <ActionButton
-          v-if="type == 'code' || type == 'md'"
+          v-if="type == 'code' || type == 'md' || type == 'html'"
           :onClick="playAudio ? onRunAudio : onStopAudio"
         >
           <template #icon>
@@ -205,7 +205,7 @@ const pageStore = usePageStore()
 const { 
   topic, type, items, currentIndex, pathFile, showAvatar, chessCurrentMove, chessTotalMoves, carouselRef,
   navigateToHome, navigateToPage, navigateToSibling, toggleChessFlip, setChessMove, setCarouselAction,
-  isInfoOpen, getCarouselSlideInfo
+  isInfoOpen, getCarouselSlideInfo, code
 } = pageStore
 
 const infoStore = useInfoStore()
@@ -375,34 +375,80 @@ async function fileExists(url:string) {
 // ▶️ Avvia l'audio (robusto)
 const onRunAudio = async () => {
   let sPath: string = pathFile.value ?? ''
-  if (!sPath) return
-
-  if (!sPath.toLowerCase().endsWith('.mp3')) {
-    sPath = '/'+sPath.replace(/\.[^/.]+$/, '.mp3')
-  } else {
-    sPath = '/'+sPath
-  }
+  let exists = false;
 
   // evita click multipli mentre controlliamo/avviamo
   if (checkingAudio.value) return
   checkingAudio.value = true
 
-  // se c'è già audio in riproduzione lo fermiamo prima di verificare il nuovo
+  // se c'è già audio in riproduzione lo fermiamo prima di verificare il nuovo o usare TTS
   if (audio instanceof HTMLAudioElement) {
     audio.pause()
     audio.currentTime = 0
     audio = null
   }
 
-  const exists = await fileExists(sPath)
+  if (sPath) {
+    if (!sPath.toLowerCase().endsWith('.mp3')) {
+      sPath = '/'+sPath.replace(/\.[^/.]+$/, '.mp3')
+    } else {
+      sPath = '/'+sPath
+    }
+
+    exists = await fileExists(sPath)
+  }
+  
   checkingAudio.value = false
 
   if (!exists) {
-    // fallback UX: log e reset stato (puoi mostrare un toast)
-    console.error(`File non trovato: ${sPath}`)
-    // ripristina avatar/stato
-    showAvatar.value = 'stop'
-    playAudio.value = true
+    // Non avviamo la voce sintetica per il codice (type: code)
+    if (type.value === 'code') {
+      console.warn(`Nessun audio trovato per il codice. Voce sintetica disabilitata.`);
+      showAvatar.value = 'stop'
+      playAudio.value = true
+      return
+    }
+
+    console.warn(`Audio non trovato: ${sPath || 'percorso vuoto'}. Avvio sintesi vocale...`)
+    
+    // Preparazione del testo
+    const textToRead = code.value || topic.value || "Testo non disponibile";
+    let plainText = textToRead;
+    if (type.value === 'html' || type.value === 'md') {
+       const tempDiv = document.createElement('div');
+       tempDiv.innerHTML = textToRead; 
+       plainText = tempDiv.textContent || tempDiv.innerText || "";
+       plainText = plainText.replace(/[#*`_~=\[\]]/g, ''); // Rimuovi markdown residuo
+    }
+
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(plainText);
+        utterance.lang = 'it-IT'; 
+        
+        utterance.onstart = () => {
+            showAvatar.value = 'run'
+            playAudio.value = false
+        };
+        
+        utterance.onend = () => {
+            showAvatar.value = 'stop'
+            playAudio.value = true
+        };
+        
+        utterance.onerror = (e) => {
+            console.error("Speech synthesis error", e);
+            showAvatar.value = 'stop'
+            playAudio.value = true
+        };
+
+        window.speechSynthesis.speak(utterance);
+    } else {
+        console.error("Speech synthesis non supportata dal browser");
+        showAvatar.value = 'stop'
+        playAudio.value = true
+    }
     return
   }
 
@@ -461,6 +507,9 @@ const onStopAudio = () => {
     try { audio.currentTime = 0 } catch (e) { /* ignore */ }
     audio = null
   }
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
   playAudio.value = true
   showAvatar.value = 'stop'
 }
@@ -470,6 +519,9 @@ onUnmounted(() => {
   if (audio) {
     try { audio.pause() } catch(e) {}
     audio = null
+  }
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
   }
 })
 
