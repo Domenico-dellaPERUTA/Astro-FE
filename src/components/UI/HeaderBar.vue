@@ -427,6 +427,30 @@ const onRunAudio = async () => {
         const utterance = new SpeechSynthesisUtterance(plainText);
         utterance.lang = 'it-IT'; 
         
+        // --- Forzare voce femminile ---
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            const itVoices = voices.filter(v => v.lang.startsWith('it'));
+            const femaleVoice = itVoices.find(v => 
+                v.name.includes('Emma') || 
+                v.name.includes('Federica') || 
+                v.name.includes('Elsa') || 
+                v.name.includes('Carla') || 
+                v.name.includes('Bianca') || 
+                v.name.includes('Alice') || 
+                v.name.includes('Paola') || 
+                v.name.includes('Luciana') || 
+                v.name.includes('Martina') || 
+                v.name.includes('Google italiano') // Su Chrome Android/PC è spesso femminile di default
+            );
+            
+            if (femaleVoice) {
+                utterance.voice = femaleVoice;
+            } else if (itVoices.length > 0) {
+                utterance.voice = itVoices[0]; // fallback a una voce italiana qualsiasi
+            }
+        }
+        
         utterance.onstart = () => {
             showAvatar.value = 'run'
             playAudio.value = false
