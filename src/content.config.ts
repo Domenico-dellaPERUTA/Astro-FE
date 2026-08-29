@@ -5,7 +5,7 @@ const topicsCollection = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/topics" }),
   schema: z.object({
     title: z.string(),
-    type: z.enum(['html', 'code', 'carousel', 'dictionary', 'chess', 'home', 'md']).default('html'),
+    type: z.enum(['html', 'code', 'carousel', 'video', 'dictionary', 'chess', 'home', 'md']).default('html'),
     
     // Nuovo sistema gerarchico
     menu: z.string().optional().default('Uncategorized'), // Percorso: "Programmazione/Rust 🦀"
@@ -26,6 +26,16 @@ const topicsCollection = defineCollection({
     
     // Audio per code
     audio: z.string().optional(),
+    
+    // Dati specifici per il video carousel (lista URL video esterni)
+    videos: z.array(z.union([
+      z.string(),
+      z.object({
+        url: z.string(),
+        title: z.string().optional(),
+        text: z.string().optional()
+      })
+    ])).optional(),
     
     // Dati per dizionario
     dictionary: z.array(z.object({

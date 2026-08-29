@@ -120,6 +120,17 @@ if (topic.data.type === "carousel") {
       originalPath: imgPath, // teniamolo per compatibilità o debug
     };
   });
+} else if (topic.data.type === "video") {
+  resolvedItems = (topic.data.videos || []).map((vid) => {
+    const vidUrl = typeof vid === "object" ? vid.url : vid;
+    const vidTitle = typeof vid === "object" ? vid.title : undefined;
+    const vidText = typeof vid === "object" ? vid.text : undefined;
+    return {
+      url: vidUrl,
+      title: vidTitle,
+      text: vidText,
+    };
+  });
 } else if (topic.data.type === "dictionary" && topic.data.dictionary) {
   // Risolviamo gli asset per tutti gli elementi del dizionario
   resolvedItems = topic.data.dictionary.map((item) => {

@@ -136,7 +136,7 @@
 
         <!-- Pulsante Info per carousel -->
         <ActionButton 
-          v-if="type === 'carousel' && carouselSlideInfo.hasInfo" 
+          v-if="(type === 'carousel' || type === 'video') && carouselSlideInfo.hasInfo" 
           customClass="info-btn-blink"
           :onClick="() => isInfoOpen = true"
         >
@@ -145,24 +145,38 @@
           </template>
         </ActionButton>
 
-        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'dictionary') && infoPageNum < 2" :onClick="firstPage">
+        <!-- Pulsante Schermo Intero per video -->
+        <ActionButton 
+          v-if="type === 'video'" 
+          :onClick="toggleVideoFullscreen"
+          :title="isVideoFullscreen ? 'Esci da schermo intero' : 'Schermo intero'"
+        >
+          <template #icon>
+            <component :is="isVideoFullscreen ? Shrink : Expand" class="icon-small" />
+          </template>
+        </ActionButton>
+
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'video' && type !== 'dictionary') && infoPageNum < 2" :onClick="firstPage">
           <template #icon>
             <ChevronsLeft class="icon-small" />
           </template>
         </ActionButton>
  
-        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'dictionary') && infoPageNum < 2" :onClick="prevPage">
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'video' && type !== 'dictionary') && infoPageNum < 2" :onClick="prevPage">
           <template #icon>
             <ChevronLeft class="icon-small" />
           </template>
         </ActionButton>
  
-        <span :class="(type !== 'carousel' && type !== 'dictionary') ? 'page-info' : 'page-info-carousel'">
+        <span :class="(type !== 'carousel' && type !== 'video' && type !== 'dictionary') ? 'page-info' : 'page-info-carousel'">
           <template v-if="type === 'chess'">
             Mossa {{ chessCurrentMove }} / {{ chessTotalMoves }}
           </template>
           <template v-else-if="type === 'carousel'">
             Slide {{ currentIndex + 1 }} / {{ items.length }}
+          </template>
+          <template v-else-if="type === 'video'">
+            Video {{ currentIndex + 1 }} / {{ items.length }}
           </template>
           <template v-else-if="type === 'dictionary'">
             Pagina {{ currentIndex + 1 }} / {{ items.length }}
@@ -172,13 +186,13 @@
           </template>
         </span>
  
-        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'dictionary') && infoPageNum >= infoMaxPageNum" :onClick="nextPage">
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'video' && type !== 'dictionary') && infoPageNum >= infoMaxPageNum" :onClick="nextPage">
           <template #icon>
             <ChevronRight class="icon-small" />
           </template>
         </ActionButton>
  
-        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'dictionary') && infoPageNum >= infoMaxPageNum" :onClick="lastPage">
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'video' && type !== 'dictionary') && infoPageNum >= infoMaxPageNum" :onClick="lastPage">
           <template #icon>
             <ChevronsRight class="icon-small" />
           </template>
@@ -193,7 +207,7 @@
 import { 
   Menu, Home, Volume2, VolumeOff, Link,CircleSlash2,Scale,NotebookPen,EyeOff, User2,Castle,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,Image, Dot,GalleryThumbnails,Eye,
-  RefreshCw, Info
+  RefreshCw, Info, Expand, Shrink
 } from 'lucide-vue-next'
 import { computed, ref, onUnmounted, watch } from 'vue'
 
@@ -205,7 +219,7 @@ const pageStore = usePageStore()
 const { 
   topic, type, items, currentIndex, pathFile, showAvatar, chessCurrentMove, chessTotalMoves, carouselRef,
   navigateToHome, navigateToPage, navigateToSibling, toggleChessFlip, setChessMove, setCarouselAction,
-  isInfoOpen, getCarouselSlideInfo, code
+  isInfoOpen, getCarouselSlideInfo, code, isVideoFullscreen, toggleVideoFullscreen
 } = pageStore
 
 const infoStore = useInfoStore()
@@ -280,6 +294,10 @@ const nextPage = () => {
     setCarouselAction('next')
     return
   }
+  if (type.value === 'video') {
+    setCarouselAction('next')
+    return
+  }
   if (type.value === 'dictionary') {
     if (currentIndex.value < items.value.length - 1) {
       navigateToPage(currentIndex.value + 1)
@@ -298,6 +316,10 @@ const prevPage = () => {
     return
   }
   if (type.value === 'carousel') {
+    setCarouselAction('prev')
+    return
+  }
+  if (type.value === 'video') {
     setCarouselAction('prev')
     return
   }
@@ -322,6 +344,10 @@ const firstPage = () => {
     setCarouselAction('first')
     return
   }
+  if (type.value === 'video') {
+    setCarouselAction('first')
+    return
+  }
   if (type.value === 'dictionary') {
     navigateToPage(0)
     return
@@ -337,6 +363,10 @@ const lastPage = () => {
     return
   }
   if (type.value === 'carousel') {
+    setCarouselAction('last')
+    return
+  }
+  if (type.value === 'video') {
     setCarouselAction('last')
     return
   }

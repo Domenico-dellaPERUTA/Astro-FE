@@ -29,6 +29,28 @@ const chessTotalMoves = ref(0)
 const chessFlipped = ref(false)
 const chessMove = ref<string | null>(null)
 const carouselAction = ref<string | null>(null)
+const isVideoFullscreen = ref(false)
+
+const toggleVideoFullscreen = () => {
+    const container = document.querySelector('.video-carousel-container') || document.querySelector('.carousel-container')
+    if (!document.fullscreenElement) {
+        if (container?.requestFullscreen) {
+            container.requestFullscreen().catch(() => {})
+        } else if ((container as any)?.webkitRequestFullscreen) {
+            (container as any).webkitRequestFullscreen()
+        } else if ((container as any)?.msRequestFullscreen) {
+            (container as any).msRequestFullscreen()
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {})
+        } else if ((document as any).webkitExitFullscreen) {
+            (document as any).webkitExitFullscreen()
+        } else if ((document as any).msExitFullscreen) {
+            (document as any).msExitFullscreen()
+        }
+    }
+}
 
 const setPageData = (data: any) => {
     // Reset pathFile prima di tutto per evitare valori residui
@@ -154,6 +176,8 @@ export const usePageStore = () => {
         toggleChessFlip,
         setChessMove,
         carouselAction,
-        setCarouselAction
+        setCarouselAction,
+        isVideoFullscreen,
+        toggleVideoFullscreen
     }
 }

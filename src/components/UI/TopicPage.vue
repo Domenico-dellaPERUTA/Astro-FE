@@ -91,6 +91,83 @@
       </div>
     </div>
 
+    <!------------------------------- 🧩 VIDEO CAROUSEL ---------------------------------------->
+    <div v-else-if="type === 'video'" class="carousel-container video-carousel-container relative">
+      <Carousel
+        ref="carouselRef"
+        :items-to-show="1"
+        :wrap-around="true"
+        :transition="70"
+        class="rounded-2xl overflow-hidden"
+        @slide-start="onVideoSlideChange"
+      >
+        <Slide v-for="(item, index) in items" :key="index">
+          <div class="slide">
+            <div class="slide-content">
+              <div class="video-frame-wrapper">
+                <button
+                  class="video-fullscreen-btn"
+                  :title="isVideoFullscreen ? 'Esci da schermo intero' : 'Schermo intero'"
+                  @click="toggleVideoFullscreen"
+                >
+                  <svg v-if="!isVideoFullscreen" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                  </svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                  </svg>
+                </button>
+                <iframe
+                  v-if="index === currentIndex || Math.abs(index - currentIndex) <= 1"
+                  :src="toEmbedUrl(typeof item === 'object' ? item.url : item)"
+                  class="video-frame"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                  allowfullscreen
+                ></iframe>
+                <div v-else class="image-placeholder">
+                  <img src="/await.gif" alt="loading">
+                </div>
+              </div>
+            </div>
+          </div>
+        </Slide>
+      </Carousel>
+
+      <!-- Pulsante sinistro -->
+      <button class="nav-btn left" @click="prevSlide">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+          stroke-width="2" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <!-- Pulsante destro -->
+      <button class="nav-btn right" @click="nextSlide">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+          stroke-width="2" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      <!-- Finestra Dialog Info -->
+      <div v-if="isInfoOpen" class="info-dialog-overlay" @click="isInfoOpen = false">
+        <div class="info-dialog" @click.stop>
+          <button class="close-btn" @click="isInfoOpen = false">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+          <div class="info-dialog-header">
+            <h3>{{ currentSlideInfo.title || 'Informazioni' }}</h3>
+          </div>
+          <div class="info-dialog-body">
+            <p>{{ currentSlideInfo.text }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-------------------------- 🧩 DICTIONARY ---------------------------------->
     <div v-else-if="type === 'dictionary'" class="dictionary-view">
       <!-- Search Bar -->
@@ -214,7 +291,7 @@ if (typeof window !== 'undefined') {
 
 
 const pageStore = usePageStore()
-const { topic, type, items, code, pgn, currentIndex, showAvatar, avatarReady, setCarouselRef, navigateToPage, audio, carouselAction, setCarouselAction } = pageStore
+const { topic, type, items, code, pgn, currentIndex, showAvatar, avatarReady, setCarouselRef, navigateToPage, audio, carouselAction, setCarouselAction, isVideoFullscreen, toggleVideoFullscreen } = pageStore
 
 watch(carouselAction, async (action) => {
   if (!action || !carouselRef.value) return
@@ -401,6 +478,28 @@ const detectLanguage = (code: string): string => {
   return 'javascript' // Default
 }
 
+/** 🎬 Converte URL video in formato embed */
+function toEmbedUrl(url: string): string {
+  if (!url) return ''
+  // YouTube standard: https://www.youtube.com/watch?v=VIDEO_ID
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/)
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`
+  // YouTube Shorts: https://www.youtube.com/shorts/VIDEO_ID
+  const ytShort = url.match(/youtube\.com\/shorts\/([\w-]+)/)
+  if (ytShort) return `https://www.youtube.com/embed/${ytShort[1]}`
+  // Vimeo: https://vimeo.com/VIDEO_ID
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`
+  // Fallback: usa l'URL così com'è (potrebbe essere già un embed URL)
+  return url
+}
+
+/** 🎯 Evento cambio slide dal video carousel */
+function onVideoSlideChange(data: any) {
+  const newIndex = data?.currentSlideIndex ?? 0
+  currentIndex.value = newIndex
+}
+
 /** 🔧 Percorso immagine normalizzato */
 function normalizedSrc(input: any) {
   const path = typeof input === 'object' ? input.image : input
@@ -473,7 +572,7 @@ async function onSlideChange(data: any) {
 watch(
   () => items.value,
   async (newItems) => {
-    if (Array.isArray(newItems) && newItems.length > 0 && type.value === 'carousel') {
+    if (Array.isArray(newItems) && newItems.length > 0 && (type.value === 'carousel' || type.value === 'video')) {
       // Reset cache immagini
       carouselImages.value = {}
       loadingImages.value.clear()
@@ -490,7 +589,7 @@ watch(
 
 /** 🔧 Setup carosello */
 onMounted(() => {
-  if (type.value === 'carousel' && carouselRef.value) {
+  if ((type.value === 'carousel' || type.value === 'video') && carouselRef.value) {
     setCarouselRef(carouselRef.value)
   }
 })
@@ -530,7 +629,7 @@ watch(
 watch(
   () => type.value,
   async (newType) => {
-    if (newType === 'carousel') {
+    if (newType === 'carousel' || newType === 'video') {
       await nextTick()
       if (carouselRef.value) {
         setCarouselRef(carouselRef.value)
@@ -629,12 +728,20 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
+const updateFullscreenStatus = () => {
+  isVideoFullscreen.value = !!document.fullscreenElement
+}
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  document.addEventListener('fullscreenchange', updateFullscreenStatus)
+  document.addEventListener('webkitfullscreenchange', updateFullscreenStatus)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('fullscreenchange', updateFullscreenStatus)
+  document.removeEventListener('webkitfullscreenchange', updateFullscreenStatus)
 })
 
 /** 🧹 Cleanup */
@@ -1151,4 +1258,112 @@ watch(
   }
 }
 
+.video-frame-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+  height: 0;
+  overflow: hidden;
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  background-color: #000;
+}
+
+.video-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 1rem;
+}
+
+.video-fullscreen-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  padding: 0.45rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+}
+
+.video-fullscreen-btn:hover {
+  background: rgba(0, 0, 0, 0.95);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* 📺 Modalità a tutto schermo per il carosello video */
+:fullscreen.video-carousel-container,
+:-webkit-full-screen.video-carousel-container {
+  max-width: 100vw !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #000 !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+:fullscreen .slide,
+:-webkit-full-screen .slide {
+  height: 100vh !important;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:fullscreen .slide-content,
+:-webkit-full-screen .slide-content {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100vw !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:fullscreen .video-frame-wrapper,
+:-webkit-full-screen .video-frame-wrapper {
+  width: 100vw;
+  height: 100vh;
+  padding-bottom: 0;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:fullscreen .video-frame,
+:-webkit-full-screen .video-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
+  border-radius: 0;
+}
+
+:fullscreen .nav-btn,
+:-webkit-full-screen .nav-btn {
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.7);
+}
 </style>
