@@ -66,7 +66,86 @@ const { title = "Astro Basics" } = Astro.props;
   </head>
 
   <body>
+    <!-- Overlay di caricamento globale (stato di caricamento del browser / navigazione) -->
+    <div id="global-page-loader" class="global-page-loader" aria-hidden="true">
+      <img src="/await.gif" alt="Caricamento..." class="global-loader-gif" />
+    </div>
+
     <slot />
+
+    <script is:inline>
+      (function () {
+        var loader = document.getElementById('global-page-loader');
+
+        function hideLoader() {
+          if (loader) {
+            loader.classList.add('is-hidden');
+          }
+        }
+
+        function showLoader() {
+          if (loader) {
+            loader.classList.remove('is-hidden');
+          }
+        }
+
+        window.__showGlobalLoader = showLoader;
+        window.__hideGlobalLoader = hideLoader;
+
+        // Ripristina lo stato se la pagina viene caricata dalla bfcache (pulsante indietro/avanti)
+        window.addEventListener('pageshow', function () {
+          hideLoader();
+        });
+
+        // Fallback: se per qualsiasi motivo la pagina ha finito il caricamento standard, nascondi il loader
+        window.addEventListener('load', function () {
+          setTimeout(hideLoader, 800);
+        });
+
+        // Intercetta i click sui link interni per mostrare subito l'icona durante il caricamento del browser
+        document.addEventListener('click', function (e) {
+          var target = e.target && e.target.closest ? e.target.closest('a') : null;
+          if (!target) return;
+          var href = target.getAttribute('href');
+          if (!href) return;
+
+          // Ignora ancore locali, protocolli speciali e target _blank
+          if (
+            href.startsWith('#') ||
+            href.startsWith('javascript:') ||
+            href.startsWith('mailto:') ||
+            href.startsWith('tel:') ||
+            target.target === '_blank' ||
+            e.ctrlKey || e.metaKey || e.shiftKey || e.altKey
+          ) {
+            return;
+          }
+
+          try {
+            var url = new URL(target.href, window.location.href);
+            if (url.origin === window.location.origin) {
+              if (
+                url.pathname === window.location.pathname &&
+                url.search === window.location.search &&
+                url.hash !== window.location.hash
+              ) {
+                return;
+              }
+              showLoader();
+            }
+          } catch (err) {
+            if (href.startsWith('/') && !href.startsWith('//')) {
+              showLoader();
+            }
+          }
+        }, true);
+
+        // Mostra il loader quando il browser inizia a scaricare la nuova pagina
+        window.addEventListener('beforeunload', function () {
+          showLoader();
+        });
+      })();
+    </script>
   </body>
 </html>
 
@@ -89,5 +168,37 @@ const { title = "Astro Basics" } = Astro.props;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+  }
+
+  /* 🌀 Overlay di caricamento globale */
+  .global-page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(18, 18, 18, 0.15);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    pointer-events: all;
+  }
+
+  .global-page-loader.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .global-loader-gif {
+    width: 250px;
+    height: 250px;
+    object-fit: contain;
   }
 </style>

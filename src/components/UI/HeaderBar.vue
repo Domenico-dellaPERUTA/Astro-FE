@@ -641,6 +641,9 @@ const onLinkSelect = (item: Link) => {
     // Altrimenti cerchiamo tra i siblings (altri topic)
     const sibling = siblings.value.find((s: any) => s.name === item.name)
     if (sibling?.link) {
+      if (typeof window !== 'undefined' && (window as any).__showGlobalLoader) {
+        (window as any).__showGlobalLoader()
+      }
       window.location.assign(sibling.link)
     }
   }, 250)

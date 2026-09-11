@@ -1,11 +1,6 @@
 <!-- app/components/UI/FlexibleLayout.vue -->
 <template>
   <div ref="container" class="container">
-    <!-- Overlay di caricamento -->
-    <div v-if="isLoading" class="loading-overlay">
-       <img src="/await.gif" alt="Caricamento..." class="loading-gif" />
-    </div>
-
     <!-- Header -->
     <HeaderBar
       :isPhone="isPhone"
@@ -70,7 +65,6 @@ watch(() => props.initialMenuData, (newMenu) => {
 }, { immediate: true })
 
 const showMenu = ref(true)
-const isLoading = ref(true)
 
 function toggleMenu() {
   showMenu.value = !showMenu.value
@@ -80,10 +74,12 @@ const isPhone = ref(false)
 const isTablet = ref(false)
 
 onMounted(() => {
-  // Rimuovi il caricamento dopo un piccolo ritardo per fluidità
+  // Rimuovi il caricamento globale dopo un piccolo ritardo per consentire il rendering iniziale fluido
   setTimeout(() => {
-    isLoading.value = false
-  }, 400)
+    if (typeof window !== 'undefined' && (window as any).__hideGlobalLoader) {
+      (window as any).__hideGlobalLoader()
+    }
+  }, 150)
 
   const checkLayout = () => {
     isPhone.value = window.innerWidth <= 768
@@ -171,27 +167,6 @@ function onSelectMenu(item: any): void {
 
 .content.no-scroll {
   overflow: hidden;
-}
-
-/* 🌀 Caricamento */
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(18, 18, 18, 0.1); /* Highly transparent charcoal */
-  backdrop-filter: blur(4px); /* Subtler blur */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.loading-gif {
-  width: 250px; /* Larger image */
-  height: 250px;
-  object-fit: contain;
 }
 
 /* Sidebar destra */

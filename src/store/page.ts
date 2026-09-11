@@ -106,12 +106,18 @@ const navigateToPage = (index: number) => {
 }
 
 const navigateToHome = () => {
+    if (typeof window !== 'undefined' && (window as any).__showGlobalLoader) {
+        (window as any).__showGlobalLoader()
+    }
     window.location.assign('/')
 }
 
 const navigateToSibling = (index: number) => {
     const sibling = siblings.value[index]
     if (sibling?.link) {
+        if (typeof window !== 'undefined' && (window as any).__showGlobalLoader) {
+            (window as any).__showGlobalLoader()
+        }
         window.location.assign(sibling.link)
     }
 }
