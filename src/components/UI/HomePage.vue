@@ -47,7 +47,7 @@
     <div class="footer-links">
       <a
         target="_blank" 
-        rel="noreferrer nofollow" 
+        rel="noopener noreferrer nofollow" 
         class="footer-link iubenda-privacy-policy" 
         href="https://www.iubenda.com/privacy-policy/63164304">
         Privacy Policy

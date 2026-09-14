@@ -118,12 +118,14 @@
                   </svg>
                 </button>
                 <iframe
-                  v-if="index === currentIndex || Math.abs(index - currentIndex) <= 1"
+                  v-if="(index === currentIndex || Math.abs(index - currentIndex) <= 1) && toEmbedUrl(typeof item === 'object' ? item.url : item)"
                   :src="toEmbedUrl(typeof item === 'object' ? item.url : item)"
                   class="video-frame"
                   frameborder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                   allowfullscreen
+                  sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+                  referrerpolicy="strict-origin-when-cross-origin"
                 ></iframe>
                 <div v-else class="image-placeholder">
                   <img src="/await.gif" alt="loading">
@@ -211,11 +213,11 @@
         
           <!-- Visual Preview (codeView) -->
           <div v-if="dictionary?.codeView" class="dictionary-preview">
-            <div v-html="dictionary?.codeView" class="preview-scale-wrapper"></div>
+            <div v-html="sanitizedCodeView" class="preview-scale-wrapper"></div>
           </div>
           
           <!-- Legacy HTML rendering for codeDescription (backward compatibility) -->
-          <div v-else-if="dictionary?.codeDescription && dictionary?.type === 'html'" v-html="dictionary?.codeDescription" class="dictionary-code" />
+          <div v-else-if="dictionary?.codeDescription && dictionary?.type === 'html'" v-html="sanitizedCodeDescription" class="dictionary-code" />
 
           <!-- Monaco Editor for Code Snippet (codeDescription) -->
           <div v-if="dictionary?.codeDescription" class="dictionary-code-wrapper">
@@ -266,6 +268,7 @@ import { ref, onMounted, watch, computed, nextTick, onBeforeUnmount, onUnmounted
 import { usePageStore } from '../../store/page'
 import { useInfoStore } from '../../store/info'
 import ChessBoard from './ChessBoard.vue'
+import DOMPurify from 'dompurify'
 
 
 if (typeof window !== 'undefined') {
@@ -376,6 +379,14 @@ interface DictionaryItem {
 }
 const dictionary = computed<DictionaryItem | undefined>(() => items.value[currentIndex.value] as DictionaryItem)
 
+const sanitizedCodeView = computed(() => {
+  return dictionary.value?.codeView ? DOMPurify.sanitize(dictionary.value.codeView) : ''
+})
+
+const sanitizedCodeDescription = computed(() => {
+  return dictionary.value?.codeDescription ? DOMPurify.sanitize(dictionary.value.codeDescription) : ''
+})
+
 const colorTextDictionary = (sType: string): string => {
   if (!sType) return ''
   let sColor1 = "#ffffff", sColor2 = "#ffffff", sColor3 = "#ffffff"
@@ -478,20 +489,40 @@ const detectLanguage = (code: string): string => {
   return 'javascript' // Default
 }
 
-/** 🎬 Converte URL video in formato embed */
+/** 🎬 Converte e valida URL video in formato embed sicuro */
 function toEmbedUrl(url: string): string {
-  if (!url) return ''
+  if (!url || typeof url !== 'string') return ''
+  const trimmed = url.trim()
+
   // YouTube standard: https://www.youtube.com/watch?v=VIDEO_ID
-  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/)
+  const ytMatch = trimmed.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/)
   if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`
+
   // YouTube Shorts: https://www.youtube.com/shorts/VIDEO_ID
-  const ytShort = url.match(/youtube\.com\/shorts\/([\w-]+)/)
+  const ytShort = trimmed.match(/youtube\.com\/shorts\/([\w-]+)/)
   if (ytShort) return `https://www.youtube.com/embed/${ytShort[1]}`
+
   // Vimeo: https://vimeo.com/VIDEO_ID
-  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+  const vimeoMatch = trimmed.match(/vimeo\.com\/(\d+)/)
   if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`
-  // Fallback: usa l'URL così com'è (potrebbe essere già un embed URL)
-  return url
+
+  // Permetti solo URL embed già validi con protocollo HTTPS sicuro su domini consentiti
+  try {
+    const parsed = new URL(trimmed)
+    if (parsed.protocol === 'https:') {
+      if (
+        parsed.hostname === 'www.youtube.com' ||
+        parsed.hostname === 'youtube.com' ||
+        parsed.hostname === 'player.vimeo.com'
+      ) {
+        return parsed.href
+      }
+    }
+  } catch (_) {
+    return ''
+  }
+
+  return ''
 }
 
 /** 🎯 Evento cambio slide dal video carousel */
@@ -605,7 +636,7 @@ watch(
       
       renderedHtml.value = ''
       await nextTick()
-      renderedHtml.value = `<div class="page">${correctedCode}</div>` || ''
+      renderedHtml.value = DOMPurify.sanitize(`<div class="page">${correctedCode}</div>`) || ''
     } else if (type.value === 'code' && codeEditor) {
       // Aggiorna il contenuto dell'editor con codice pulito
       const cleaned = cleanCode(newCode || '')
@@ -613,12 +644,13 @@ watch(
       const language = detectLanguage(cleaned)
       monaco.editor.setModelLanguage(codeEditor.getModel(), language)
     } else if (type.value === 'md') {
-      // Convert markdown to HTML using marked
+      // Convert markdown to HTML using marked e sanitizza con DOMPurify
       try {
-        renderedMarkdown.value = marked(newCode || '') as string
+        const raw = marked(newCode || '') as string
+        renderedMarkdown.value = DOMPurify.sanitize(raw)
       } catch (e) {
         console.error('[TopicPage] Markdown parse error:', e)
-        renderedMarkdown.value = newCode || ''
+        renderedMarkdown.value = DOMPurify.sanitize(newCode || '')
       }
     }
   },
@@ -638,13 +670,14 @@ watch(
       await nextTick()
       if (!codeEditor) await initializeCodeEditor(newType)
     } else if (newType === 'md') {
-      // Convert markdown to HTML
+      // Convert markdown to HTML e sanitizza con DOMPurify
       await nextTick()
       try {
-        renderedMarkdown.value = marked(code.value || '') as string
+        const raw = marked(code.value || '') as string
+        renderedMarkdown.value = DOMPurify.sanitize(raw)
       } catch (e) {
         console.error('[TopicPage] Markdown parse error:', e)
-        renderedMarkdown.value = code.value || ''
+        renderedMarkdown.value = DOMPurify.sanitize(code.value || '')
       }
     }
   }
