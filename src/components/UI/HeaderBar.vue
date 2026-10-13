@@ -99,9 +99,9 @@
           </template>
         </ActionButton>
 
-        <!-- AUDIO -->
+        <!-- AUDIO: visibile solo se frontmatter `audio` presente (true o percorso file) -->
         <ActionButton
-          v-if="type == 'code' || type == 'md' || type == 'html'"
+          v-if="(type == 'code' || type == 'md' || type == 'html') && hasAudio"
           :onClick="playAudio ? onRunAudio : onStopAudio"
         >
           <template #icon>
@@ -219,7 +219,7 @@ const pageStore = usePageStore()
 const { 
   topic, type, items, currentIndex, pathFile, showAvatar, chessCurrentMove, chessTotalMoves, carouselRef,
   navigateToHome, navigateToPage, navigateToSibling, toggleChessFlip, setChessMove, setCarouselAction,
-  isInfoOpen, getCarouselSlideInfo, code, isVideoFullscreen, toggleVideoFullscreen
+  isInfoOpen, getCarouselSlideInfo, code, isVideoFullscreen, toggleVideoFullscreen, audio: storeAudio
 } = pageStore
 
 const infoStore = useInfoStore()
@@ -238,6 +238,20 @@ watch(currentIndex, (newIdx) => {
 })
 
 const currentIcon = computed(() => playAudio.value ? Volume2 : VolumeOff)
+
+// 🔊 Mostra il pulsante audio solo se il frontmatter `audio` è presente:
+// - `audio: true` → abilitato (usa file se risolvibile, altrimenti TTS)
+// - `audio: "/path/file.mp3"` → abilitato (retrocompatibilità)
+// - assente / false / "" → nascosto
+const hasAudio = computed(() => {
+  const v = storeAudio.value
+  return v === true || (typeof v === 'string' && v.length > 0)
+})
+
+// Reset stato audio al cambio pagina (evita icona residua / audio in riproduzione)
+watch([type, topic, storeAudio], () => {
+  onStopAudio()
+})
 
 const isOpenLinks = ref(false)
 const isOpenOpposites = ref(false)
@@ -431,8 +445,8 @@ const onRunAudio = async () => {
   checkingAudio.value = false
 
   if (!exists) {
-    // Non avviamo la voce sintetica per il codice (type: code)
-    if (type.value === 'code') {
+    // Non avviamo la voce sintetica per il codice, a meno che sia esplicitamente abilitata con `audio: true`
+    if (type.value === 'code' && storeAudio.value !== true) {
       console.warn(`Nessun audio trovato per il codice. Voce sintetica disabilitata.`);
       showAvatar.value = 'stop'
       playAudio.value = true

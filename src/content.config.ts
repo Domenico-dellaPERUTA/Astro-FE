@@ -24,8 +24,9 @@ const topicsCollection = defineCollection({
     // Dati specifici per gli scacchi (pgn)
     pgn: z.string().optional(),
     
-    // Audio per code
-    audio: z.string().optional(),
+    // Audio per code/md/html: percorso file mp3 oppure `true` per abilitare sintesi vocale
+    // Il pulsante audio viene mostrato solo se questo attributo è presente
+    audio: z.union([z.string(), z.boolean()]).optional(),
     
     // Dati specifici per il video carousel (lista URL video esterni)
     videos: z.array(z.union([

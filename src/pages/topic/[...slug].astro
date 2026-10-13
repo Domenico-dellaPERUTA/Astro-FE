@@ -146,7 +146,14 @@ if (topic.data.type === "carousel") {
 }
 
 // 3. Risolviamo l'audio
-const resolvedAudio = topic.data.audio ? resolveAudio(topic.data.audio) : "";
+// Supporta sia `audio: "/path/file.mp3"` che `audio: true` (abilita pulsante + TTS fallback)
+const rawAudio = topic.data.audio;
+let resolvedAudio: string | boolean = "";
+if (typeof rawAudio === "boolean") {
+  resolvedAudio = rawAudio;
+} else if (typeof rawAudio === "string" && rawAudio) {
+  resolvedAudio = resolveAudio(rawAudio);
+}
 
 const pageData = {
   type: topic.data.type,

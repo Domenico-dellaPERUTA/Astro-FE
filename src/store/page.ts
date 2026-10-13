@@ -20,7 +20,7 @@ const showAvatar = ref('stop')
 const avatarReady = ref(true)   // false mentre il modello 3D è in download
 const pathFile = ref('')
 const carouselRef = ref<any>(null)
-const audio = ref('')
+const audio = ref<string | boolean>('')
 const isInfoOpen = ref(false)
 
 // Chess state
@@ -65,11 +65,12 @@ const setPageData = (data: any) => {
     currentIndex.value = data.currentIndex || 0
     siblings.value = data.siblings || []
     menuPath.value = data.menuPath || ''
-    audio.value = data.audio || ''
+    audio.value = data.audio ?? ''
     
-    // Per il tipo code e md, imposta pathFile al valore di audio se presente
+    // Per i tipi code, md e html, imposta pathFile solo se audio è un percorso file (stringa)
+    // Se audio === true il pulsante viene mostrato e verrà usata la sintesi vocale (TTS) come fallback
     // Rimuovi il "/" iniziale se presente, perché HeaderBar lo aggiungerà
-    if ((data.type === 'code' || data.type === 'md') && data.audio) {
+    if ((data.type === 'code' || data.type === 'md' || data.type === 'html') && typeof data.audio === 'string' && data.audio) {
         pathFile.value = data.audio.startsWith('/') ? data.audio.slice(1) : data.audio
     }
     
