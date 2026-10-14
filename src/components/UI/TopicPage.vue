@@ -801,6 +801,7 @@ watch(
 
 <style scoped>
 .topic-page-container {
+  position: relative; /* riferimento per il righello di lettura assoluto */
   height: 100%;
   width: 100%;
   display: flex;

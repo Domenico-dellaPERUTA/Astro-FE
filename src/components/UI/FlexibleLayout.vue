@@ -24,6 +24,10 @@
         <TopicPage v-else />
       </div>
 
+      <!-- Righello di avanzamento lettura: fuori da .content perché
+           il view-transition-name del contenuto ne altererebbe il fixed -->
+      <ReadingRuler />
+
       <!-- Sidebar destra -->
       <aside
         v-if="siblings?.length >= 1 || type === 'dictionary'"
@@ -45,6 +49,7 @@ import HeaderBar from './HeaderBar.vue'
 import MenuMaster from './MenuMaster.vue'
 import TopicPage from './TopicPage.vue'
 import HomePage from './HomePage.vue'
+import ReadingRuler from './ReadingRuler.vue'
 
 const props = defineProps({
   initialPageData: { type: Object, default: () => null },
