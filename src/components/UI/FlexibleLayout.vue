@@ -10,7 +10,7 @@
     />
 
     <!-- Main layout -->
-    <div ref="main" class="main">
+    <div ref="main" :class="['main', { 'menu-open': showMenu }]">
       <!-- Sidebar sinistra -->
       <aside
         :class="['sidebar-left', showMenu ? 'is-open' : '']"
@@ -183,6 +183,9 @@ function onSelectMenu(item: any): void {
 
 /* 📱 MOBILE / TABLET (Drive Mode) */
 @media (max-width: 1024px) {
+  .main.menu-open .content {
+    z-index: 1; /* il contenuto resta sempre sotto il drawer */
+  }
   .sidebar-left {
     position: absolute;
     top: 0;
@@ -191,7 +194,7 @@ function onSelectMenu(item: any): void {
     width: 300px;
     transform: translateX(-100%);
     box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-    z-index: 100; /* Must be high */
+    z-index: 1000; /* drawer sempre sopra contenuto e dropdown */
   }
   
   /* Quando il menu è aperto su mobile tramite classe o state */

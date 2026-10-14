@@ -22,6 +22,51 @@
       <h1 class="title">
         {{ currentTitle }}
       </h1>
+
+      <!-- Ricerca testuale su tutte le voci del menu -->
+      <div ref="searchBox" class="search-box">
+        <Search class="search-icon" />
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-input"
+          placeholder="Cerca argomenti…"
+          autocomplete="off"
+          spellcheck="false"
+          role="combobox"
+          aria-label="Cerca nel menu"
+          :aria-expanded="searchOpen && searchResults.length > 0"
+          aria-controls="menu-search-listbox"
+          :aria-activedescendant="activeIdx >= 0 ? `menu-search-opt-${activeIdx}` : undefined"
+          @focus="openSearch"
+          @keydown="onSearchKeydown"
+        />
+        <button v-if="searchQuery" class="search-clear" @click="clearSearch" aria-label="Cancella ricerca">
+          <X class="search-clear-icon" />
+        </button>
+
+        <div v-if="searchOpen && searchQuery.trim()" class="search-results">
+          <ul v-if="searchResults.length > 0" id="menu-search-listbox" role="listbox" class="search-list">
+            <li
+              v-for="(r, i) in searchResults"
+              :id="`menu-search-opt-${i}`"
+              :key="r.link + i"
+              role="option"
+              :aria-selected="i === activeIdx"
+              :class="['search-item', { 'is-active': i === activeIdx }]"
+              @click="goSearch(r.link)"
+              @mouseenter="activeIdx = i"
+            >
+              <span class="search-item-main">
+                <span class="search-item-name">{{ r.name }}</span>
+                <span v-if="r.path" class="search-item-path">{{ r.path }}</span>
+              </span>
+              <span v-if="r.type" class="search-item-type" :title="r.type">{{ typeEmoji(r.type) }}</span>
+            </li>
+          </ul>
+          <p v-else class="search-empty">Nessun risultato per “{{ searchQuery.trim() }}”</p>
+        </div>
+      </div>
       <!-- Pulsante login --> 
 <!--
       <button 
@@ -207,19 +252,20 @@
 import { 
   Menu, Home, Volume2, VolumeOff, Link,CircleSlash2,Scale,NotebookPen,EyeOff, User2,Castle,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,Image, Dot,GalleryThumbnails,Eye,
-  RefreshCw, Info, Expand, Shrink
+  RefreshCw, Info, Expand, Shrink, Search, X
 } from 'lucide-vue-next'
-import { computed, ref, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 
 import { useInfoStore } from '../../store/info'
 import { usePageStore } from '../../store/page'
+import { useMenuStore } from '../../store/menu'
 import ActionButton from './ActionButton.vue'
 
 const pageStore = usePageStore()
 const { 
   topic, type, items, currentIndex, pathFile, showAvatar, chessCurrentMove, chessTotalMoves, carouselRef,
   navigateToHome, navigateToPage, navigateToSibling, toggleChessFlip, setChessMove, setCarouselAction,
-  isInfoOpen, getCarouselSlideInfo, code, isVideoFullscreen, toggleVideoFullscreen, audio: storeAudio
+  isInfoOpen, getCarouselSlideInfo, code, isVideoFullscreen, toggleVideoFullscreen, audio: storeAudio, route
 } = pageStore
 
 const infoStore = useInfoStore()
@@ -255,6 +301,122 @@ watch([type, topic, storeAudio], () => {
 
 const isOpenLinks = ref(false)
 const isOpenOpposites = ref(false)
+
+// 🔍 Ricerca testuale su tutte le voci del menu (combo-box con suggerimenti)
+const { treeMenu } = useMenuStore()
+
+interface SearchEntry {
+  name: string
+  link: string
+  type?: string
+  path: string
+}
+
+const searchQuery = ref('')
+const searchOpen = ref(false)
+const activeIdx = ref(-1)
+const searchBox = ref<HTMLElement | null>(null)
+
+// Appiattisce l'albero in lista di voci navigabili, con breadcrumb di sezione
+const flatMenu = computed<SearchEntry[]>(() => {
+  const out: SearchEntry[] = []
+  const walk = (nodes: any[], trail: string[]) => {
+    for (const n of nodes || []) {
+      if (n.isFolder) {
+        if (n.link) out.push({ name: n.name, link: n.link, type: n.type, path: trail.join(' / ') })
+        walk(n.menu || [], [...trail, n.name])
+      } else if (n.link) {
+        out.push({ name: n.name, link: n.link, type: n.type, path: trail.join(' / ') })
+      }
+    }
+  }
+  walk(treeMenu.value || [], [])
+  return out
+})
+
+const searchResults = computed<SearchEntry[]>(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return []
+  return flatMenu.value
+    .filter(e => e.name.toLowerCase().includes(q) || e.path.toLowerCase().includes(q))
+    .slice(0, 10)
+})
+
+const openSearch = () => {
+  if (searchQuery.value.trim()) searchOpen.value = true
+}
+
+const closeSearch = () => {
+  searchOpen.value = false
+  activeIdx.value = -1
+}
+
+const clearSearch = () => {
+  searchQuery.value = ''
+  closeSearch()
+}
+
+// Emoji per tipo di contenuto (più chiara della sigla per l'utente finale)
+const typeEmoji = (t?: string): string => {
+  switch ((t || '').toLowerCase()) {
+    case 'code': return '💻'
+    case 'md': return '📝'
+    case 'html': return '🌐'
+    case 'carousel': return '🎞️'
+    case 'video': return '🎬'
+    case 'dictionary': return '📖'
+    case 'chess': return '♟️'
+    case 'home': return '🏠'
+    default: return '📄'
+  }
+}
+
+const goSearch = (link: string) => {  closeSearch()
+  searchQuery.value = ''
+  if (!link) return
+  if (typeof window !== 'undefined' && (window as any).__showGlobalLoader) {
+    (window as any).__showGlobalLoader()
+  }
+  window.location.assign(link)
+}
+
+const onSearchKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault()
+    const len = searchResults.value.length
+    if (!len) return
+    searchOpen.value = true
+    activeIdx.value = e.key === 'ArrowDown'
+      ? (activeIdx.value + 1) % len
+      : (activeIdx.value - 1 + len) % len
+  } else if (e.key === 'Enter') {
+    const target = activeIdx.value >= 0 ? searchResults.value[activeIdx.value] : searchResults.value[0]
+    if (target) goSearch(target.link)
+  } else if (e.key === 'Escape') {
+    closeSearch()
+    ;(e.target as HTMLInputElement)?.blur()
+  }
+}
+
+watch(searchQuery, () => {
+  activeIdx.value = -1
+  searchOpen.value = searchQuery.value.trim().length > 0
+})
+
+// Chiude i suggerimenti al cambio pagina e al click fuori dal campo
+watch(route, () => {
+  searchQuery.value = ''
+  closeSearch()
+})
+
+const onDocumentClick = (e: MouseEvent) => {
+  const el = searchBox.value
+  if (el && !el.contains(e.target as Node)) closeSearch()
+}
+
+onMounted(() => {
+  document.addEventListener('click', onDocumentClick)
+})
 
 const toggleFlip = () => {
   console.log('toggleFlip clicked in HeaderBar')
@@ -584,6 +746,7 @@ const onStopAudio = () => {
 
 // pulizia quando il componente viene smontato (importa onUnmounted)
 onUnmounted(() => {
+  document.removeEventListener('click', onDocumentClick)
   if (audio) {
     try { audio.pause() } catch(e) {}
     audio = null
@@ -680,6 +843,8 @@ const onLinkSelect = (item: Link) => {
 
 /* Header principale */
 .header {
+  position: relative; /* crea contesto di stacking: la tendina di ricerca resta sopra il contenuto */
+  z-index: 500; /* sopra .content (10), sotto il drawer del menu (1000) */
   width: 100%;
   background-color: #121212; /* Charcoal black */
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
@@ -716,6 +881,7 @@ const onLinkSelect = (item: Link) => {
 /* Titolo */
 .title {
   flex: 1;
+  min-width: 0;
   text-align: center;
   color: #ff8c00; /* Brilliant Orange */
   font-family: 'Fredericka the Great', cursive;
@@ -723,6 +889,136 @@ const onLinkSelect = (item: Link) => {
   font-weight: normal;
   letter-spacing: 1.5px;
   text-shadow: 0 0 25px rgba(255, 140, 0, 0.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 🔍 Ricerca testuale nel menu (combo-box) */
+.search-box {
+  position: relative;
+  width: 17rem;
+  flex-shrink: 1;
+  min-width: 0;
+  margin: 0 0.75rem;
+}
+.search-icon {
+  position: absolute;
+  left: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.05rem;
+  height: 1.05rem;
+  color: #64748b;
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  padding: 0.5rem 2rem 0.5rem 2.2rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+  font-family: 'Julee', cursive;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.search-input::placeholder {
+  color: #64748b;
+}
+.search-input:focus {
+  border-color: rgba(255, 140, 0, 0.6);
+  background: rgba(255, 255, 255, 0.09);
+}
+.search-clear {
+  position: absolute;
+  right: 0.4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0.2rem;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.search-clear:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.search-clear-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: #94a3b8;
+}
+.search-results {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 21rem;
+  max-width: calc(100vw - 2rem);
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  z-index: 500;
+}
+.search-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem;
+  max-height: 22rem;
+  overflow-y: auto;
+}
+.search-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.search-item.is-active {
+  background: #f1f5f9;
+}
+.search-item-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.search-item-name {
+  font-family: 'Julee', cursive;
+  font-size: 0.95rem;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-item-path {
+  font-family: monospace;
+  font-size: 0.68rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-item-type {
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: help;
+}
+.search-empty {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  font-family: 'Julee', cursive;
+  font-size: 0.9rem;
+  color: #64748b;
+  text-align: center;
 }
 
 /* Barra secondaria */
@@ -808,6 +1104,16 @@ const onLinkSelect = (item: Link) => {
   }
   .header-main {
     padding: 0 0.5rem;
+  }
+  .search-box {
+    width: auto;
+    flex: 1;
+    margin: 0 0.4rem;
+  }
+  .search-results {
+    left: 0;
+    right: 0;
+    width: auto;
   }
   .header-secondary {
     flex-direction: column;
