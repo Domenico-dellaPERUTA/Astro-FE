@@ -25,8 +25,9 @@
       </div>
 
       <!-- Righello di avanzamento lettura: fuori da .content perché
-           il view-transition-name del contenuto ne altererebbe il fixed -->
-      <ReadingRuler />
+           il view-transition-name del contenuto ne altererebbe il fixed.
+           Non serve sulla home (nessun contenuto scorrevole) -->
+      <ReadingRuler v-if="type !== 'home'" />
 
       <!-- Sidebar destra -->
       <aside
