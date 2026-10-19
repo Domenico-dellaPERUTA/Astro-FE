@@ -173,15 +173,10 @@ let ambient = []
 let ambientApi = null
 let onResize = null
 
-function maxKids() {
-  return W < 700 ? 6 : 9
-}
-
 function radiusFor(kind, depth) {
   const s = W < 700 ? 0.84 : 1
   if (kind === 'hub') return 40 * s
   if (kind === 'folder') return (depth === 0 ? 37 : 27) * s
-  if (kind === 'more') return 21 * s
   return 20 * s
 }
 
@@ -197,7 +192,6 @@ function makeNode(p) {
       parentId: null,
       childrenIds: [],
       expanded: false,
-      batch: 0,
       r: 20,
       x: 0,
       y: 0,
@@ -240,41 +234,9 @@ function buildSource(items, depth, parentId) {
   return ids
 }
 
-function ensureMore(parent, rest) {
-  const id = parent.id + '##more'
-  let m = nodes.get(id)
-  if (!m) {
-    m = makeNode({
-      id,
-      label: '+',
-      kind: 'more',
-      depth: parent.depth + 1,
-      parentId: parent.id
-    })
-    m.x = parent.x
-    m.y = parent.y
-    m.spawned = true
-  }
-  m.rest = rest
-  return m
-}
-
 function visibleChildrenIds(n) {
   if (n.kind !== 'folder' || !n.expanded) return []
-  const all = n.childrenIds
-  if (!all.length) return []
-  const max = maxKids()
-  const cap = Math.max(0, Math.ceil(all.length / max) - 1)
-  if (n.batch > cap) n.batch = cap
-  const start = n.batch * max
-  const slice = all.slice(start, start + max)
-  const ids = slice.slice()
-  const rest = all.length - start - slice.length
-  if (rest > 0) {
-    ensureMore(n, rest)
-    ids.push(n.id + '##more')
-  }
-  return ids
+  return n.childrenIds
 }
 
 function computeVisibleIds() {
@@ -292,7 +254,6 @@ function computeVisibleIds() {
 
 function glyphFor(n) {
   if (n.kind === 'hub') return '✦'
-  if (n.kind === 'more') return '+'
   if (n.kind === 'folder') return emojiOf(n.label) || initialOf(n.label)
   return TYPE_ICON[n.type] || initialOf(n.label)
 }
@@ -300,7 +261,7 @@ function glyphFor(n) {
 function createEl(n) {
   const isLink = n.kind === 'leaf' && !!n.link
   const el = document.createElement(isLink ? 'a' : 'button')
-  el.setAttribute('aria-label', n.kind === 'more' ? 'mostra altri ' + n.rest + ' elementi' : n.label)
+  el.setAttribute('aria-label', n.label)
   if (isLink) {
     el.setAttribute('href', n.link)
   } else {
@@ -319,8 +280,8 @@ function createEl(n) {
 
   const label = document.createElement('span')
   label.className = 'gn-label'
-  label.textContent = n.kind === 'more' ? '+' + n.rest : n.label
-  label.title = n.kind === 'more' ? '+' + n.rest + ' altri' : n.label
+  label.textContent = n.label
+  label.title = n.label
 
   el.append(disc, label)
   if (!isLink) {
@@ -420,7 +381,7 @@ function updateFocus() {
 }
 
 function makeRoom(fresh) {
-  const REACH = 340
+  const REACH = 420
   for (const n of fresh) {
     for (const m of active) {
       if (m === n) continue
@@ -428,7 +389,10 @@ function makeRoom(fresh) {
       const dy = m.y - n.y
       const d = Math.sqrt(dx * dx + dy * dy)
       if (d > REACH || d < 0.001) continue
-      const f = (1 - d / REACH) * 7.5
+      // spinta proporzionale anche allo spazio minimo che serve fra i due nodi
+      const minSpace = n.r + m.r + 70
+      const crowding = Math.max(0, 1 - d / minSpace)
+      const f = (1 - d / REACH) * (8.5 + crowding * 9)
       m.vx += (dx / d) * f
       m.vy += (dy / d) * f
     }
@@ -436,31 +400,19 @@ function makeRoom(fresh) {
 }
 
 function onNodeClick(n) {
-  if (n.kind === 'more') {
-    const parent = nodes.get(n.parentId)
-    if (parent) {
-      parent.batch++
-      syncStructure()
-    }
-    return
-  }
   if (n.kind === 'hub') {
     resetAll()
     return
   }
   if (n.kind === 'folder') {
     n.expanded = !n.expanded
-    n.batch = 0
     syncStructure()
   }
 }
 
 function resetAll() {
   for (const n of nodes.values()) {
-    if (n.kind === 'folder') {
-      n.expanded = false
-      n.batch = 0
-    }
+    if (n.kind === 'folder') n.expanded = false
   }
   syncStructure()
 }
@@ -580,9 +532,9 @@ function physics() {
       const d = Math.sqrt(dx * dx + dy * dy) || 0.001
       const ux = dx / d
       const uy = dy / d
-      const minD = a.r + b.r + 58
+      const minD = a.r + b.r + 72
       if (d < minD) {
-        const f = (1 - d / minD) * 3.1
+        const f = (1 - d / minD) * 3.6
         a.vx -= ux * f
         a.vy -= uy * f
         b.vx += ux * f
@@ -604,15 +556,16 @@ function physics() {
       const d = Math.sqrt(dx * dx + dy * dy) || 0.001
       const ux = dx / d
       const uy = dy / d
-      const reach = 240
+      const reach = 280
       if (d < reach) {
-        const f = (1 - d / reach) * 2.4
+        const f = (1 - d / reach) * 3.4
         n.vx += ux * f
         n.vy += uy * f
       }
-      const keep = n.r + 48
+      // cuscino minimo: evita solo che il nodo finisca esattamente sotto il cursore
+      const keep = n.r + 14
       if (d < keep) {
-        const g = (1 - d / keep) * 3.2
+        const g = (1 - d / keep) * 1.4
         n.vx -= ux * g
         n.vy -= uy * g
       }
@@ -821,6 +774,11 @@ onMounted(() => {
   const hub = makeNode({ id: 'hub', label: 'Appunti', kind: 'hub', depth: -1 })
   hub.spawned = true
   rootIds = buildSource(treeMenu.value, 0, null)
+  // collega visivamente (e fisicamente) il nodo centrale ai suoi figli radice
+  for (const id of rootIds) {
+    const rn = nodes.get(id)
+    if (rn) rn.parentId = 'hub'
+  }
 
   treeG = document.createElementNS(NS, 'g')
   treeG.setAttribute('class', 'tree-edges')
@@ -1003,7 +961,6 @@ onBeforeUnmount(() => {
 .gn-hub { z-index: 9; }
 .gn-d0 { z-index: 8; }
 .gn-folder { z-index: 7; }
-.gn-more { z-index: 7; }
 .gn-leaf { z-index: 6; }
 
 .gn-hub .gn-disc {
@@ -1021,9 +978,12 @@ onBeforeUnmount(() => {
 .gn-d0 .gn-glyph { color: #e9ff95; }
 .gn-d0 .gn-label { color: rgba(233, 255, 149, 0.85); font-size: 0.82rem; }
 
-.gn-folder .gn-disc { border-color: rgba(59, 130, 246, 0.6); }
-.gn-folder .gn-glyph { color: #cfe2ff; }
-.gn-folder .gn-label { color: rgba(214, 228, 255, 0.78); }
+.gn-folder .gn-disc {
+  border-color: rgba(207, 255, 4, 0.6);
+  box-shadow: 0 0 22px rgba(207, 255, 4, 0.14), 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+.gn-folder .gn-glyph { color: #e9ff95; }
+.gn-folder .gn-label { color: rgba(233, 255, 149, 0.82); }
 
 .gn-folder.gn-d0 .gn-disc {
   border-color: rgba(207, 255, 4, 0.6);
@@ -1032,21 +992,21 @@ onBeforeUnmount(() => {
 .gn-folder.gn-d0 .gn-glyph { color: #e9ff95; }
 .gn-folder.gn-d0 .gn-label { color: rgba(233, 255, 149, 0.85); font-size: 0.82rem; }
 
-.gn-leaf .gn-disc { border-color: rgba(255, 255, 255, 0.2); }
-.gn-leaf .gn-label { font-size: 0.64rem; color: rgba(255, 255, 255, 0.5); max-width: 104px; }
-
-.gn-more .gn-disc {
-  border-style: dashed;
-  border-color: rgba(207, 255, 4, 0.65);
-  background: rgba(207, 255, 4, 0.07);
+.gn-leaf .gn-disc {
+  border-color: rgba(96, 165, 250, 0.85);
+  box-shadow: 0 0 18px rgba(59, 130, 246, 0.25), 0 10px 26px rgba(0, 0, 0, 0.45);
 }
-.gn-more .gn-glyph { color: #cfff04; font-size: calc(var(--r) * 1.05); font-weight: 600; }
-.gn-more .gn-label { color: rgba(207, 255, 4, 0.8); }
+.gn-leaf .gn-glyph { color: #bfdbfe; }
+.gn-leaf .gn-label { font-size: 0.64rem; color: rgba(168, 200, 255, 0.78); max-width: 104px; }
 
 .gn:hover .gn-disc,
 .gn:focus-visible .gn-disc { transform: scale(1.12); border-color: #cfff04; }
 .gn:hover .gn-label,
 .gn:focus-visible .gn-label { color: #cfff04; opacity: 1; }
+.gn-leaf:hover .gn-disc,
+.gn-leaf:focus-visible .gn-disc { border-color: #60a5fa; }
+.gn-leaf:hover .gn-label,
+.gn-leaf:focus-visible .gn-label { color: #93c5fd; opacity: 1; }
 .gn:focus-visible { outline: none; }
 .gn:focus-visible .gn-disc {
   box-shadow: 0 0 0 3px #1a1a1a, 0 0 0 5px #cfff04, 0 0 30px rgba(207, 255, 4, 0.4);

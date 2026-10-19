@@ -22,6 +22,7 @@
           :transition="70"
           class="rounded-2xl overflow-hidden"
           @slide-start="onSlideChange"
+          @slide-end="onSlideEnd"
         >
           <Slide v-for="(item, index) in items" :key="index">
             <div class="slide">
@@ -100,6 +101,7 @@
         :transition="70"
         class="rounded-2xl overflow-hidden"
         @slide-start="onVideoSlideChange"
+        @slide-end="onVideoSlideEnd"
       >
         <Slide v-for="(item, index) in items" :key="index">
           <div class="slide">
@@ -254,6 +256,30 @@
     <!-------------------------- ♟️ CHESS -------------------------------------->
     <div v-else-if="type === 'chess'" class="chess-wrapper">
          <ChessBoard :pgn="pgn" />
+
+         <!-- Pulsanti di navigazione rotondi laterali (stile carousel) -->
+         <button
+           class="nav-btn left"
+           :disabled="chessCurrentMove <= 0"
+           aria-label="Mossa precedente"
+           @click="setChessMove('prev')"
+         >
+           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+             stroke-width="2" stroke="currentColor" class="w-6 h-6">
+             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+           </svg>
+         </button>
+         <button
+           class="nav-btn right"
+           :disabled="chessCurrentMove >= chessTotalMoves"
+           aria-label="Mossa successiva"
+           @click="setChessMove('next')"
+         >
+           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+             stroke-width="2" stroke="currentColor" class="w-6 h-6">
+             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+           </svg>
+         </button>
     </div>
 
     <!-------------------------- 🧨 CARICAMENTO ---------------------------------->
@@ -271,30 +297,19 @@ import ChessBoard from './ChessBoard.vue'
 import DOMPurify from 'dompurify'
 
 
+// Monaco 0.53: i worker sono moduli ESM, il vecchio trucco blob+importScripts non funziona più.
+// Il CSS arriva già dal bundle npm (il link CDN non serve più: cdnjs non ospita la 0.53).
+import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
+
 if (typeof window !== 'undefined') {
-  // Carichiamo il CSS dinamicamente da CDN se Rollup fa i capricci
-  if (!document.getElementById('monaco-style')) {
-    const link = document.createElement('link');
-    link.id = 'monaco-style';
-    link.rel = 'stylesheet';
-    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.53.0/min/vs/editor/editor.main.css';
-    document.head.appendChild(link);
-  }
-  window.MonacoEnvironment = {
-    getWorkerUrl: function () {
-      const workerScript = `
-        self.MonacoEnvironment = { baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.53.0/min/' };
-        importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.53.0/min/vs/base/worker/workerMain.js');
-      `;
-      const blob = new Blob([workerScript], { type: 'application/javascript' });
-      return URL.createObjectURL(blob);
-    }
+  (self as any).MonacoEnvironment = {
+    getWorker: () => new EditorWorker()
   }
 }
 
 
 const pageStore = usePageStore()
-const { topic, type, items, code, pgn, currentIndex, showAvatar, avatarReady, setCarouselRef, navigateToPage, audio, carouselAction, setCarouselAction, isVideoFullscreen, toggleVideoFullscreen } = pageStore
+const { topic, type, items, code, pgn, currentIndex, showAvatar, avatarReady, setCarouselRef, navigateToPage, audio, carouselAction, setCarouselAction, isVideoFullscreen, toggleVideoFullscreen, setChessMove, chessCurrentMove, chessTotalMoves } = pageStore
 
 watch(carouselAction, async (action) => {
   if (!action || !carouselRef.value) return
@@ -525,10 +540,24 @@ function toEmbedUrl(url: string): string {
   return ''
 }
 
-/** 🎯 Evento cambio slide dal video carousel */
+/**
+ * 🎯 Sync indice slide con lo store.
+ * ATTENZIONE (vue3-carousel 0.17): in `slide-start` il campo `currentSlideIndex`
+ * è la slide di PARTENZA, non quella di destinazione — la destinazione è
+ * `slidingToIndex`. In `slide-end` invece `currentSlideIndex` è quella finale.
+ */
+const clampSlideIndex = (idx: number): number => {
+  const len = items.value?.length || 0
+  if (!len) return 0
+  return Math.min(Math.max(idx, 0), len - 1)
+}
+
 function onVideoSlideChange(data: any) {
-  const newIndex = data?.currentSlideIndex ?? 0
-  currentIndex.value = newIndex
+  currentIndex.value = clampSlideIndex(data?.slidingToIndex ?? data?.currentSlideIndex ?? 0)
+}
+
+function onVideoSlideEnd(data: any) {
+  currentIndex.value = clampSlideIndex(data?.currentSlideIndex ?? data?.slidingToIndex ?? 0)
 }
 
 /** 🔧 Percorso immagine normalizzato */
@@ -594,9 +623,15 @@ async function preloadAdjacentImages(currentIndexArg: number) {
 
 /** 🎯 Evento cambio slide dal carousel */
 async function onSlideChange(data: any) {
-  const newIndex = data?.currentSlideIndex ?? 0
+  const newIndex = clampSlideIndex(data?.slidingToIndex ?? data?.currentSlideIndex ?? 0)
   currentIndex.value = newIndex
   await preloadAdjacentImages(newIndex)
+}
+
+function onSlideEnd(data: any) {
+  const newIndex = clampSlideIndex(data?.currentSlideIndex ?? data?.slidingToIndex ?? 0)
+  currentIndex.value = newIndex
+  preloadAdjacentImages(newIndex)
 }
 
 /** 🔧 Carica solo la prima immagine al cambio items */
@@ -1278,11 +1313,23 @@ watch(
 
 /* Chess wrapper responsive */
 .chess-wrapper {
+  position: relative; /* riferimento per i pulsanti di navigazione laterali */
   width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 0.5rem;
+}
+
+.chess-wrapper .nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.chess-wrapper .nav-btn:disabled:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-50%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Mobile responsive for chess */
