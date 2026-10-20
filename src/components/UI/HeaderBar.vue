@@ -621,9 +621,8 @@ const onRunAudio = async () => {
     const textToRead = code.value || topic.value || "Testo non disponibile";
     let plainText = textToRead;
     if (type.value === 'html' || type.value === 'md') {
-       const tempDiv = document.createElement('div');
-       tempDiv.innerHTML = textToRead; 
-       plainText = tempDiv.textContent || tempDiv.innerText || "";
+       // DOMParser invece di innerHTML: nessuna esecuzione di markup/script iniettato
+       plainText = new DOMParser().parseFromString(textToRead, 'text/html').documentElement.textContent || "";
        plainText = plainText.replace(/[#*`_~=\[\]]/g, ''); // Rimuovi markdown residuo
     }
 

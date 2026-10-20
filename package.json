@@ -12,11 +12,11 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/vue": "^6.0.1",
+    "@astrojs/vue": "^7.1.0",
     "@tailwindcss/vite": "^4.2.2",
     "@types/dompurify": "^3.0.5",
     "@types/three": "^0.184.1",
-    "astro": "^6.1.7",
+    "astro": "^7.4.0",
     "chess.js": "^1.4.0",
     "dompurify": "^3.4.15",
     "highlight.js": "^11.11.1",
