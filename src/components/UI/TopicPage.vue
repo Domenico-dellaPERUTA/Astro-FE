@@ -296,6 +296,26 @@ import { useInfoStore } from '../../store/info'
 import ChessBoard from './ChessBoard.vue'
 import DOMPurify from 'dompurify'
 
+// DOMPurify config that preserves KaTeX-generated HTML
+// KaTeX uses custom tags (annotation, semantics, math, etc.), inline styles, and aria-hidden
+function sanitizeMarkdown(html: string): string {
+  return DOMPurify.sanitize(html, {
+    ADD_TAGS: ['math', 'maction', 'maligngroup', 'malignmark', 'menclose', 'merror',
+      'mfenced', 'mfrac', 'mglyph', 'mi', 'mlabeledtr', 'mlongdiv', 'mmultiscripts',
+      'mn', 'mo', 'mover', 'mpadded', 'mphantom', 'mroot', 'mrow', 'ms', 'mscarries',
+      'mscarry', 'msgroup', 'mstack', 'msline', 'mspace', 'msqrt', 'msrow', 'mstyle',
+      'msub', 'msup', 'msubsup', 'mtable', 'mtd', 'mtext', 'mtr', 'munder',
+      'munderover', 'semantics', 'annotation', 'annotation-xml'],
+    ADD_ATTR: ['mathvariant', 'encoding', 'xmlns', 'overflow', 'lspace', 'rspace',
+      'accent', 'accentunder', 'bevelled', 'close', 'columnspan', 'denomalign',
+      'depth', 'dir', 'display', 'displaystyle', 'fence', 'frame', 'largeop',
+      'length', 'linethickness', 'lquote', 'mathsize', 'minsize', 'maxsize',
+      'movablelimits', 'notation', 'numalign', 'open', 'rowalign', 'rowspan',
+      'rquote', 'scriptlevel', 'separator', 'separators', 'stretchy', 'symmetric',
+      'voffset', 'aria-hidden', 'style'],
+  })
+}
+
 
 // Monaco 0.53: i worker sono moduli ESM, il vecchio trucco blob+importScripts non funziona più.
 // Il CSS arriva già dal bundle npm (il link CDN non serve più: cdnjs non ospita la 0.53).
@@ -333,6 +353,10 @@ const markdownContainer = ref<HTMLElement | null>(null)
 // Import marked for Markdown rendering + syntax highlighting
 import { marked, Renderer } from 'marked'
 import hljs from 'highlight.js'
+import markedKatex from 'marked-katex-extension'
+
+// Enable KaTeX math rendering in marked ($...$ for inline, $$...$$ for display)
+marked.use(markedKatex({ throwOnError: false }))
 
 // Configure marked with a custom renderer for syntax highlighting
 const mdRenderer = new Renderer()
@@ -682,10 +706,10 @@ watch(
       // Convert markdown to HTML using marked e sanitizza con DOMPurify
       try {
         const raw = marked(newCode || '') as string
-        renderedMarkdown.value = DOMPurify.sanitize(raw)
+        renderedMarkdown.value = sanitizeMarkdown(raw)
       } catch (e) {
         console.error('[TopicPage] Markdown parse error:', e)
-        renderedMarkdown.value = DOMPurify.sanitize(newCode || '')
+        renderedMarkdown.value = sanitizeMarkdown(newCode || '')
       }
     }
   },
@@ -709,10 +733,10 @@ watch(
       await nextTick()
       try {
         const raw = marked(code.value || '') as string
-        renderedMarkdown.value = DOMPurify.sanitize(raw)
+        renderedMarkdown.value = sanitizeMarkdown(raw)
       } catch (e) {
         console.error('[TopicPage] Markdown parse error:', e)
-        renderedMarkdown.value = DOMPurify.sanitize(code.value || '')
+        renderedMarkdown.value = sanitizeMarkdown(code.value || '')
       }
     }
   }

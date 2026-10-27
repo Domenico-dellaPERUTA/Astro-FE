@@ -6,7 +6,7 @@ dist/
 
 # dependencies
 node_modules/
-
+npm-cache/
 # logs
 npm-debug.log*
 yarn-debug.log*
@@ -31,3 +31,5 @@ src/content/topics/*.off
 src/assets/WebPages/*
 create_rust_md.sh
 deploy.sh
+
+

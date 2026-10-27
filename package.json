@@ -6,7 +6,7 @@
     "node": "22.20.0"
   },
   "scripts": {
-    "dev": "astro dev",
+    "dev": "HOME=$(pwd) ASTRO_TELEMETRY_DISABLED=true astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
@@ -22,11 +22,21 @@
     "highlight.js": "^11.11.1",
     "lucide-vue-next": "^1.0.0",
     "marked": "^18.0.2",
+    "marked-katex-extension": "^5.1.13",
     "monaco-editor": "^0.53.0",
     "monaco-editor-vue3": "^1.0.5",
     "tailwindcss": "^4.2.2",
     "three": "^0.184.0",
     "vue": "^3.5.32",
     "vue3-carousel": "^0.17.0"
+  },
+  "overrides": {
+    "vite": "^7"
+  },
+  "devDependencies": {
+    "@astrojs/markdown-remark": "^7.3.4",
+    "katex": "^0.16.21",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0"
   }
 }

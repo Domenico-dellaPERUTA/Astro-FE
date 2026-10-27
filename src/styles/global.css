@@ -1,4 +1,13 @@
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+/* Display math: left-aligned instead of centered */
+.katex-display {
+  text-align: left;
+}
+.katex-display > .katex {
+  text-align: left;
+}
 
 /* assets/css/global.css */
 
