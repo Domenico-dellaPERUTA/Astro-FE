@@ -5,6 +5,7 @@
     <HeaderBar
       :isPhone="isPhone"
       :isTablet="isTablet"
+      :isNarrow="isNarrow"
       :isOpen="showMenu"
       @openMenu="toggleMenu"
     />
@@ -78,6 +79,8 @@ function toggleMenu() {
 
 const isPhone = ref(false)
 const isTablet = ref(false)
+// Schermi molto stretti: l'Editor LaTeX non è utilizzabile (l'output non è leggibile)
+const isNarrow = ref(false)
 
 onMounted(() => {
   // Rimuovi il caricamento globale dopo un piccolo ritardo per consentire il rendering iniziale fluido
@@ -90,6 +93,7 @@ onMounted(() => {
   const checkLayout = () => {
     isPhone.value = window.innerWidth <= 768
     isTablet.value = window.innerWidth > 768 && window.innerWidth <= 1024
+    isNarrow.value = window.innerWidth < 900
 
     // Su desktop (>1024) il menu è aperto di default, su tablet/phone è chiuso
     if (type.value !== 'home') {

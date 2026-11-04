@@ -3,89 +3,98 @@
   <header class="header">
     <!------------------------ Barra principale  --------------------------------->
     <div class="header-main">
-      <!-- Pulsante menu su telefono -->
-      <button 
-        v-if="isPhone || isTablet || isHome" 
-        @click="$emit('openMenu')" 
-        class="btn-icon"
-      >
-        <template v-if="isOpen">
-          <EyeOff class="icon" />
-        </template>
-        <template v-else>
-          <Menu class="icon" />
-        </template>
-        
-      </button>
+      <!-- Sezione sinistra: Menu + Icona matita per LaTeX Editor -->
+      <div class="header-main-left">
+        <!-- Pulsante menu su telefono -->
+        <button 
+          v-if="isPhone || isTablet || isHome" 
+          @click="$emit('openMenu')" 
+          class="btn-icon"
+          title="Menu"
+        >
+          <template v-if="isOpen">
+            <EyeOff class="icon" />
+          </template>
+          <template v-else>
+            <Menu class="icon" />
+          </template>
+        </button>
+
+        <!-- Pulsante LaTeX Editor (icona matita a sinistra) - nascosto su schermi stretti -->
+        <a 
+          v-if="!isNarrow"
+          href="/latex-editor" 
+          class="btn-icon btn-latex"
+          title="Editor LaTeX Online"
+          aria-label="Editor LaTeX Online"
+          @click="onGoToLatex"
+        >
+          <Pencil class="icon" />
+        </a>
+      </div>
 
       <!-- Titolo pagina -->
       <h1 class="title">
         {{ currentTitle }}
       </h1>
 
-      <!-- Ricerca testuale su tutte le voci del menu -->
-      <div ref="searchBox" class="search-box">
-        <Search class="search-icon" />
-        <input
-          v-model="searchQuery"
-          type="text"
-          class="search-input"
-          placeholder="Cerca argomenti…"
-          autocomplete="off"
-          spellcheck="false"
-          role="combobox"
-          aria-label="Cerca nel menu"
-          :aria-expanded="searchOpen && searchResults.length > 0"
-          aria-controls="menu-search-listbox"
-          :aria-activedescendant="activeIdx >= 0 ? `menu-search-opt-${activeIdx}` : undefined"
-          @focus="openSearch"
-          @keydown="onSearchKeydown"
-        />
-        <button v-if="searchQuery" class="search-clear" @click="clearSearch" aria-label="Cancella ricerca">
-          <X class="search-clear-icon" />
-        </button>
+      <!-- Sezione destra: Ricerca + Home -->
+      <div class="header-main-right">
+        <!-- Ricerca testuale su tutte le voci del menu -->
+        <div ref="searchBox" class="search-box">
+          <Search class="search-icon" />
+          <input
+            v-model="searchQuery"
+            type="text"
+            class="search-input"
+            placeholder="Cerca argomenti…"
+            autocomplete="off"
+            spellcheck="false"
+            role="combobox"
+            aria-label="Cerca nel menu"
+            :aria-expanded="searchOpen && searchResults.length > 0"
+            aria-controls="menu-search-listbox"
+            :aria-activedescendant="activeIdx >= 0 ? `menu-search-opt-${activeIdx}` : undefined"
+            @focus="openSearch"
+            @keydown="onSearchKeydown"
+          />
+          <button v-if="searchQuery" class="search-clear" @click="clearSearch" aria-label="Cancella ricerca">
+            <X class="search-clear-icon" />
+          </button>
 
-        <div v-if="searchOpen && searchQuery.trim()" class="search-results">
-          <ul v-if="searchResults.length > 0" id="menu-search-listbox" role="listbox" class="search-list">
-            <li
-              v-for="(r, i) in searchResults"
-              :id="`menu-search-opt-${i}`"
-              :key="r.link + i"
-              role="option"
-              :aria-selected="i === activeIdx"
-              :class="['search-item', { 'is-active': i === activeIdx }]"
-              @click="goSearch(r.link)"
-              @mouseenter="activeIdx = i"
-            >
-              <span class="search-item-main">
-                <span class="search-item-name">{{ r.name }}</span>
-                <span v-if="r.path" class="search-item-path">{{ r.path }}</span>
-              </span>
-              <span v-if="r.type" class="search-item-type" :title="r.type">{{ typeEmoji(r.type) }}</span>
-            </li>
-          </ul>
-          <p v-else class="search-empty">Nessun risultato per “{{ searchQuery.trim() }}”</p>
+          <div v-if="searchOpen && searchQuery.trim()" class="search-results">
+            <ul v-if="searchResults.length > 0" id="menu-search-listbox" role="listbox" class="search-list">
+              <li
+                v-for="(r, i) in searchResults"
+                :id="`menu-search-opt-${i}`"
+                :key="r.link + i"
+                role="option"
+                :aria-selected="i === activeIdx"
+                :class="['search-item', { 'is-active': i === activeIdx }]"
+                @click="goSearch(r.link)"
+                @mouseenter="activeIdx = i"
+              >
+                <span class="search-item-main">
+                  <span class="search-item-name">{{ r.name }}</span>
+                  <span v-if="r.path" class="search-item-path">{{ r.path }}</span>
+                </span>
+                <span v-if="r.type" class="search-item-type" :title="r.type">{{ typeEmoji(r.type) }}</span>
+              </li>
+            </ul>
+            <p v-else class="search-empty">Nessun risultato per “{{ searchQuery.trim() }}”</p>
+          </div>
         </div>
-      </div>
-      <!-- Pulsante login --> 
-<!--
-      <button 
-        v-if="isHome"
-        @click="window.location.assign('/login')" 
-        class="btn-icon-user"
-      >
-        <User2 class="icon-user" />
-      </button> 
--->
 
-      <!-- Pulsante home -->
-      <button 
-        v-if="!isHome"
-        @click="navigateToHome()" 
-        class="btn-icon"
-      >
-        <Home class="icon" />
-      </button>
+        <!-- Pulsante home -->
+        <button 
+          v-if="!isHome"
+          @click="navigateToHome()" 
+          class="btn-icon"
+          title="Torna alla Home"
+        >
+          <Home class="icon" />
+        </button>
+      </div>
     </div>
 
     <!-------------------------------- Barra secondaria ---------------------------->
@@ -252,7 +261,7 @@
 import { 
   Menu, Home, Volume2, VolumeOff, Link,CircleSlash2,Scale,NotebookPen,EyeOff, User2,Castle,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,Image, Dot,GalleryThumbnails,Eye,
-  RefreshCw, Info, Expand, Shrink, Search, X
+  RefreshCw, Info, Expand, Shrink, Search, X, Pencil
 } from 'lucide-vue-next'
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 
@@ -319,7 +328,9 @@ const searchBox = ref<HTMLElement | null>(null)
 
 // Appiattisce l'albero in lista di voci navigabili, con breadcrumb di sezione
 const flatMenu = computed<SearchEntry[]>(() => {
-  const out: SearchEntry[] = []
+  const out: SearchEntry[] = [
+    { name: 'Editor LaTeX Online', link: '/latex-editor', type: 'latex', path: 'Strumenti & Utility' }
+  ]
   const walk = (nodes: any[], trail: string[]) => {
     for (const n of nodes || []) {
       if (n.isFolder) {
@@ -334,10 +345,18 @@ const flatMenu = computed<SearchEntry[]>(() => {
   return out
 })
 
+const onGoToLatex = () => {
+  if (typeof window !== 'undefined' && (window as any).__showGlobalLoader) {
+    (window as any).__showGlobalLoader()
+  }
+}
+
 const searchResults = computed<SearchEntry[]>(() => {
   const q = searchQuery.value.trim().toLowerCase()
   if (!q) return []
   return flatMenu.value
+    // Su schermi stretti (< 900px) l'Editor LaTeX non è disponibile: escludilo dai risultati
+    .filter(e => !(props.isNarrow && e.type === 'latex'))
     .filter(e => e.name.toLowerCase().includes(q) || e.path.toLowerCase().includes(q))
     .slice(0, 10)
 })
@@ -367,6 +386,7 @@ const typeEmoji = (t?: string): string => {
     case 'dictionary': return '📖'
     case 'chess': return '♟️'
     case 'home': return '🏠'
+    case 'latex': return '✏️'
     default: return '📄'
   }
 }
@@ -430,6 +450,7 @@ var audio: HTMLAudioElement | null = null // riferimento al player audio
 const props = defineProps({
   isPhone: { type: Boolean, default: false },
   isTablet: { type: Boolean, default: false },
+  isNarrow: { type: Boolean, default: false },
   isOpen: {type: Boolean, default: true},
 })
 
@@ -860,6 +881,13 @@ const onLinkSelect = (item: Link) => {
   padding: 0 1.5rem;
 }
 
+.header-main-left,
+.header-main-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
 /* Pulsanti icona */
 .btn-icon {
   padding: 0.6rem;
@@ -875,6 +903,10 @@ const onLinkSelect = (item: Link) => {
 .btn-icon:hover {
   background-color: rgba(255, 255, 255, 0.15);
   transform: scale(1.05);
+}
+.btn-latex:hover {
+  color: #ff8c00;
+  border-color: rgba(255, 140, 0, 0.4);
 }
 
 /* Titolo */

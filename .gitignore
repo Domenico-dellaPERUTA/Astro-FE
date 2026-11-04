@@ -33,3 +33,4 @@ create_rust_md.sh
 deploy.sh
 
 
+.npm/

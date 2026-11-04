@@ -1,0 +1,18 @@
+---
+import Layout from "../layouts/Layout.astro";
+import LatexEditorApp from "../components/LatexEditor/LatexEditorApp.vue";
+---
+
+<Layout title="Editor LaTeX Online - Formule & Matematica">
+  <script is:inline>
+    // L'Editor LaTeX non è disponibile su telefono: reindirizza alla home
+    (function () {
+      var isSmallScreen = window.innerWidth < 900;
+      var isMobileUA = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent);
+      if (isSmallScreen || isMobileUA) {
+        window.location.replace('/');
+      }
+    })();
+  </script>
+  <LatexEditorApp client:only="vue" />
+</Layout>
