@@ -1,0 +1,18 @@
+---
+import Layout from "../layouts/Layout.astro";
+import MarkdownEditorApp from "../components/MarkdownEditor/MarkdownEditorApp.vue";
+---
+
+<Layout title="Editor Markdown Online - Documenti & Note">
+  <script is:inline>
+    // L'Editor Markdown non è disponibile su telefono: reindirizza alla home
+    (function () {
+      var isSmallScreen = window.innerWidth < 900;
+      var isMobileUA = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent);
+      if (isSmallScreen || isMobileUA) {
+        window.location.replace('/');
+      }
+    })();
+  </script>
+  <MarkdownEditorApp client:only="vue" />
+</Layout>

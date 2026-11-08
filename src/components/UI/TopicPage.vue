@@ -295,25 +295,11 @@ import { usePageStore } from '../../store/page'
 import { useInfoStore } from '../../store/info'
 import ChessBoard from './ChessBoard.vue'
 import DOMPurify from 'dompurify'
-
+import { sanitizeKatexHtml } from '../../utils/katexSanitize'
 // DOMPurify config that preserves KaTeX-generated HTML
-// KaTeX uses custom tags (annotation, semantics, math, etc.), inline styles, and aria-hidden
+// (config condivisa in src/utils/katexSanitize.ts)
 function sanitizeMarkdown(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ADD_TAGS: ['math', 'maction', 'maligngroup', 'malignmark', 'menclose', 'merror',
-      'mfenced', 'mfrac', 'mglyph', 'mi', 'mlabeledtr', 'mlongdiv', 'mmultiscripts',
-      'mn', 'mo', 'mover', 'mpadded', 'mphantom', 'mroot', 'mrow', 'ms', 'mscarries',
-      'mscarry', 'msgroup', 'mstack', 'msline', 'mspace', 'msqrt', 'msrow', 'mstyle',
-      'msub', 'msup', 'msubsup', 'mtable', 'mtd', 'mtext', 'mtr', 'munder',
-      'munderover', 'semantics', 'annotation', 'annotation-xml'],
-    ADD_ATTR: ['mathvariant', 'encoding', 'xmlns', 'overflow', 'lspace', 'rspace',
-      'accent', 'accentunder', 'bevelled', 'close', 'columnspan', 'denomalign',
-      'depth', 'dir', 'display', 'displaystyle', 'fence', 'frame', 'largeop',
-      'length', 'linethickness', 'lquote', 'mathsize', 'minsize', 'maxsize',
-      'movablelimits', 'notation', 'numalign', 'open', 'rowalign', 'rowspan',
-      'rquote', 'scriptlevel', 'separator', 'separators', 'stretchy', 'symmetric',
-      'voffset', 'aria-hidden', 'style'],
-  })
+  return sanitizeKatexHtml(html)
 }
 
 

@@ -79,7 +79,7 @@ function toggleMenu() {
 
 const isPhone = ref(false)
 const isTablet = ref(false)
-// Schermi molto stretti: l'Editor LaTeX non è utilizzabile (l'output non è leggibile)
+// Schermi molto stretti: gli editor non sono utilizzabili (l'output non è leggibile)
 const isNarrow = ref(false)
 
 onMounted(() => {

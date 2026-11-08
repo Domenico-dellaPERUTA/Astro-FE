@@ -402,6 +402,8 @@ import {
   printFormula
 } from './latexExporter';
 
+import { sanitizeKatexHtml } from '../../utils/katexSanitize';
+
 // State
 const defaultCode = `x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}`;
 const latexCode = ref(defaultCode);
@@ -526,16 +528,19 @@ const renderCurrentCode = () => {
       displayMode: true,
       throwOnError: true
     });
-    renderedHtml.value = html;
+    // Sanitizza prima dell'uso in v-html (CVE-2026-103923: senza sanitizer,
+    // un Object.prototype inquinato abilita \href{javascript:...}).
+    // forbidImages blocca anche gli \includegraphics verso risorse esterne.
+    renderedHtml.value = sanitizeKatexHtml(html, { forbidImages: true });
     renderError.value = '';
   } catch (err: any) {
     renderError.value = err?.message || 'Errore nella formula LaTeX';
     // Fallback: render with throwOnError=false so partial math still shows
     try {
-      renderedHtml.value = katex.renderToString(code, {
+      renderedHtml.value = sanitizeKatexHtml(katex.renderToString(code, {
         displayMode: true,
         throwOnError: false
-      });
+      }));
     } catch {
       renderedHtml.value = '';
     }

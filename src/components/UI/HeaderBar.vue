@@ -20,17 +20,37 @@
           </template>
         </button>
 
-        <!-- Pulsante LaTeX Editor (icona matita a sinistra) - nascosto su schermi stretti -->
-        <a 
-          v-if="!isNarrow"
-          href="/latex-editor" 
-          class="btn-icon btn-latex"
-          title="Editor LaTeX Online"
-          aria-label="Editor LaTeX Online"
-          @click="onGoToLatex"
-        >
-          <Pencil class="icon" />
-        </a>
+        <!-- Pulsante editor (icona matita a sinistra) - menu LaTeX / Markdown - nascosto su schermi stretti -->
+        <div v-if="!isNarrow" ref="editorsBox" class="editors-box">
+          <button 
+            class="btn-icon btn-latex"
+            title="Editor di testo: LaTeX e Markdown"
+            aria-label="Menu editor: LaTeX e Markdown"
+            aria-haspopup="true"
+            :aria-expanded="editorsMenuOpen"
+            @click.stop="editorsMenuOpen = !editorsMenuOpen"
+          >
+            <Pencil class="icon" />
+          </button>
+
+          <!-- Menu editor disponibili -->
+          <div v-if="editorsMenuOpen" class="editors-menu">
+            <button class="editors-item" @click="goToEditor('/latex-editor')">
+              <span class="editors-item-emoji">✏️</span>
+              <span class="editors-item-main">
+                <span class="editors-item-name">Editor LaTeX Online</span>
+                <span class="editors-item-desc">Formule matematiche, simboli ed esportazione</span>
+              </span>
+            </button>
+            <button class="editors-item" @click="goToEditor('/markdown-editor')">
+              <span class="editors-item-emoji">📝</span>
+              <span class="editors-item-main">
+                <span class="editors-item-name">Editor Markdown Online</span>
+                <span class="editors-item-desc">Documenti, tabelle, codice e formule</span>
+              </span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Titolo pagina -->
@@ -329,7 +349,8 @@ const searchBox = ref<HTMLElement | null>(null)
 // Appiattisce l'albero in lista di voci navigabili, con breadcrumb di sezione
 const flatMenu = computed<SearchEntry[]>(() => {
   const out: SearchEntry[] = [
-    { name: 'Editor LaTeX Online', link: '/latex-editor', type: 'latex', path: 'Strumenti & Utility' }
+    { name: 'Editor LaTeX Online', link: '/latex-editor', type: 'latex', path: 'Strumenti & Utility' },
+    { name: 'Editor Markdown Online', link: '/markdown-editor', type: 'mdedit', path: 'Strumenti & Utility' }
   ]
   const walk = (nodes: any[], trail: string[]) => {
     for (const n of nodes || []) {
@@ -345,18 +366,24 @@ const flatMenu = computed<SearchEntry[]>(() => {
   return out
 })
 
-const onGoToLatex = () => {
+// 🖊 Pulsante matita: menu con i due editor disponibili (LaTeX / Markdown)
+const editorsBox = ref<HTMLElement | null>(null)
+const editorsMenuOpen = ref(false)
+
+const goToEditor = (link: string) => {
+  editorsMenuOpen.value = false
   if (typeof window !== 'undefined' && (window as any).__showGlobalLoader) {
     (window as any).__showGlobalLoader()
   }
+  window.location.assign(link)
 }
 
 const searchResults = computed<SearchEntry[]>(() => {
   const q = searchQuery.value.trim().toLowerCase()
   if (!q) return []
   return flatMenu.value
-    // Su schermi stretti (< 900px) l'Editor LaTeX non è disponibile: escludilo dai risultati
-    .filter(e => !(props.isNarrow && e.type === 'latex'))
+    // Su schermi stretti (< 900px) gli editor non sono disponibili: escludili dai risultati
+    .filter(e => !(props.isNarrow && (e.type === 'latex' || e.type === 'mdedit')))
     .filter(e => e.name.toLowerCase().includes(q) || e.path.toLowerCase().includes(q))
     .slice(0, 10)
 })
@@ -387,6 +414,7 @@ const typeEmoji = (t?: string): string => {
     case 'chess': return '♟️'
     case 'home': return '🏠'
     case 'latex': return '✏️'
+    case 'mdedit': return '📝'
     default: return '📄'
   }
 }
@@ -423,15 +451,18 @@ watch(searchQuery, () => {
   searchOpen.value = searchQuery.value.trim().length > 0
 })
 
-// Chiude i suggerimenti al cambio pagina e al click fuori dal campo
+// Chiude i suggerimenti e il menu editor al cambio pagina e al click fuori dal campo
 watch(route, () => {
   searchQuery.value = ''
   closeSearch()
+  editorsMenuOpen.value = false
 })
 
 const onDocumentClick = (e: MouseEvent) => {
   const el = searchBox.value
   if (el && !el.contains(e.target as Node)) closeSearch()
+  const editors = editorsBox.value
+  if (editors && !editors.contains(e.target as Node)) editorsMenuOpen.value = false
 }
 
 onMounted(() => {
@@ -907,6 +938,74 @@ const onLinkSelect = (item: Link) => {
 .btn-latex:hover {
   color: #ff8c00;
   border-color: rgba(255, 140, 0, 0.4);
+}
+
+/* 🖊 Menu editor (LaTeX / Markdown) collegato all'icona matita */
+.editors-box {
+  position: relative;
+}
+
+.editors-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: 17.5rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.35rem;
+}
+
+.editors-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.editors-item:hover {
+  background: #f1f5f9;
+}
+
+.editors-item-emoji {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.editors-item-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.editors-item-name {
+  font-family: 'Julee', cursive;
+  font-size: 0.95rem;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editors-item-desc {
+  font-size: 0.72rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Titolo */

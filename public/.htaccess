@@ -1,39 +1,25 @@
-# Abilita mod_rewrite
-RewriteEngine On
-RewriteBase /
-
-# Supporto MIME types per modelli 3D e font
-AddType model/gltf-binary .glb
-AddType model/gltf+json .gltf
-AddType font/woff2 .woff2
-
-# Configurazione PHP Altervista
-AddHandler av-php8 .php
-
-# Compressione GZIP
-<IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
-</IfModule>
-
-# Cache-Control per file statici
+# Header di sicurezza per il blog (deploy Apache su hosting Altervista)
+# Attivi solo se mod_headers è disponibile, per evitare errori 500 altrimenti.
 <IfModule mod_headers.c>
-  # index.html: nessun cache
-  <FilesMatch "index\.html$">
-    Header set Cache-Control "no-cache, no-store, must-revalidate"
-  </FilesMatch>
+  # Previene il MIME-sniffing nei browser
+  Header always set X-Content-Type-Options "nosniff"
 
-  # Asset con hash (js, css): cache lungo
-  <FilesMatch "\.(js|css|woff2|glb|gltf)$">
-    Header set Cache-Control "public, max-age=31536000, immutable"
-  </FilesMatch>
+  # Anti-clickjacking (riservandolo al client normale)
+  Header always set X-Frame-Options "SAMEORIGIN"
 
-  # Immagini e media: cache moderato
-  <FilesMatch "\.(jpg|jpeg|png|gif|svg|webp|ico|mp4|webm|pdf)$">
-    Header set Cache-Control "public, max-age=2592000"
-  </FilesMatch>
+  # Non invia URL di provenienza completi verso risorse cross-origin
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Forza HTTPS per 6 mesi (site is served over HTTPS)
+  Header always set Strict-Transport-Security "max-age=15552000"
+
+  # Riduce le superfici via browser features
+  Header always set Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=(), usb=()"
+
+  # Content-Security-Policy: origini esterne effettivamente utilizzate dal sito:
+  # - iubenda (cookie consent: cdn + iframe policy/vendor-list)
+  # - Google Fonts (css + font)
+  # - YouTube (embed delle videolezioni)
+  # - worker blob (Monaco editor) e librerie KaTeX/resource interne
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.iubenda.com https://*.iubenda.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: *; media-src 'self' data: *; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://*.iubenda.com; connect-src 'self' https://*.iubenda.com https://cdn.iubenda.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
 </IfModule>
-
-# SPA routing: reindirizza verso index.html
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.html [L,QSA]
