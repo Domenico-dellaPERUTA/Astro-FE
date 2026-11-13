@@ -27,6 +27,9 @@ pnpm-debug.log*
 src/content/topics/*.md
 src/content/topics/*.off
 
+# eccezioni: file di riferimento/template che iniziano con _info
+!src/content/topics/_info*
+
 # WebPages
 src/assets/WebPages/*
 create_rust_md.sh

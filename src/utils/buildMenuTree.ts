@@ -3,7 +3,9 @@
  * 
  * Trasforma la collezione piatta dei topic in un albero nidificato a cartelle.
  * 
- * Input:  Array di topic con { data: { title, type, menu, index, images?, pgn? }, id }
+ * Input:  Array di topic con { data: { title, type, menu, index, visible?, images?, pgn? }, id }
+ *         I topic con visible: false sono bozze: esclusi da menu e siblings
+ *         (la pagina non viene nemmeno generata, via URL diretto → 404)
  * Output: Array di nodi menu nidificati per MenuMaster/MenuItem
  */
 
@@ -14,6 +16,7 @@ interface TopicEntry {
     type: string;
     menu: string;
     index: number;
+    visible?: boolean;   // false → bozza: nascosta da menu e siblings
     images?: string[];
     pgn?: string;
   };
@@ -45,8 +48,11 @@ export function buildMenuTree(topics: TopicEntry[]): TreeNode[] {
   // Mappa delle cartelle per aggiungere i link
   const categoryMap = new Map<string, TopicEntry[]>();
 
+  // Bozze (visible: false): escluse dal menu (la pagina non viene nemmeno generata)
+  const visibleTopics = (topics || []).filter(t => t.data.visible !== false);
+
   // Prima passata: costruisci l'albero e raccogli file per categoria
-  for (const topic of topics) {
+  for (const topic of visibleTopics) {
     const menuPath = topic.data.menu || "";
     if (!menuPath) {
       continue;
@@ -89,7 +95,7 @@ export function buildMenuTree(topics: TopicEntry[]): TreeNode[] {
   }
 
   // Seconda passata: aggiungi i link alle cartelle foglia
-  addLinksToLeafFolders(root, categoryMap, topics);
+  addLinksToLeafFolders(root, categoryMap, visibleTopics);
 
   // Ordinamento finale
   sortRecursive(root);
@@ -158,7 +164,10 @@ function sortRecursive(nodes: TreeNode[]) {
  */
 export function findSiblings(topics: TopicEntry[], currentMenuPath: string): TreeNodeLeaf[] {
   return topics
-    .filter(t => (t.data.menu || "") === (currentMenuPath || ""))
+    .filter(t =>
+      t.data.visible !== false && // le bozze non contano tra i siblings
+      (t.data.menu || "") === (currentMenuPath || "")
+    )
     .map(t => ({
       name: t.data.title,
       link: `/topic/${t.id}/`,

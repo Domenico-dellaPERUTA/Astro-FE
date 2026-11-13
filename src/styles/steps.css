@@ -1,0 +1,339 @@
+/* src/styles/steps.css
+   Tipo "steps": presentazione a slide stile PowerPoint.
+   Ogni figlio diretto del body è una SLIDE che riempie l'intera vista
+   (nessuno scroll); i suoi elementi con data-step appaiono a passi
+   successivi con effetti animati. Il CSS è globale perché il body è
+   montato via v-html (fuori dallo scope di TopicPage). */
+
+/* ------------------------------------------------------------ */
+/* Impalcato: vista fissa, senza scroll                          */
+/* ------------------------------------------------------------ */
+
+.steps-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 0.75rem 1rem 1.4rem;
+}
+
+/* Il palco: esattamente l'area visibile disponibile */
+.steps-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+
+/* ------------------------------------------------------------ */
+/* Slide: ognuna copre l'intero palco                            */
+/* ------------------------------------------------------------ */
+
+.step-slide {
+  position: absolute;
+  inset: 0;
+  display: none;
+  overflow: hidden;
+  padding: 2.25rem 3rem;
+  background-color: #ffffff;
+  color: #222;
+  font-family: 'New Tegomin', serif;
+  font-size: 1.15rem;
+  line-height: 1.65;
+  text-align: left;
+}
+
+.step-slide.slide-active {
+  display: block;
+}
+
+/* Helper OPT-IN: contenuto centrato in verticale (o in tutto).
+   Senza queste classi il contenuto scorre dall'alto verso il basso */
+.step-slide.slide-center.slide-active {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.step-slide.slide-center-both.slide-active {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* Transizioni tra slide (direzione gestita da TopicPage) */
+.slide-enter-right { animation: slide-in-right 0.45s ease both; }
+.slide-enter-left  { animation: slide-in-left  0.45s ease both; }
+.slide-exit-left   { animation: slide-out-left  0.45s ease both; }
+.slide-exit-right  { animation: slide-out-right 0.45s ease both; }
+
+@keyframes slide-in-right  { from { opacity: 0; transform: translateX(5%); }  to { opacity: 1; transform: none; } }
+@keyframes slide-in-left   { from { opacity: 0; transform: translateX(-5%); } to { opacity: 1; transform: none; } }
+@keyframes slide-out-left  { from { opacity: 1; } to { opacity: 0; transform: translateX(-5%); } }
+@keyframes slide-out-right { from { opacity: 1; } to { opacity: 0; transform: translateX(5%); } }
+
+/* ------------------------------------------------------------ */
+/* Tipografia dentro le slide (coerente con .page)               */
+/* ------------------------------------------------------------ */
+
+.step-slide h1,
+.step-slide h2 {
+  font-family: 'Fredericka the Great', cursive;
+  font-weight: normal;
+  color: #0f172a;
+  font-size: 2.1rem;
+  line-height: 1.2;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.step-slide h3 {
+  font-family: 'Fredericka the Great', cursive;
+  font-weight: normal;
+  color: #0f172a;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid #3b82f6;
+  padding-left: 1rem;
+}
+
+.step-slide p {
+  margin: 0.75rem 0;
+}
+
+.step-slide img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+.step-slide b,
+.step-slide a {
+  font-family: 'Julee', cursive;
+  font-weight: bold;
+}
+
+.step-slide a {
+  color: #265301;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.step-slide a:hover {
+  color: #437a16;
+  border-bottom-color: #cfff04;
+}
+
+.step-slide ul,
+.step-slide ol {
+  padding-left: 1.6rem;
+  margin: 0.75rem 0;
+}
+
+.step-slide li {
+  margin: 0.35rem 0;
+}
+
+.step-slide blockquote {
+  margin: 1rem 0;
+  padding: 0.5rem 1.25rem;
+  border-left: 4px solid #93c5fd;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.step-slide .katex-display {
+  margin: 1rem 0;
+}
+
+/* Sorgenti non eseguibili: mai mostrati */
+.step-slide script,
+.step-slide style {
+  display: none !important;
+}
+
+/* ------------------------------------------------------------ */
+/* Blocchi a comparsa                                            */
+/* ------------------------------------------------------------ */
+
+/* Nascosto di default: il contenuto si apre passo dopo passo */
+.step-item {
+  display: none;
+}
+
+/* Blocco centrato orizzontalmente (center: true nel formato YAML) */
+.step-slide .step-center {
+  text-align: center;
+}
+
+.step-item.step-visible {
+  display: block;
+}
+
+/* Varianti d'ingresso (data-fx) */
+.step-item.step-visible.fx-fade        { animation: st-fade        0.55s ease both; }
+.step-item.step-visible.fx-slide-left  { animation: st-slide-left  0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.step-item.step-visible.fx-slide-right { animation: st-slide-right 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.step-item.step-visible.fx-slide-up    { animation: st-slide-up    0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.step-item.step-visible.fx-slide-down  { animation: st-slide-down  0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.step-item.step-visible.fx-zoom        { animation: st-zoom        0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.step-item.step-visible.fx-zoom-out    { animation: st-zoom-out    0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.step-item.step-visible.fx-pop         { animation: st-pop         0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.step-item.step-visible.fx-flip        { animation: st-flip        0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.step-item.step-visible.fx-blur        { animation: st-blur        0.6s ease both; }
+
+@keyframes st-fade {
+  from { opacity: 0; }
+}
+
+@keyframes st-slide-left  { from { opacity: 0; transform: translateX(-44px); } }
+@keyframes st-slide-right { from { opacity: 0; transform: translateX(44px); } }
+@keyframes st-slide-up    { from { opacity: 0; transform: translateY(30px); } }
+@keyframes st-slide-down  { from { opacity: 0; transform: translateY(-30px); } }
+
+@keyframes st-zoom     { from { opacity: 0; transform: scale(0.85); } }
+@keyframes st-zoom-out { from { opacity: 0; transform: scale(1.18); } }
+
+@keyframes st-pop {
+  0%   { opacity: 0; transform: scale(0.55); }
+  70%  { opacity: 1; transform: scale(1.07); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes st-flip {
+  from { opacity: 0; transform: perspective(700px) rotateX(-55deg); transform-origin: 50% 100%; }
+}
+
+@keyframes st-blur {
+  from { opacity: 0; filter: blur(10px); }
+  to   { opacity: 1; filter: blur(0); }
+}
+
+/* Uscita animata (data-out): resta in display block finché l'animazione
+   non termina (poi TopicPage rimuove step-visible) */
+.step-item.step-exit {
+  display: block !important;
+  animation: st-out 0.45s ease both !important;
+}
+
+@keyframes st-out {
+  to { opacity: 0; transform: translateY(-14px) scale(0.97); }
+}
+
+/* ------------------------------------------------------------ */
+/* Overlay: elementi sovrapposti (es. rette sopra un grafico)    */
+/* ------------------------------------------------------------ */
+
+/* Contenitore di sovrapposizione: il PRIMO figlio definisce la
+   dimensione; gli elementi animati successivi si sovrappongono */
+.step-canvas {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 1rem auto;
+}
+
+/* La base (primo figlio) resta in flusso e dimensiona il contenitore */
+.step-canvas > svg:first-child {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Gli overlay animati coprono esattamente la base */
+.step-canvas > .step-item {
+  display: none;
+  position: absolute;
+  inset: 0;
+}
+
+.step-canvas > .step-item.step-visible,
+.step-canvas > .step-item.step-exit {
+  display: block;
+}
+
+/* ------------------------------------------------------------ */
+/* Indicatori: dots per slide + passo di comparsa                */
+/* ------------------------------------------------------------ */
+
+.steps-indicators {
+  position: absolute;
+  bottom: 0.55rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.steps-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.steps-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: all 0.25s ease;
+}
+
+.steps-dot.past {
+  background: #94a3b8;
+}
+
+.steps-dot.on {
+  background: #2563eb;
+  transform: scale(1.35);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.steps-step-info {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+}
+
+/* ------------------------------------------------------------ */
+/* Accessibilità: movimento ridotto                              */
+/* ------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .step-item.step-visible,
+  .step-item.fx-slide-left.step-visible,
+  .step-item.fx-slide-right.step-visible,
+  .step-item.fx-slide-up.step-visible,
+  .step-item.fx-slide-down.step-visible,
+  .step-item.fx-zoom.step-visible,
+  .step-item.fx-zoom-out.step-visible,
+  .step-item.fx-pop.step-visible,
+  .step-item.fx-flip.step-visible,
+  .step-item.fx-blur.step-visible,
+  .step-item.step-exit,
+  .slide-enter-right,
+  .slide-enter-left,
+  .slide-exit-left,
+  .slide-exit-right {
+    animation: st-fade 0.01s both !important;
+  }
+}

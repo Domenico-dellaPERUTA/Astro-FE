@@ -31,6 +31,19 @@ const chessMove = ref<string | null>(null)
 const carouselAction = ref<string | null>(null)
 const isVideoFullscreen = ref(false)
 
+// Steps state (presentazione a slide stile PowerPoint)
+const stepsSlide = ref(1)        // slide corrente (1-based)
+const stepsSlideTotal = ref(1)   // numero totale di slide
+const stepsStep = ref(1)         // passo di comparsa corrente nella slide
+const stepsStepTotal = ref(1)    // passi di comparsa nella slide corrente
+const stepsAction = ref<string | null>(null)  // comandi da HeaderBar: next/prev/first/last
+const autoplay = ref(false)      // avanza automaticamente quando finisce l'audio dello step
+const stepsData = ref<any[]>([]) // slide YAML dal frontmatter (chiave "slides")
+
+const setStepsAction = (action: string | null) => {
+    stepsAction.value = action
+}
+
 const toggleVideoFullscreen = () => {
     const container = document.querySelector('.video-carousel-container') || document.querySelector('.carousel-container')
     if (!document.fullscreenElement) {
@@ -66,13 +79,22 @@ const setPageData = (data: any) => {
     siblings.value = data.siblings || []
     menuPath.value = data.menuPath || ''
     audio.value = data.audio ?? ''
-    
-    // Per i tipi code, md e html, imposta pathFile solo se audio è un percorso file (stringa)
+    autoplay.value = data.autoplay === true
+    stepsData.value = data.slides || []
+
+    // Per i tipi code, md, html e steps, imposta pathFile solo se audio è un percorso file (stringa)
     // Se audio === true il pulsante viene mostrato e verrà usata la sintesi vocale (TTS) come fallback
     // Rimuovi il "/" iniziale se presente, perché HeaderBar lo aggiungerà
-    if ((data.type === 'code' || data.type === 'md' || data.type === 'html') && typeof data.audio === 'string' && data.audio) {
+    if ((data.type === 'code' || data.type === 'md' || data.type === 'html' || data.type === 'steps') && typeof data.audio === 'string' && data.audio) {
         pathFile.value = data.audio.startsWith('/') ? data.audio.slice(1) : data.audio
     }
+
+    // Reset stato steps al cambio pagina (evita contatori residui)
+    stepsSlide.value = 1
+    stepsSlideTotal.value = 1
+    stepsStep.value = 1
+    stepsStepTotal.value = 1
+    stepsAction.value = null
     
     // Sincronizza Info Store
     const info = useInfoStore()
@@ -174,6 +196,14 @@ export const usePageStore = () => {
         chessFlipped,
         chessMove,
         isInfoOpen,
+        stepsSlide,
+        stepsSlideTotal,
+        stepsStep,
+        stepsStepTotal,
+        stepsAction,
+        setStepsAction,
+        autoplay,
+        stepsData,
         getCarouselSlideInfo,
         setPageData,
         navigateToPage,

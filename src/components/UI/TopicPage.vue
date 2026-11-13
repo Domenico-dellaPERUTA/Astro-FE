@@ -1,6 +1,6 @@
 <!-- app/components/UI/TopicPage.vue -->
 <template>
-  <div :class="['topic-page-container', { 'no-scroll': type === 'code' || type === 'chess' }]">
+  <div :class="['topic-page-container', { 'no-scroll': type === 'code' || type === 'chess' || type === 'steps' }]">
     <!-------------------------------- 🧩 HTML ------------------------------------------->
     <div v-if="type === 'html'" v-html="renderedHtml"></div>
 
@@ -282,6 +282,57 @@
          </button>
     </div>
 
+    <!-------------------------- 🧩 STEPS (presentazione a slide) ------------->
+    <div v-else-if="type === 'steps'" class="steps-wrapper">
+      <!-- Palco: una "vista" fissa pari all'area disponibile, senza scroll.
+           Il body HTML viene montato qui: ogni figlio diretto è una SLIDE,
+           i suoi elementi con data-step appaiono a passi successivi -->
+      <div
+        ref="stepsStage"
+        class="steps-stage"
+        v-html="renderedSteps"
+        @click="onStageClick"
+      ></div>
+
+      <!-- Pulsanti di navigazione rotondi laterali (stile carousel/chess) -->
+      <button
+        class="nav-btn left"
+        :disabled="stepsSlide <= 1 && stepsStep <= 1"
+        aria-label="Slide precedente"
+        @click="stepsPrev"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+          stroke-width="2" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <button
+        class="nav-btn right"
+        :disabled="stepsSlide >= stepsSlideTotal && stepsStep >= stepsStepTotal"
+        aria-label="Slide successiva"
+        @click="stepsNext"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+          stroke-width="2" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      <!-- Indicatori: dots per slide + passo di comparsa corrente -->
+      <div class="steps-indicators">
+        <div class="steps-dots">
+          <span
+            v-for="n in stepsSlideTotal"
+            :key="n"
+            :class="['steps-dot', { on: n === stepsSlide, past: n < stepsSlide }]"
+          ></span>
+        </div>
+        <div v-if="stepsStepTotal > 1" class="steps-step-info">
+          passo {{ stepsStep }} / {{ stepsStepTotal }}
+        </div>
+      </div>
+    </div>
+
     <!-------------------------- 🧨 CARICAMENTO ---------------------------------->
     <div v-else></div>
   </div>
@@ -315,7 +366,7 @@ if (typeof window !== 'undefined') {
 
 
 const pageStore = usePageStore()
-const { topic, type, items, code, pgn, currentIndex, showAvatar, avatarReady, setCarouselRef, navigateToPage, audio, carouselAction, setCarouselAction, isVideoFullscreen, toggleVideoFullscreen, setChessMove, chessCurrentMove, chessTotalMoves } = pageStore
+const { topic, type, items, code, pgn, currentIndex, showAvatar, avatarReady, setCarouselRef, navigateToPage, audio, carouselAction, setCarouselAction, isVideoFullscreen, toggleVideoFullscreen, setChessMove, chessCurrentMove, chessTotalMoves, stepsSlide, stepsSlideTotal, stepsStep, stepsStepTotal, stepsAction, setStepsAction, autoplay, stepsData } = pageStore
 
 watch(carouselAction, async (action) => {
   if (!action || !carouselRef.value) return
@@ -343,6 +394,9 @@ import markedKatex from 'marked-katex-extension'
 
 // Enable KaTeX math rendering in marked ($...$ for inline, $$...$$ for display)
 marked.use(markedKatex({ throwOnError: false }))
+
+// KaTeX auto-render per il tipo "steps": converte $...$ e \(...\) nell'HTML del body
+import renderMathInElement from 'katex/contrib/auto-render'
 
 // Configure marked with a custom renderer for syntax highlighting
 const mdRenderer = new Renderer()
@@ -670,6 +724,513 @@ onMounted(() => {
   }
 })
 
+/** ============================================================
+ * 🪜 STEPS — presentazione a slide stile PowerPoint
+ * ============================================================
+ * Il body è HTML: ogni figlio diretto è una SLIDE (section/div):
+ *
+ *   <section class="slide" data-audio="/WebPages/.../slide-1.mp3">
+ *     <h1 data-step="1">Titolo</h1>              appare al passo 1
+ *     <p data-step="2" data-fx="slide-up">…</p>  appare al passo 2
+ *     <img data-step="3" data-out="4" …>         esce al passo 4
+ *   </section>
+ *
+ *   data-step  passo di apparizione (se nessun elemento lo ha,
+ *              i figli diretti della slide diventano passi progressivi)
+ *   data-out   passo di sparizione (uscita animata)
+ *   data-fx    fade | slide-left | slide-right | slide-up | slide-down
+ *              | zoom | zoom-out | pop | flip | blur
+ *   data-audio mp3 riprodotto quando il blocco entra in scena
+ *              (sulla slide: quando si entra nella slide)
+ *   classi helper slide: .slide-center (contenuto centrato in verticale),
+ *                        .slide-center-both (centrato anche in orizzontale)
+ *
+ * Frontmatter:
+ *   audio: true     → TTS del testo del blocco a ogni passo
+ *   audio: "/x.mp3" → pulsante header con la spiegazione completa
+ *   autoplay: true  → quando l'audio del passo termina, avanza
+ *
+ * Authoring: in alternativa al body HTML, le slide possono essere
+ * definite in YAML nel frontmatter (chiave `slides:`) → slidesToHtml().
+ *
+ * Le slide riempono tutta la vista disponibile (nessuno scroll) e si
+ * succedono con transizione direzionale.
+ */
+
+const stepsStage = ref<HTMLElement | null>(null)
+const renderedSteps = ref('')
+
+interface StepBlock { el: HTMLElement; step: number; out: number | null; fx: string }
+interface StepSlide { el: HTMLElement; blocks: StepBlock[]; maxStep: number; audio?: string }
+
+let stepSlides: StepSlide[] = []
+
+/** 🧩 Identifica slide e blocchi a comparsa e calcola i totali */
+function collectStepSlides(stage: HTMLElement) {
+  stepSlides = []
+
+  // Ogni figlio diretto dello stage è una slide.
+  // Fallback: senza contenitori, l'intero body è una slide unica.
+  const slideEls = (Array.from(stage.children) as HTMLElement[])
+    .filter(el => el.tagName !== 'SCRIPT' && el.tagName !== 'STYLE')
+  const targets = slideEls.length > 0 ? slideEls : [stage]
+
+  for (const slideEl of targets) {
+    if (slideEl !== stage) slideEl.classList.add('step-slide')
+
+    const blocks: StepBlock[] = []
+    let maxStep = 0
+
+    // Blocchi a comparsa: elementi con data-step; se la slide non ne ha
+    // nessuno, i figli diretti diventano passi progressivi (1, 2, 3…)
+    const tagged = Array.from(slideEl.querySelectorAll('[data-step]')) as HTMLElement[]
+    const blockEls = tagged.length > 0
+      ? tagged
+      : (Array.from(slideEl.children) as HTMLElement[])
+
+    let autoStep = 0
+    for (const el of blockEls) {
+      if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue
+
+      const rawStep = parseInt(el.dataset.step || '', 10)
+      if (tagged.length > 0 && !Number.isFinite(rawStep)) continue // sempre visibile
+
+      let step = rawStep
+      if (!Number.isFinite(step) || step < 1) {
+        autoStep++
+        step = autoStep
+      }
+      el.classList.add('step-item', `fx-${el.dataset.fx || 'fade'}`)
+
+      let out: number | null = parseInt(el.dataset.out || '', 10)
+      if (!Number.isFinite(out)) out = null
+      else if (out <= step) out = step + 1 // uscita immediata: visibile un solo passo
+      if (out !== null && out > maxStep) maxStep = out
+      if (step > maxStep) maxStep = step
+
+      blocks.push({ el, step, out, fx: el.dataset.fx || 'fade' })
+    }
+
+    stepSlides.push({
+      el: slideEl,
+      blocks,
+      maxStep: Math.max(maxStep, 1),
+      audio: slideEl.dataset.audio || undefined,
+    })
+  }
+}
+
+/** ⏳ Uscite di blocco in corso: annullabili se il blocco torna visibile */
+const pendingExit = new WeakMap<HTMLElement, () => void>()
+
+/** 👁 Applica la visibilità (con animazione) di un singolo blocco */
+function setBlockVisible(el: HTMLElement, visible: boolean) {
+  if (visible) {
+    pendingExit.get(el)?.()
+    pendingExit.delete(el)
+    if (el.classList.contains('step-visible')) return
+    el.classList.add('step-visible')
+    // riavvia l'animazione d'ingresso anche se la classe torna nello stesso frame
+    el.style.animation = 'none'
+    void el.offsetHeight
+    el.style.animation = ''
+    return
+  }
+  if (!el.classList.contains('step-visible') || el.classList.contains('step-exit')) return
+
+  // uscita animata: display none solo quando l'animazione è finita
+  el.classList.add('step-exit')
+  let done = false
+  const cleanup = () => {
+    if (done) return
+    done = true
+    el.removeEventListener('animationend', onEnd)
+    pendingExit.delete(el)
+    el.classList.remove('step-visible', 'step-exit')
+  }
+  const onEnd = (e: AnimationEvent) => {
+    if (e.target !== el) return
+    cleanup()
+  }
+  el.addEventListener('animationend', onEnd)
+  const timer = setTimeout(cleanup, 700) // rete di sicurezza
+  pendingExit.set(el, () => {
+    done = true
+    clearTimeout(timer)
+    el.removeEventListener('animationend', onEnd)
+    el.classList.remove('step-exit')
+  })
+}
+
+/** 👁 Visibilità di tutti i blocchi di una slide per il passo corrente */
+function applyBlockVisibility(slide: StepSlide, step: number) {
+  for (const b of slide.blocks) {
+    const visible = b.step <= step && (b.out === null || step < b.out)
+    setBlockVisible(b.el, visible)
+  }
+}
+
+/** 🎬 Transizione tra slide, direzionale (stile PowerPoint "Push") */
+function showSlide(index: number, dir: 'forward' | 'back') {
+  stepSlides.forEach((s, i) => {
+    const el = s.el
+    const clearAnim = () => el.classList.remove('slide-enter-left', 'slide-enter-right')
+    if (i === index) {
+      // entra: da destra se si avanza, da sinistra se si torna indietro
+      const from = dir === 'forward' ? 'slide-enter-right' : 'slide-enter-left'
+      el.classList.remove('slide-exit-left', 'slide-exit-right')
+      const restart = el.classList.contains('slide-active')
+      el.classList.remove('slide-enter-left', 'slide-enter-right')
+      if (restart) void el.offsetHeight
+      el.classList.add('slide-active', from)
+      const onEnd = (e: AnimationEvent) => {
+        if (e.target !== el) return
+        el.removeEventListener('animationend', onEnd)
+        clearTimeout(t)
+        clearAnim()
+      }
+      el.addEventListener('animationend', onEnd)
+      const t = setTimeout(clearAnim, 650)
+    } else if (el.classList.contains('slide-active')) {
+      // esce: verso sinistra se si avanza, verso destra se si torna
+      const to = dir === 'forward' ? 'slide-exit-left' : 'slide-exit-right'
+      el.classList.remove('slide-enter-left', 'slide-enter-right', 'slide-exit-left', 'slide-exit-right')
+      el.classList.add(to)
+      const finish = () => {
+        el.removeEventListener('animationend', onEnd)
+        clearTimeout(t)
+        el.classList.remove('slide-active', 'slide-exit-left', 'slide-exit-right')
+      }
+      const onEnd = (e: AnimationEvent) => {
+        if (e.target !== el) return
+        finish()
+      }
+      el.addEventListener('animationend', onEnd)
+      const t = setTimeout(finish, 650)
+    }
+  })
+}
+
+/** 🚚 Passa a una slide (indice 0-based) con transizione direzionale */
+function goToSlide(index: number, dir: 'forward' | 'back') {
+  if (index < 0 || index >= stepSlides.length) return
+  if (index === stepsSlide.value - 1) return
+  stopStepAudio()
+  showSlide(index, dir)
+  stepsSlide.value = index + 1
+  stepsStep.value = 1
+}
+
+/** ⬅️➡️ Navigazione: la freccia consuma prima i passi, poi le slide */
+function stepsNext() {
+  if (type.value !== 'steps' || !stepSlides.length) return
+  const slide = stepSlides[stepsSlide.value - 1]
+  if (stepsStep.value < slide.maxStep) {
+    stepsStep.value++
+  } else if (stepsSlide.value < stepSlides.length) {
+    goToSlide(stepsSlide.value, 'forward')
+  }
+}
+function stepsPrev() {
+  if (type.value !== 'steps' || !stepSlides.length) return
+  if (stepsStep.value > 1) {
+    stepsStep.value--
+  } else if (stepsSlide.value > 1) {
+    goToSlide(stepsSlide.value - 2, 'back')
+    stepsStep.value = stepSlides[stepsSlide.value - 1].maxStep
+  }
+}
+function stepsFirst() {
+  if (type.value !== 'steps' || !stepSlides.length) return
+  if (stepsSlide.value === 1) { stepsStep.value = 1; return }
+  goToSlide(0, 'back')
+}
+function stepsLast() {
+  if (type.value !== 'steps' || !stepSlides.length) return
+  const last = stepSlides.length - 1
+  if (stepsSlide.value - 1 === last) { stepsStep.value = stepSlides[last].maxStep; return }
+  goToSlide(last, 'forward')
+  stepsStep.value = stepSlides[last].maxStep
+}
+
+// Comandi di navigazione step inviati da HeaderBar (frecce della barra)
+watch(stepsAction, (action) => {
+  if (!action || type.value !== 'steps') return
+  if (action === 'next') stepsNext()
+  else if (action === 'prev') stepsPrev()
+  else if (action === 'first') stepsFirst()
+  else if (action === 'last') stepsLast()
+  // Reset l'azione dopo l'esecuzione
+  setStepsAction(null)
+})
+
+/** 🔊 Audio dello step: mp3 (data-audio) oppure sintesi vocale (audio: true) */
+let stepAudioEl: HTMLAudioElement | null = null
+let stepTtsToken = 0
+
+function stopStepAudio() {
+  stepTtsToken++
+  if (stepAudioEl) {
+    try { stepAudioEl.pause() } catch (_) { /* ignore */ }
+    stepAudioEl = null
+  }
+  if (window.speechSynthesis) window.speechSynthesis.cancel()
+  showAvatar.value = 'stop'
+}
+
+/** 🎞 Frontmatter autoplay: quando l'audio del passo termina, avanza automaticamente */
+function maybeAutoAdvance() {
+  if (!autoplay.value) return
+  stepsNext()
+}
+
+function playStepMp3(src: string) {
+  stopStepAudio()
+  try {
+    showAvatar.value = 'run'
+    const el = new Audio(src)
+    stepAudioEl = el
+    el.onended = () => {
+      if (stepAudioEl !== el) return
+      stepAudioEl = null
+      showAvatar.value = 'stop'
+      maybeAutoAdvance()
+    }
+    el.onerror = () => {
+      if (stepAudioEl !== el) return
+      stepAudioEl = null
+      showAvatar.value = 'stop'
+    }
+    const p = el.play()
+    if (p && typeof p.catch === 'function') {
+      p.catch(() => { showAvatar.value = 'stop' })
+    }
+  } catch (_) {
+    showAvatar.value = 'stop'
+  }
+}
+
+function playStepTts(text: string) {
+  stopStepAudio()
+  if (!text || !window.speechSynthesis) return
+  // Senza voci disponibili il TTS terminerebbe all'istante (e con autoplay
+  // scarterebbe tutti gli step): meglio non partire affatto
+  if (window.speechSynthesis.getVoices().length === 0) return
+  const myToken = ++stepTtsToken
+
+  const utterance = new SpeechSynthesisUtterance(text)
+  utterance.lang = 'it-IT'
+  // Voce femminile italiana (stessa lista usata in HeaderBar)
+  const voices = window.speechSynthesis.getVoices()
+  const itVoices = voices.filter(v => v.lang.startsWith('it'))
+  const female = itVoices.find(v =>
+    /Emma|Federica|Elsa|Carla|Bianca|Alice|Paola|Luciana|Martina|Google italiano/i.test(v.name)
+  )
+  if (female) utterance.voice = female
+  else if (itVoices.length > 0) utterance.voice = itVoices[0]
+
+  utterance.onstart = () => { showAvatar.value = 'run' }
+  utterance.onend = () => {
+    if (myToken !== stepTtsToken) return
+    showAvatar.value = 'stop'
+    maybeAutoAdvance()
+  }
+  utterance.onerror = () => {
+    if (myToken !== stepTtsToken) return
+    showAvatar.value = 'stop'
+  }
+  window.speechSynthesis.speak(utterance)
+}
+
+/** 📖 Testo leggibile di un blocco (senza il MathML duplicato di KaTeX) */
+function blockText(el: HTMLElement): string {
+  const clone = el.cloneNode(true) as HTMLElement
+  clone.querySelectorAll('.katex-mathml').forEach(n => n.remove())
+  // Non leggere i blocchi non ancora comparsi (es. overlay del canvas)
+  clone.querySelectorAll('.step-item:not(.step-visible)').forEach(n => n.remove())
+  return (clone.textContent || '').replace(/\s+/g, ' ').trim()
+}
+
+/** 🔁 Applica visibilità dei blocchi e audio dello stato corrente */
+function refreshSteps(silent = false) {
+  const slide = stepSlides[stepsSlide.value - 1]
+  if (!slide) return
+  stepsSlideTotal.value = stepSlides.length
+  stepsStepTotal.value = slide.maxStep
+  applyBlockVisibility(slide, stepsStep.value)
+
+  if (silent) return
+
+  // 🔊 Priorità audio: blocco entrato con questo passo → slide → TTS
+  const entered = slide.blocks.filter(b => b.step === stepsStep.value)
+  const audioBlock = entered.find(b => b.el.dataset.audio)
+  if (audioBlock) {
+    playStepMp3(audioBlock.el.dataset.audio as string)
+    return
+  }
+  if (slide.audio) {
+    playStepMp3(slide.audio)
+    return
+  }
+  if (audio.value === true) {
+    let text = ''
+    if (entered.length) {
+      // i blocchi che entrano in questo passo
+      text = entered.map(b => blockText(b.el)).filter(Boolean).join(' ')
+    } else if (slide.blocks.length === 0) {
+      // slide statica: leggo tutto il testo
+      text = blockText(slide.el)
+    } else {
+      // passo "vuoto": leggo solo gli elementi statici della slide
+      const animated = new Set(slide.blocks.map(b => b.el))
+      text = Array.from(slide.el.children)
+        .filter(el => !animated.has(el as HTMLElement))
+        .map(el => blockText(el as HTMLElement))
+        .filter(Boolean).join(' ')
+    }
+    playStepTts(text)
+    return
+  }
+  stopStepAudio()
+}
+
+/** 🎬 Cambio slide o passo: aggiorna visibilità dei blocchi + audio del passo */
+watch([stepsSlide, stepsStep], () => {
+  if (type.value !== 'steps' || !stepSlides.length) return
+  refreshSteps()
+})
+
+/** 🖱 Click sul palco = avanza (tranne su link e controlli) */
+function onStageClick(event: MouseEvent) {
+  if (type.value !== 'steps') return
+  const target = event.target as HTMLElement
+  if (target.closest && target.closest('a, button, audio, video, input, [data-no-advance]')) return
+  stepsNext()
+}
+
+/** ⌨️ Frecce / PageUp-Down / Home-End / Spazio (stile PowerPoint) */
+function onStepsKeydown(event: KeyboardEvent) {
+  if (type.value !== 'steps') return
+  const target = event.target as HTMLElement
+  if (target && target.closest && target.closest('input, textarea, select, [contenteditable="true"]')) return
+  switch (event.key) {
+    case 'ArrowRight':
+    case 'PageDown':
+    case ' ':
+      event.preventDefault()
+      stepsNext()
+      break
+    case 'ArrowLeft':
+    case 'PageUp':
+      event.preventDefault()
+      stepsPrev()
+      break
+    case 'Home':
+      event.preventDefault()
+      stepsFirst()
+      break
+    case 'End':
+      event.preventDefault()
+      stepsLast()
+      break
+  }
+}
+
+/** 🏗 Slide YAML (frontmatter) → HTML della presentazione.
+ *  Genera lo stesso markup del formato body, così tutta la pipeline
+ *  a valle (sanifica → KaTeX → raccolta blocchi) resta invariata.
+ *  Numerazione: il `title` della slide è il passo 1, i passi seguenti
+ *  proseguono in ordine (2, 3, …). Nei blocchi html: gli elementi
+ *  interni possono usare data-step/data-out con questi stessi numeri. */
+function slidesToHtml(slides: any[]): string {
+  return slides.map((slide) => {
+    const classes = ['slide']
+    if (slide.center) classes.push('slide-center')
+    if (slide.centerBoth) classes.push('slide-center-both')
+    const slideAttrs = [`class="${classes.join(' ')}"`]
+    if (slide.audio) slideAttrs.push(`data-audio="${slide.audio}"`)
+    if (slide.background) slideAttrs.push(`style="background:${slide.background}"`)
+
+    const blocks: string[] = []
+    let n = 0
+    if (slide.title) {
+      n++
+      blocks.push(`<h2 data-step="${n}">${slide.title}</h2>`)
+    }
+    for (const step of slide.steps || []) {
+      n++
+      const attrs = [`data-step="${n}"`, `data-fx="${step.fx || 'fade'}"`]
+      if (step.out) attrs.push(`data-out="${step.out}"`)
+      if (step.audio) attrs.push(`data-audio="${step.audio}"`)
+      if (step.center) attrs.push('class="step-center"')
+
+      if (step.html != null && step.html !== '') {
+        // Blocco HTML libero (grafica complessa: SVG, .step-canvas, overlay…)
+        blocks.push(`<div ${attrs.join(' ')}>${step.html}</div>`)
+      } else {
+        const tag = step.tag || 'p'
+        const inner = `<${tag} ${attrs.join(' ')}>${step.text || ''}</${tag}>`
+        blocks.push(tag === 'li' ? `<ul>${inner}</ul>` : inner)
+      }
+    }
+    return `<section ${slideAttrs.join(' ')}>${blocks.join('\n')}</section>`
+  }).join('\n')
+}
+
+/** 🖌 Rendering del palco: sanifica, renderizza KaTeX, raccoglie slide e blocchi.
+ *  Fonte: slide YAML dal frontmatter se presenti, altrimenti il body HTML. */
+watch(
+  () => [type.value, code.value, stepsData.value],
+  async ([t]) => {
+    if (t !== 'steps') return
+    stopStepAudio()
+    stepSlides = []
+
+    // Correggi percorsi src relativi (come per il tipo html)
+    let correctedCode = ''
+    if (stepsData.value.length > 0) {
+      correctedCode = slidesToHtml(stepsData.value)
+    } else {
+      correctedCode = code.value || ''
+      correctedCode = correctedCode.replace(/src=(["'])(?!\/|https?:\/\/)([^"']*)\1/g, 'src=$1/$2')
+    }
+
+    renderedSteps.value = ''
+    await nextTick()
+    renderedSteps.value = sanitizeKatexHtml(correctedCode) || ''
+    await nextTick()
+
+    const stage = stepsStage.value
+    if (!stage) return
+
+    // 1. Formule KaTeX nell'HTML: $...$, \(...\), $$...$$, \[...\]
+    try {
+      renderMathInElement(stage, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '\\[', right: '\\]', display: true },
+          { left: '\\(', right: '\\)', display: false },
+          { left: '$', right: '$', display: false },
+        ],
+        throwOnError: false,
+      })
+      // 2. Risanitizza dopo l'auto-render (stessa policy del tipo md)
+      stage.innerHTML = sanitizeKatexHtml(stage.innerHTML) || ''
+    } catch (e) {
+      console.error('[TopicPage] Steps KaTeX render error:', e)
+    }
+
+    // 3. Raccogli slide e blocchi, mostra la prima, applica lo stato iniziale
+    collectStepSlides(stage)
+    stepsSlide.value = 1
+    stepsStep.value = 1
+    stepSlides.forEach(s => s.el.classList.remove('slide-active'))
+    stepSlides[0]?.el.classList.add('slide-active')
+    refreshSteps(true)
+  },
+  { immediate: true }
+)
+
 /** 🔧 HTML rendering */
 watch(
   () => code.value,
@@ -814,12 +1375,15 @@ onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('fullscreenchange', updateFullscreenStatus)
   document.addEventListener('webkitfullscreenchange', updateFullscreenStatus)
+  // Navigazione tastiera per il tipo "steps"
+  document.addEventListener('keydown', onStepsKeydown)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('fullscreenchange', updateFullscreenStatus)
   document.removeEventListener('webkitfullscreenchange', updateFullscreenStatus)
+  document.removeEventListener('keydown', onStepsKeydown)
 })
 
 /** 🧹 Cleanup */

@@ -175,7 +175,7 @@
 
         <!-- AUDIO: visibile solo se frontmatter `audio` presente (true o percorso file) -->
         <ActionButton
-          v-if="(type == 'code' || type == 'md' || type == 'html') && hasAudio"
+          v-if="(type == 'code' || type == 'md' || type == 'html' || type == 'steps') && hasAudio"
           :onClick="playAudio ? onRunAudio : onStopAudio"
         >
           <template #icon>
@@ -230,13 +230,13 @@
           </template>
         </ActionButton>
 
-        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'video' && type !== 'dictionary') && infoPageNum < 2" :onClick="firstPage">
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'video' && type !== 'dictionary' && type !== 'steps') && infoPageNum < 2" :onClick="firstPage">
           <template #icon>
             <ChevronsLeft class="icon-small" />
           </template>
         </ActionButton>
  
-        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'video' && type !== 'dictionary') && infoPageNum < 2" :onClick="prevPage">
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'video' && type !== 'dictionary' && type !== 'steps') && infoPageNum < 2" :onClick="prevPage">
           <template #icon>
             <ChevronLeft class="icon-small" />
           </template>
@@ -245,6 +245,9 @@
         <span :class="(type !== 'carousel' && type !== 'video' && type !== 'dictionary') ? 'page-info' : 'page-info-carousel'">
           <template v-if="type === 'chess'">
             Mossa {{ chessCurrentMove }} / {{ chessTotalMoves }}
+          </template>
+          <template v-else-if="type === 'steps'">
+            Slide {{ stepsSlide }} / {{ stepsSlideTotal }}
           </template>
           <template v-else-if="type === 'carousel'">
             Slide {{ currentIndex + 1 }} / {{ items.length }}
@@ -260,13 +263,13 @@
           </template>
         </span>
  
-        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'video' && type !== 'dictionary') && infoPageNum >= infoMaxPageNum" :onClick="nextPage">
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'video' && type !== 'dictionary' && type !== 'steps') && infoPageNum >= infoMaxPageNum" :onClick="nextPage">
           <template #icon>
             <ChevronRight class="icon-small" />
           </template>
         </ActionButton>
  
-        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'video' && type !== 'dictionary') && infoPageNum >= infoMaxPageNum" :onClick="lastPage">
+        <ActionButton :disabled="(type !== 'chess' && type !== 'carousel' && type !== 'video' && type !== 'dictionary' && type !== 'steps') && infoPageNum >= infoMaxPageNum" :onClick="lastPage">
           <template #icon>
             <ChevronsRight class="icon-small" />
           </template>
@@ -294,7 +297,8 @@ const pageStore = usePageStore()
 const { 
   topic, type, items, currentIndex, pathFile, showAvatar, chessCurrentMove, chessTotalMoves, carouselRef,
   navigateToHome, navigateToPage, navigateToSibling, toggleChessFlip, setChessMove, setCarouselAction,
-  isInfoOpen, getCarouselSlideInfo, code, isVideoFullscreen, toggleVideoFullscreen, audio: storeAudio, route
+  isInfoOpen, getCarouselSlideInfo, code, isVideoFullscreen, toggleVideoFullscreen, audio: storeAudio, route,
+  stepsSlide, stepsSlideTotal, stepsStep, stepsStepTotal, setStepsAction
 } = pageStore
 
 const infoStore = useInfoStore()
@@ -309,6 +313,14 @@ watch(currentIndex, (newIdx) => {
     if (currentItem?.item) {
       infoStore.title.value = currentItem.item
     }
+  }
+})
+
+// Per il tipo "steps": avanza/indietreggia slide o passo → ferma la spiegazione
+// completa (audio della barra) per non sovrapporla a quella del singolo passo
+watch([stepsSlide, stepsStep], () => {
+  if (type.value === 'steps' && !playAudio.value) {
+    onStopAudio()
   }
 })
 
@@ -518,6 +530,10 @@ const nextPage = () => {
     setChessMove('next')
     return
   }
+  if (type.value === 'steps') {
+    setStepsAction('next')
+    return
+  }
   if (type.value === 'carousel') {
     setCarouselAction('next')
     return
@@ -541,6 +557,10 @@ const nextPage = () => {
 const prevPage = () => {
   if (type.value === 'chess') {
     setChessMove('prev')
+    return
+  }
+  if (type.value === 'steps') {
+    setStepsAction('prev')
     return
   }
   if (type.value === 'carousel') {
@@ -568,6 +588,10 @@ const firstPage = () => {
     setChessMove('start')
     return
   }
+  if (type.value === 'steps') {
+    setStepsAction('first')
+    return
+  }
   if (type.value === 'carousel') {
     setCarouselAction('first')
     return
@@ -588,6 +612,10 @@ const firstPage = () => {
 const lastPage = () => {
   if (type.value === 'chess') {
     setChessMove('end')
+    return
+  }
+  if (type.value === 'steps') {
+    setStepsAction('last')
     return
   }
   if (type.value === 'carousel') {
@@ -672,10 +700,11 @@ const onRunAudio = async () => {
     // Preparazione del testo
     const textToRead = code.value || topic.value || "Testo non disponibile";
     let plainText = textToRead;
-    if (type.value === 'html' || type.value === 'md') {
+    if (type.value === 'html' || type.value === 'md' || type.value === 'steps') {
        // DOMParser invece di innerHTML: nessuna esecuzione di markup/script iniettato
        plainText = new DOMParser().parseFromString(textToRead, 'text/html').documentElement.textContent || "";
-       plainText = plainText.replace(/[#*`_~=\[\]]/g, ''); // Rimuovi markdown residuo
+       // Rimuovi markdown residuo + simboli LaTeX (i $ delle formule non si leggono bene)
+       plainText = plainText.replace(/[#*`_~=\[\]$\\]/g, '');
     }
 
     if (window.speechSynthesis) {

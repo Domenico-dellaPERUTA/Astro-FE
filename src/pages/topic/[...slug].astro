@@ -12,6 +12,10 @@ export async function getStaticPaths() {
   const paths = [];
 
   for (const topic of topicsInfo) {
+    // Le bozze (visible: false) non generano nemmeno la pagina:
+    // né nel menu, né tra i siblings, né via URL diretto (404)
+    if (topic.data.visible === false) continue;
+
     const siblings = findSiblings(topicsInfo, topic.data.menu);
 
     if (topic.data.type === "dictionary" && topic.data.dictionary) {
@@ -90,9 +94,9 @@ resolvedBody = resolvedBody.replace(
   },
 );
 
-// per i file html src="..." o href="..."
+// per i file html src="..." o href="..." (e data-audio per il tipo "steps")
 resolvedBody = resolvedBody.replace(
-  /(src|href)="(\/WebPages\/[^"]+)"/g,
+  /(src|href|data-audio)="(\/WebPages\/[^"]+)"/g,
   (match, attr, path) => {
     return `${attr}="${resolveAsset(path)}"`;
   },
@@ -100,6 +104,8 @@ resolvedBody = resolvedBody.replace(
 
 // 2. Risolviamo gli asset nelle immagini del carosello o nel dizionario
 let resolvedItems = [];
+// Slide YAML del tipo "steps" (con gli asset risolti)
+let resolvedSlides: any[] = [];
 if (topic.data.type === "carousel") {
   resolvedItems = (topic.data.images || []).map((img) => {
     // Supporta sia stringhe semplici che oggetti con image, title, text
@@ -132,18 +138,35 @@ if (topic.data.type === "carousel") {
     };
   });
 } else if (topic.data.type === "dictionary" && topic.data.dictionary) {
-  // Risolviamo gli asset per tutti gli elementi del dizionario
-  resolvedItems = topic.data.dictionary.map((item) => {
-    const path = item.path || "";
-    return {
-      ...item,
-      // Aggiungiamo campi risolti che TopicPage.vue possa usare
-      resolvedImageJpg: resolveAsset(`${path}${item.item}.jpg`),
-      resolvedImagePng: resolveAsset(`${path}${item.item}.png`),
-      resolvedAudio: resolveAudio(`${path}${item.item}.mp3`),
-    };
-  });
-}
+    // Risolviamo gli asset per tutti gli elementi del dizionario
+    resolvedItems = topic.data.dictionary.map((item) => {
+      const path = item.path || "";
+      return {
+        ...item,
+        // Aggiungiamo campi risolti che TopicPage.vue possa usare
+        resolvedImageJpg: resolveAsset(`${path}${item.item}.jpg`),
+        resolvedImagePng: resolveAsset(`${path}${item.item}.png`),
+        resolvedAudio: resolveAudio(`${path}${item.item}.mp3`),
+      };
+    });
+  } else if (topic.data.type === "steps" && topic.data.slides) {
+    // Risolviamo gli asset nelle slide YAML del tipo "steps":
+    // mp3 dei passi e delle slide + src/href/data-audio dentro i blocchi html
+    resolvedSlides = topic.data.slides.map((slide) => ({
+      ...slide,
+      audio: slide.audio ? resolveAudio(slide.audio) : undefined,
+      steps: (slide.steps || []).map((step) => ({
+        ...step,
+        audio: step.audio ? resolveAudio(step.audio) : undefined,
+        html: step.html
+          ? step.html.replace(
+              /(src|href|data-audio)="(\/WebPages\/[^"]+)"/g,
+              (match, attr, path) => `${attr}="${resolveAsset(path)}"`,
+            )
+          : undefined,
+      })),
+    }));
+  }
 
 // 3. Risolviamo l'audio
 // Supporta sia `audio: "/path/file.mp3"` che `audio: true` (abilita pulsante + TTS fallback)
@@ -163,8 +186,10 @@ const pageData = {
     : `/topic/${topic.id}/`,
   code: resolvedBody,
   items: resolvedItems,
+  slides: resolvedSlides,
   pgn: topic.data.pgn || "",
   audio: resolvedAudio,
+  autoplay: topic.data.autoplay === true,
   siblings: siblings,
   menuPath: topic.data.menu,
   currentIndex: currentIndex,
