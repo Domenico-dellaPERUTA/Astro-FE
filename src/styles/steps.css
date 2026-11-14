@@ -157,6 +157,53 @@
   margin: 1rem 0;
 }
 
+/* Codice nelle slide: monospace, blocco in evidenza (senza scroll) */
+.step-slide pre {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  overflow: hidden;
+  margin: 0.75rem 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.step-slide code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95em;
+  background: #f1f5f9;
+  padding: 0.1rem 0.35rem;
+  border-radius: 5px;
+}
+
+.step-slide pre code {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* Tabelle (es. riepilogo comandi) */
+.step-slide table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  font-size: 1rem;
+}
+
+.step-slide th,
+.step-slide td {
+  text-align: left;
+  padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.step-slide th {
+  color: #0f172a;
+  border-bottom: 2px solid #cbd5e1;
+}
+
 /* Sorgenti non eseguibili: mai mostrati */
 .step-slide script,
 .step-slide style {
@@ -312,6 +359,14 @@
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
   border: 1px solid #e2e8f0;
+}
+
+/* Niente legature tipografiche nel codice delle slide:
+   === deve restare ===, non il glifo unico a tre barre */
+.step-slide pre,
+.step-slide code {
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'calt' 0;
 }
 
 /* ------------------------------------------------------------ */

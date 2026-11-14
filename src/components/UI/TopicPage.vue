@@ -1047,7 +1047,9 @@ function blockText(el: HTMLElement): string {
   const clone = el.cloneNode(true) as HTMLElement
   clone.querySelectorAll('.katex-mathml').forEach(n => n.remove())
   // Non leggere i blocchi non ancora comparsi (es. overlay del canvas)
+  // e non leggere il codice: solo prosa
   clone.querySelectorAll('.step-item:not(.step-visible)').forEach(n => n.remove())
+  clone.querySelectorAll('pre, code').forEach(n => n.remove())
   return (clone.textContent || '').replace(/\s+/g, ' ').trim()
 }
 

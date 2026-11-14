@@ -39,6 +39,21 @@ interface TreeNodeLeaf {
 type TreeNode = TreeNodeFolder | TreeNodeLeaf;
 
 /**
+ * Ordine esplicito delle cartelle («indice» del menu).
+ *
+ * Chiave:  percorso del menu PADRE (i segmenti, come nel frontmatter `menu:`)
+ * Valore:  nomi delle cartelle figlie nell'ordine voluto
+ *
+ * Le cartelle non elencate restano in ordine alfabetico, dopo quelle elencate.
+ * I file invece si ordinano sempre per `index` (frontmatter).
+ */
+export const ORDINE_CARTELLE: Record<string, string[]> = {
+  "Programmazione/JavaScript": ["FrontEnd", "BackEnd", "TypeScript 📘"],
+  "Programmazione/JavaScript/FrontEnd": ["Angular 🅰", "React JS ⚛️"],
+  "Programmazione/JavaScript/BackEnd": ["NodeJS 🟢", "Express 🚂"],
+};
+
+/**
  * Costruisce l'albero del menu a partire dalla collezione piatta dei topic.
  * Mostra la struttura di cartelle e aggiunge link alle cartelle foglia.
  */
@@ -142,19 +157,32 @@ function addLinksToLeafFolders(
   }
 }
 
-function sortRecursive(nodes: TreeNode[]) {
-  // Ordiniamo il livello corrente: foglie per index prima, poi cartelle per nome
+function sortRecursive(nodes: TreeNode[], percorso = "") {
+  // Ordine esplicito delle cartelle di questo livello (se presente nell'indice)
+  const ordine = ORDINE_CARTELLE[percorso];
+
+  // Ordiniamo il livello corrente: foglie per index prima, poi cartelle
+  // (elencate nell'indice, se presente, altrimenti per nome)
   nodes.sort((a, b) => {
     if (!a.isFolder && b.isFolder) return -1;
     if (a.isFolder && !b.isFolder) return 1;
-    if (a.isFolder && b.isFolder) return a.name.localeCompare(b.name);
+    if (a.isFolder && b.isFolder) {
+      if (ordine) {
+        const rangoA = ordine.indexOf(a.name);
+        const rangoB = ordine.indexOf(b.name);
+        if (rangoA !== -1 && rangoB !== -1) return rangoA - rangoB;
+        if (rangoA !== -1) return -1;  // le cartelle nell'indice vengono prima
+        if (rangoB !== -1) return 1;
+      }
+      return a.name.localeCompare(b.name);
+    }
     return (a as TreeNodeLeaf).index - (b as TreeNodeLeaf).index;
   });
 
-  // Ricorsione sui sottomenu
+  // Ricorsione sui sottomenu, tracciando il percorso per l'indice
   for (const node of nodes) {
     if (node.isFolder) {
-      sortRecursive(node.menu);
+      sortRecursive(node.menu, percorso ? `${percorso}/${node.name}` : node.name);
     }
   }
 }

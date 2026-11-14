@@ -14,6 +14,11 @@ export default defineConfig({
     build: {
       chunkSizeWarningLimit: 1500,
       assetsInclude: ['**/*.mp3', '**/*.wav', '**/*.ogg'],
+      // ⚠️ Niente asset inline (base64): gli mp3 brevi (es. dizionario
+      // Inglese: ~1000 clip da pochi KB) finirebbero come data URI dentro
+      // l'HTML della pagina, appesantendola di MB. Restano file esterni
+      // con URL /_astro/…
+      assetsInlineLimit: 0,
     },
   },
   markdown: {

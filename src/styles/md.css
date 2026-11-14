@@ -331,4 +331,14 @@
   font-size: 1rem;
 }
 
+/* Niente legature tipografiche nel codice: === deve restare ===,
+   non il glifo unico a tre barre di JetBrains Mono / Fira Code */
+.md pre code,
+.md code,
+.md pre.hljs-pre code.hljs {
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'calt' 0;
+}
+
+
 
