@@ -347,11 +347,10 @@ import { useInfoStore } from '../../store/info'
 import ChessBoard from './ChessBoard.vue'
 import DOMPurify from 'dompurify'
 import { sanitizeKatexHtml } from '../../utils/katexSanitize'
-// DOMPurify config that preserves KaTeX-generated HTML
-// (config condivisa in src/utils/katexSanitize.ts)
-function sanitizeMarkdown(html: string): string {
-  return sanitizeKatexHtml(html)
-}
+// Pipeline markdown condivisa con la build Astro (SSR underlay):
+// stesso marked + KaTeX + hljs + sanitizzazione, così l'HTML statico
+// dell'underlay è identico a quello che questa pagina genera nel browser.
+import { renderMarkdown, cleanCode } from '../../utils/renderMarkdown'
 
 
 // Monaco 0.53: i worker sono moduli ESM, il vecchio trucco blob+importScripts non funziona più.
@@ -387,40 +386,11 @@ const renderedHtml = ref('')
 const renderedMarkdown = ref('')
 const markdownContainer = ref<HTMLElement | null>(null)
 
-// Import marked for Markdown rendering + syntax highlighting
-import { marked, Renderer } from 'marked'
-import hljs from 'highlight.js'
-import markedKatex from 'marked-katex-extension'
-
-// Enable KaTeX math rendering in marked ($...$ for inline, $$...$$ for display)
-marked.use(markedKatex({ throwOnError: false }))
-
 // KaTeX auto-render per il tipo "steps": converte $...$ e \(...\) nell'HTML del body
 import renderMathInElement from 'katex/contrib/auto-render'
 
-// Configure marked with a custom renderer for syntax highlighting
-const mdRenderer = new Renderer()
-mdRenderer.code = function({ text, lang }: { text: string; lang?: string }) {
-  let highlighted: string
-  if (lang && hljs.getLanguage(lang)) {
-    try {
-      highlighted = hljs.highlight(text, { language: lang }).value
-    } catch (__) {
-      highlighted = text
-    }
-  } else {
-    // Auto-detect language if not specified
-    try {
-      highlighted = hljs.highlightAuto(text).value
-    } catch (__) {
-      highlighted = text
-    }
-  }
-  const langClass = lang ? ` language-${lang}` : ''
-  return `<pre class="hljs-pre"><code class="hljs${langClass}">${highlighted}</code></pre>`
-}
-
-marked.setOptions({ renderer: mdRenderer })
+// La pipeline markdown (marked + KaTeX + hljs + sanitizzazione) ora vive in
+// src/utils/renderMarkdown.ts, condivisa con la build per l'underlay SSR.
 
 
 
@@ -483,17 +453,7 @@ const colorTextDictionary = (sType: string): string => {
   return `color: ${sColor3};`
 }
 
-/** 🧹 Pulisce il codice dai tag personalizzati /_ _/ e dai triple backticks */
-const cleanCode = (rawCode: string): string => {
-  if (!rawCode) return ''
-  return rawCode
-    .replace(/\/_/g, '/*')         // Converte /_ in /*
-    .replace(/_\//g, '*/')         // Converte _/ in */
-    .replace(/\\\*/g, '*')         // Converte \* in * (trasforma /\* e \*/ in /* e */)
-    .replace(/```[a-z]*\n?/gi, '') // Rimuove triple backticks iniziali
-    .replace(/```/g, '')           // Rimuove triple backticks finali
-    .trim()
-}
+// cleanCode è importato da src/utils/renderMarkdown.ts (condiviso con la build)
 
 /** 🔧 Inizializza Monaco Editor per il codice */
 const initializeCodeEditor = async (typeArg: string) => {
@@ -1252,14 +1212,8 @@ watch(
       const language = detectLanguage(cleaned)
       monaco.editor.setModelLanguage(codeEditor.getModel(), language)
     } else if (type.value === 'md') {
-      // Convert markdown to HTML using marked e sanitizza con DOMPurify
-      try {
-        const raw = marked(newCode || '') as string
-        renderedMarkdown.value = sanitizeMarkdown(raw)
-      } catch (e) {
-        console.error('[TopicPage] Markdown parse error:', e)
-        renderedMarkdown.value = sanitizeMarkdown(newCode || '')
-      }
+      // Markdown → HTML sanitizzato (pipeline condivisa con la build SSR)
+      renderedMarkdown.value = renderMarkdown(newCode || '')
     }
   },
   { immediate: true }
@@ -1278,15 +1232,9 @@ watch(
       await nextTick()
       if (!codeEditor) await initializeCodeEditor(newType)
     } else if (newType === 'md') {
-      // Convert markdown to HTML e sanitizza con DOMPurify
+      // Markdown → HTML sanitizzato (pipeline condivisa con la build SSR)
       await nextTick()
-      try {
-        const raw = marked(code.value || '') as string
-        renderedMarkdown.value = sanitizeMarkdown(raw)
-      } catch (e) {
-        console.error('[TopicPage] Markdown parse error:', e)
-        renderedMarkdown.value = sanitizeMarkdown(code.value || '')
-      }
+      renderedMarkdown.value = renderMarkdown(code.value || '')
     }
   }
 )

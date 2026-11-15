@@ -83,6 +83,9 @@ const isTablet = ref(false)
 const isNarrow = ref(false)
 
 onMounted(() => {
+  // App idratata: nasconde l'eventuale underlay statico SSR (.app-hydrated .ssr-underlay)
+  document.documentElement.classList.add('app-hydrated')
+
   // Rimuovi il caricamento globale dopo un piccolo ritardo per consentire il rendering iniziale fluido
   setTimeout(() => {
     if (typeof window !== 'undefined' && (window as any).__hideGlobalLoader) {

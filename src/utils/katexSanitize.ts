@@ -1,4 +1,6 @@
-import DOMPurify from 'dompurify'
+// isomorphic-dompurify: stesso DOMPurify del browser, ma utilizzabile anche
+// in Node alla build (SSR underlay in [...slug].astro)
+import DOMPurify from 'isomorphic-dompurify'
 
 /**
  * Sanitizzazione dell'HTML generato da KaTeX.

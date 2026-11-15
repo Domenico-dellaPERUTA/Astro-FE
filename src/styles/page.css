@@ -132,3 +132,64 @@
 
 
 
+/* ---------------------------------------------------------------
+   🪃 SSR underlay: contenuto statico renderizzato alla build
+   ([...slug].astro, tipi md/code/html). Visibile al primo paint,
+   nascosto quando l'app Vue idrata (classe .app-hydrated su <html>,
+   aggiunta in FlexibleLayout.vue onMounted).
+   Z-index 99998: sotto il loader globale (99999), sopra il resto.
+--------------------------------------------------------------- */
+.ssr-underlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99998;
+    background-color: #ffffff;
+    overflow-y: auto;
+}
+
+.app-hydrated .ssr-underlay {
+    display: none;
+}
+
+/* Codice statico per le pagine type:"code" (resa simile a Monaco vs-dark) */
+.ssr-underlay .ssr-pre {
+    margin: 0;
+    min-height: 100%;
+    padding: 1.5rem;
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    white-space: pre;
+    box-sizing: border-box;
+}
+
+/* Menu statico <noscript> (visibile solo senza JavaScript) */
+.ssr-menu ul {
+    list-style: none;
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.ssr-menu > ul {
+    padding-left: 0;
+}
+
+.ssr-menu a,
+.ssr-menu span {
+    color: #0f172a;
+    text-decoration: none;
+    line-height: 1.9;
+}
+
+.ssr-menu a:hover {
+    text-decoration: underline;
+}
+
+.ssr-menu span {
+    font-weight: 600;
+}
+
+
+

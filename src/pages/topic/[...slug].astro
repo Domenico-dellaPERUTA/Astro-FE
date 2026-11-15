@@ -4,6 +4,9 @@ import { getCollection } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import FlexibleLayout from "../../components/UI/FlexibleLayout.vue";
 import { buildMenuTree, findSiblings } from "../../utils/buildMenuTree";
+// Pipeline condivisa con TopicPage.vue: l'HTML statico dell'underlay
+// è identico a quello che l'app Vue genera nel browser
+import { renderMarkdown, cleanCode, escapeHtml, sanitizePageHtml } from "../../utils/renderMarkdown";
 
 export async function getStaticPaths() {
   const topicsInfo = await getCollection("topics");
@@ -241,6 +244,60 @@ const jsonLd: Record<string, unknown> = {
 };
 if (topic.data.keywords) jsonLd.keywords = topic.data.keywords;
 
+// --- 🪃 SSR underlay: contenuto statico renderizzato alla build ---
+// Visibile al primo paint (sotto il loader globale, z-index 99998) e nascosto
+// appena l'app Vue idrata (classe .app-hydrated su <html>, v. FlexibleLayout).
+// Pipeline identica a TopicPage.vue → nessun doppione né flash al passaggio.
+const underlay = (() => {
+  const t = topic.data.type;
+
+  // Markdown: stesso rendering dell'app (<div class="md">, stesse classi CSS)
+  if (t === "md") {
+    return `<div class="md">${renderMarkdown(resolvedBody)}</div>`;
+  }
+
+  // HTML: correggi src relativi → assoluti, wrapper <div class="page"> e
+  // sanitizzazione DOMPurify default (come il ramo html di TopicPage)
+  if (t === "html") {
+    const corrected = (resolvedBody || "").replace(
+      /src=(["'])(?!\/|https?:\/\/)([^"']*)\1/g,
+      "src=$1/$2",
+    );
+    return sanitizePageHtml(`<div class="page">${corrected}</div>`);
+  }
+
+  // Codice: Monaco non è pre-renderizzabile, ma il testo sì:
+  // un <pre> statico (resa vs-dark) dà contenuto immediato a crawler e utenti
+  if (t === "code") {
+    return `<pre class="ssr-pre"><code>${escapeHtml(cleanCode(resolvedBody))}</code></pre>`;
+  }
+
+  // carousel / video / chess / steps / dictionary: solo interattività
+  return "";
+})();
+
+// --- 🧭 Menu statico in <noscript> ---
+// Ricorsione sull'albero di buildMenuTree ({name, menu, isFolder} /
+// {name, link, isFolder:false}): navigabile dai motori e dagli utenti senza JS,
+// zero impatto visivo per chi ha JavaScript attivo.
+interface MenuNode {
+  name: string;
+  link?: string;
+  isFolder?: boolean;
+  menu?: MenuNode[];
+}
+function menuHtml(nodes: MenuNode[]): string {
+  if (!nodes?.length) return "";
+  const items = nodes
+    .map((n) =>
+      n.isFolder
+        ? `<li class="ssr-menu-folder"><span>${escapeHtml(n.name)}</span>${menuHtml(n.menu || [])}</li>`
+        : `<li><a href="${n.link}">${escapeHtml(n.name)}</a></li>`,
+    )
+    .join("");
+  return `<ul>${items}</ul>`;
+}
+
 const pageData = {
   type: topic.data.type,
   topic: virtualTitle || topic.data.title,
@@ -262,6 +319,10 @@ const pageData = {
 <Layout title={topic.data.title} description={pageDescription} keywords={topic.data.keywords}>
   <!-- SEO: dati strutturati (schema.org), leggibili dai crawler senza eseguire JS -->
   <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+  <!-- SSR underlay: contenuto statico alla build, nascosto all'idratazione -->
+  {underlay && <div class="ssr-underlay" set:html={underlay} />}
+  <!-- Menu navigabile senza JavaScript (crawler + progressive enhancement) -->
+  <noscript><nav class="ssr-menu" aria-label="Indice del sito" set:html={menuHtml(menuTree)} /></noscript>
   <FlexibleLayout
     client:only="vue"
     initialPageData={pageData}
