@@ -111,9 +111,7 @@ h3 {
   background-color: #e2e8f0;
 }
 .btn-small:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
-  background-color: #f2f2f2;
 }
 
 /* Icone */
