@@ -178,6 +178,69 @@ if (typeof rawAudio === "boolean") {
   resolvedAudio = resolveAudio(rawAudio);
 }
 
+// --- 🔎 SEO: description + dati strutturati ---
+/** Description per i motori di ricerca: dal frontmatter o dedotta dal contenuto */
+function deriveDescription(data: any, body: string): string {
+  if (data.description) return data.description;
+
+  // Tipo "md": primi ~160 caratteri di testo pulito
+  if (data.type === "md") {
+    const text = body
+      .replace(/```[\s\S]*?```/g, " ")          // blocchi di codice
+      .replace(/`[^`\n]*`/g, " ")               // codice inline
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")    // immagini
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")  // link → testo
+      .replace(/\$\$?[^$\n]*\$\$?/g, " ")       // formule KaTeX
+      .replace(/<[^>]+>/g, " ")                 // tag HTML
+      .replace(/[#>*_~|]+/g, " ")               // sintassi markdown
+      .replace(/\s+/g, " ")
+      .trim();
+    if (text.length > 40) {
+      const cut = text.slice(0, 157);
+      return `${cut.slice(0, cut.lastIndexOf(" ")).trim() || cut}…`;
+    }
+  }
+
+  // Fallback generico: titolo + sezione del menu (senza emoji)
+  const sezione = String(data.menu || "").split("/").pop() || "";
+  const pulita = sezione
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2190}-\u{27BF}\u{FE0F}]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return pulita
+    ? `${data.title} — lezione nella sezione ${pulita}`
+    : String(data.title);
+}
+
+const pageDescription = deriveDescription(topic.data, topic.body || "");
+const pageURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null;
+
+// Dati strutturati: articolo tecnico + breadcrumb dalla gerarchia del menu
+const breadcrumbItems = String(topic.data.menu)
+  .split("/")
+  .map((nome, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: nome.trim(),
+  }));
+breadcrumbItems.push({
+  "@type": "ListItem",
+  position: breadcrumbItems.length + 1,
+  name: String(topic.data.title),
+  item: pageURL ? pageURL.href : undefined,
+});
+
+const jsonLd: Record<string, unknown> = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  headline: String(topic.data.title),
+  description: pageDescription,
+  inLanguage: "it",
+  articleSection: String(topic.data.menu),
+  breadcrumb: { "@type": "BreadcrumbList", itemListElement: breadcrumbItems },
+};
+if (topic.data.keywords) jsonLd.keywords = topic.data.keywords;
+
 const pageData = {
   type: topic.data.type,
   topic: virtualTitle || topic.data.title,
@@ -196,7 +259,9 @@ const pageData = {
 };
 ---
 
-<Layout title={topic.data.title}>
+<Layout title={topic.data.title} description={pageDescription} keywords={topic.data.keywords}>
+  <!-- SEO: dati strutturati (schema.org), leggibili dai crawler senza eseguire JS -->
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
   <FlexibleLayout
     client:only="vue"
     initialPageData={pageData}

@@ -15,6 +15,12 @@ const topicsCollection = defineCollection({
     // dalla navigazione tra siblings e dall'accesso via URL diretto
     visible: z.boolean().optional().default(true),
 
+    // SEO: description per i motori di ricerca (meta description + JSON-LD);
+    // se assente, la pagina topic ne deduce una dal contenuto.
+    // keywords: parole chiave (meta keywords + JSON-LD)
+    description: z.string().optional(),
+    keywords: z.string().optional(),
+
     // Dati specifici per il carousel (es. lista immagini)
     images: z.array(z.union([
       z.string(),
