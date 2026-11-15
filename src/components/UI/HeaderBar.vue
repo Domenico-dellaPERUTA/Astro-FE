@@ -1204,9 +1204,9 @@ const onLinkSelect = (item: Link) => {
 }
 
 /* Pulsanti disabilitati (frecce di navigazione): sfondo trasparente come i
-   pulsanti normali, solo l'icona è attenuata (grigio più scuro della norma) */
+   pulsanti normali, icona quasi invisibile (si intuisce appena lo stato spento) */
 .btn-small:disabled .icon-small {
-  color: #94a3b8;
+  color: #475569;
 }
 
 .icon-on {

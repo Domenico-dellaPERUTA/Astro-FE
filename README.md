@@ -108,3 +108,24 @@ Quando l'app Vue idrata, lo strato si nasconde (`display: none`) e l'app subentr
   condizionata, probabilità totali, Bayes, eventi indipendenti); fix formule inline
   (`;` dopo `$` di chiusura non è accettato da KaTeX).
 - Build: 295 pagine.
+
+### 2026-11-15 — Ottimizzazioni bundle e UI
+
+#### Caricamento lazy della pipeline markdown e KaTeX
+Monaco era già caricato on-demand (solo pagine `code`/`dictionary`); il collo
+rimasto era `marked` + `highlight.js` (~1 MB) e **KaTeX** (~260 KB) che viaggiavano
+in ogni pagina dentro i chunk condivisi.
+
+- **`src/utils/cleanCode.ts`** (nuovo): `cleanCode`/`escapeHtml` pure, senza dipendenze,
+  importabili subito anche dove la pipeline completa va caricata lazy.
+- **`src/components/UI/TopicPage.vue`**: `renderMarkdown` (marked+KaTeX+hljs) e
+  `renderMathInElement` (auto-render KaTeX) ora via `import()` dinamico — solo le
+  pagine `md` scaricano la pipeline markdown, solo le `steps` l'auto-render.
+- Risultato: le pagine non-md/non-code (chess, carousel, video…) avviano l'app con
+  ~904 KB di JS invece di ~2.150 KB (−58%, minificato non compresso).
+
+#### Pulsanti disabilitati
+- **`src/components/UI/ActionButton.vue`**: i pulsanti disabilitati non hanno più
+  lo sfondo grigio chiaro (`#f2f2f2`): sfondo trasparente come i normali.
+- **`src/components/UI/HeaderBar.vue`**: l'icona dei disabilitati è grigio molto
+  scuro (`#475569`), quasi invisibile: lo stato si intende senza rumore visivo.

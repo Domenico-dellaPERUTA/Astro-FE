@@ -347,10 +347,19 @@ import { useInfoStore } from '../../store/info'
 import ChessBoard from './ChessBoard.vue'
 import DOMPurify from 'dompurify'
 import { sanitizeKatexHtml } from '../../utils/katexSanitize'
-// Pipeline markdown condivisa con la build Astro (SSR underlay):
-// stesso marked + KaTeX + hljs + sanitizzazione, così l'HTML statico
-// dell'underlay è identico a quello che questa pagina genera nel browser.
-import { renderMarkdown, cleanCode } from '../../utils/renderMarkdown'
+// Funzioni pure immediate (zero dipendenze)
+import { cleanCode } from '../../utils/cleanCode'
+// Pipeline markdown completa (marked + KaTeX + hljs, ~1 MB): viene caricata
+// lazy SOLO quando serve (pagine "md"). Le altre pagine non la scaricano.
+// Alla build ([...slug].astro) viene invece importata direttamente.
+let _renderMarkdown: ((md: string) => string) | null = null
+const loadRenderMarkdown = async (): Promise<(md: string) => string> => {
+  if (!_renderMarkdown) {
+    const mod = await import('../../utils/renderMarkdown')
+    _renderMarkdown = mod.renderMarkdown
+  }
+  return _renderMarkdown
+}
 
 
 // Monaco 0.53: i worker sono moduli ESM, il vecchio trucco blob+importScripts non funziona più.
@@ -386,11 +395,9 @@ const renderedHtml = ref('')
 const renderedMarkdown = ref('')
 const markdownContainer = ref<HTMLElement | null>(null)
 
-// KaTeX auto-render per il tipo "steps": converte $...$ e \(...\) nell'HTML del body
-import renderMathInElement from 'katex/contrib/auto-render'
-
 // La pipeline markdown (marked + KaTeX + hljs + sanitizzazione) ora vive in
-// src/utils/renderMarkdown.ts, condivisa con la build per l'underlay SSR.
+// src/utils/renderMarkdown.ts, condivisa con la build per l'underlay SSR;
+// nel browser viene caricata lazy. Idem l'auto-render di KaTeX (solo "steps").
 
 
 
@@ -453,7 +460,7 @@ const colorTextDictionary = (sType: string): string => {
   return `color: ${sColor3};`
 }
 
-// cleanCode è importato da src/utils/renderMarkdown.ts (condiviso con la build)
+// cleanCode è importato da src/utils/cleanCode.ts (condiviso con la build)
 
 /** 🔧 Inizializza Monaco Editor per il codice */
 const initializeCodeEditor = async (typeArg: string) => {
@@ -1167,6 +1174,8 @@ watch(
 
     // 1. Formule KaTeX nell'HTML: $...$, \(...\), $$...$$, \[...\]
     try {
+      // KaTeX auto-render (~270 KB): caricato lazy solo per le pagine "steps"
+      const { default: renderMathInElement } = await import('katex/contrib/auto-render')
       renderMathInElement(stage, {
         delimiters: [
           { left: '$$', right: '$$', display: true },
@@ -1212,8 +1221,9 @@ watch(
       const language = detectLanguage(cleaned)
       monaco.editor.setModelLanguage(codeEditor.getModel(), language)
     } else if (type.value === 'md') {
-      // Markdown → HTML sanitizzato (pipeline condivisa con la build SSR)
-      renderedMarkdown.value = renderMarkdown(newCode || '')
+      // Markdown → HTML sanitizzato (pipeline condivisa con la build SSR, caricata lazy)
+      const fn = await loadRenderMarkdown()
+      renderedMarkdown.value = fn(newCode || '')
     }
   },
   { immediate: true }
@@ -1232,9 +1242,10 @@ watch(
       await nextTick()
       if (!codeEditor) await initializeCodeEditor(newType)
     } else if (newType === 'md') {
-      // Markdown → HTML sanitizzato (pipeline condivisa con la build SSR)
+      // Markdown → HTML sanitizzato (pipeline condivisa con la build SSR, caricata lazy)
       await nextTick()
-      renderedMarkdown.value = renderMarkdown(code.value || '')
+      const fn = await loadRenderMarkdown()
+      renderedMarkdown.value = fn(code.value || '')
     }
   }
 )

@@ -15,6 +15,8 @@ import hljs from 'highlight.js'
 import markedKatex from 'marked-katex-extension'
 import DOMPurify from 'isomorphic-dompurify'
 import { sanitizeKatexHtml } from './katexSanitize'
+// Funzioni pure senza dipendenze (usate anche da TopicPage senza importare marked+hljs)
+export { cleanCode, escapeHtml } from './cleanCode'
 
 // Enable KaTeX math rendering in marked ($...$ for inline, $$...$$ for display)
 marked.use(markedKatex({ throwOnError: false }))
@@ -57,28 +59,6 @@ export function renderMarkdown(md: string): string {
     console.error('[renderMarkdown] Markdown parse error:', e)
     return sanitizeKatexHtml(src)
   }
-}
-
-/** 🧹 Pulisce il codice dai tag personalizzati /_ _/ e dai triple backticks */
-export function cleanCode(rawCode: string): string {
-  if (!rawCode) return ''
-  return rawCode
-    .replace(/\/_/g, '/*')         // Converte /_ in /*
-    .replace(/_\//g, '*/')         // Converte _/ in */
-    .replace(/\\\*/g, '*')         // Converte \* in * (trasforma /\* e \*/ in /* e */)
-    .replace(/```[a-z]*\n?/gi, '') // Rimuove triple backticks iniziali
-    .replace(/```/g, '')           // Rimuove triple backticks finali
-    .trim()
-}
-
-/** Escape HTML per mostrare codice come testo dentro <pre><code> */
-export function escapeHtml(s: string): string {
-  return (s || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
 }
 
 /**
