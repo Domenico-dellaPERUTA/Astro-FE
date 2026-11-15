@@ -129,3 +129,16 @@ in ogni pagina dentro i chunk condivisi.
   lo sfondo grigio chiaro (`#f2f2f2`): sfondo trasparente come i normali.
 - **`src/components/UI/HeaderBar.vue`**: l'icona dei disabilitati è grigio molto
   scuro (`#475569`), quasi invisibile: lo stato si intende senza rumore visivo.
+
+#### Pagine utilitarie noindex
+- **`src/layouts/Layout.astro`**: nuovo prop `noindex` → `<meta name="robots"
+  content="noindex, nofollow">`.
+- **`latex-editor` / `markdown-editor`**: `noindex` in head ed escluse dalla
+  sitemap (filtro in `astro.config.mjs`): 293 URL nella sitemap (prima 295).
+- Non disallow su robots.txt: il noindex deve poter essere letto dal crawler.
+
+#### Font self-hosted
+- JetBrains Mono (400–700, woff2 latin + latin-ext) in `public/fonts/` con
+  `@font-face` in `global.css`: eliminato il link a `fonts.googleapis.com`
+  (zero richieste a CDN esterni per i font, un round-trip in meno a pagina).
+- Gli altri font del tema erano già self-hosted in `public/fonts/`.

@@ -27,7 +27,13 @@ const SITE = process.env.SITE || 'https://note.altervista.org/';
 
 export default defineConfig({
   site: SITE,
-  integrations: [vue(), sitemap()],
+  integrations: [
+    vue(),
+    sitemap({
+      // Esclude le pagine utilitarie (noindex) dall'indice dei motori
+      filter: (page) => !page.includes('/latex-editor') && !page.includes('/markdown-editor'),
+    }),
+  ],
   telemetry: false,
   vite: {
     plugins: [tailwindcss()],

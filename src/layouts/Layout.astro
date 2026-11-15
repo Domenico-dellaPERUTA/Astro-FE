@@ -11,9 +11,11 @@ interface Props {
   description?: string;
   /** parole chiave (meta keywords + JSON-LD) */
   keywords?: string;
+  /** esclude la pagina dall'indicizzazione (pagine utilitarie, es. editor) */
+  noindex?: boolean;
 }
 
-const { title = "Astro Basics", description = "", keywords = "" } = Astro.props;
+const { title = "Astro Basics", description = "", keywords = "", noindex = false } = Astro.props;
 
 // URL canonico assoluto della pagina corrente: richiede `site` in astro.config
 const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null;
@@ -28,12 +30,11 @@ const canonicalURL = Astro.site ? new URL(Astro.url.pathname, Astro.site) : null
     <link rel="icon" href="/favicon.ico" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font: tutti self-hosted in /fonts (global.css) — niente CDN esterni -->
     <title>{title}</title>
 
     <!-- SEO: description, parole chiave, canonical, Open Graph, Twitter -->
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     {description && <meta name="description" content={description} />}
     {keywords && <meta name="keywords" content={keywords} />}
     {canonicalURL && <link rel="canonical" href={canonicalURL.href} />}
