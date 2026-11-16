@@ -107,6 +107,11 @@ scopo, piano o errore (es. `f6? {Errore grave: indebolisce la diagonale h5-e8…
   Convenzione TTS-friendly dei testi: niente virgolette doppie, niente
   pattern cifra+punto (romperebbe la regex del parser PGN), una o due frasi
   brevi per clip.
+- **Clip generate 🔊**: le 367 clip sono prodotte con kokoro (voce if_sara,
+  `genera_clip.py` del progetto kokoro-tts) dal file `testi-chess.md`
+  (derivato dal manifest): sintesi frase per frase con 0,42 s di silenzio tra
+  le frasi, MP3 128 kbps in `src/assets/WebPages/Chess/`. Dopo ogni
+  rigenerazione di clip serve `npm run build` (gli URL hashate cambiano).
 
 ### 2026-11-15 — SSR del contenuto (underlay statico) + SEO
 
