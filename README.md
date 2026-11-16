@@ -73,13 +73,15 @@ scopo, piano o errore (es. `f6? {Errore grave: indebolisce la diagonale h5-e8…
   ripristinati dopo l'introduzione dei commenti (la regex che li estrae ora
   ignora il contenuto delle graffe).
 - **Audio 🔊** (libreria condivisa): navigando su una mossa viene riprodotta in
-  auto-play la clip `/audio/chess/<chiave>.mp3`, dove la chiave è la sequenza
-  SAN della partita fino a quella mossa senza glifi, unita da `_`
+  auto-play la clip di `src/assets/WebPages/Chess/<chiave>.mp3`, dove la chiave
+  è la sequenza SAN della partita fino a quella mossa senza glifi, unita da `_`
   (es. `e4_e5_Nf3_f6.mp3`). Le partite che condividono l'apertura riusano le
   stesse clip: una sola registrazione per "1. e4" vale per tutte le pagine.
-  Clip assente → silenzio (una sola richiesta 404 per chiave, poi cache).
+  La build risolve gli URL hashate di Vite tramite la mappa `chessAudio` nel
+  pageData (bridge in `[...slug].astro`): clip assente → silenzio, zero
+  richieste. Dopo ogni aggiunta/rimozione di clip serve `npm run build`.
 - **Pipeline TTS**: `node scripts/chess-audio.mjs` scandisce tutte le pagine
-  chess, valida i PGN e scrive `public/audio/chess/manifest.json`
+  chess, valida i PGN e scrive `src/assets/WebPages/Chess/manifest.json`
   (chiave → testo da narrare) per il generatore di clip; segnala i conflitti
   (stessa sequenza con testi diversi nelle varie pagine).
 
@@ -91,7 +93,8 @@ scopo, piano o errore (es. `f6? {Errore grave: indebolisce la diagonale h5-e8…
 - **`src/components/UI/TopicPage.vue`**: legenda sotto la scacchiera, auto-play
   clip con cache delle mancanti, `stopStepAudio()` all'unmount (fix: l'audio
   steps/chess continuava a suonare uscendo dalla pagina).
-- **`src/store/page.ts`**: `chessComment`, `chessMoveLabel`, `chessAudioKey`.
+- **`src/store/page.ts`**: `chessComment`, `chessMoveLabel`, `chessAudioKey`,
+  `chessAudio` (mappa chiave → URL della clip, popolata dal pageData).
 - **`scripts/chess-audio.mjs`** (nuovo) e **`trappola-damiano.md`**: tutti e 19
   i commenti scritti e verificati mossa per mossa con chess.js (incluso il
   matto finale: `Kg7` è bloccato dal proprio pedone, `Kxf5` vietato per il

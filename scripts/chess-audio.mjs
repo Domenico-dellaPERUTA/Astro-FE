@@ -5,16 +5,21 @@
  * Le clip audio che spiegano le mosse sono una LIBRERIA CONDIVISA: partite
  * diverse che condividono l'apertura riusano le stesse clip. La chiave di una
  * clip è la sequenza SAN delle mosse fino a quella spiegata, senza glifi
- * (+ # ! ?), uniti da "_":  e4_e5_Nf3_f6  →  /audio/chess/e4_e5_Nf3_f6.mp3
+ * (+ # ! ?), uniti da "_":  e4_e5_Nf3_f6  →  src/assets/WebPages/Chess/e4_e5_Nf3_f6.mp3
  *
  * Questo script:
  *   1. scandisce src/content/topics/*.md con type: "chess"
  *   2. per ogni partita estrae i commenti PGN {...} con chess.js
  *   3. calcola la chiave condivisa di ogni mossa commentata
- *   4. scrive public/audio/chess/manifest.json (chiave → testo da narrare)
- *      pronto come lista di lavoro per la pipeline TTS (genera_clip.py)
+ *   4. scrive src/assets/WebPages/Chess/manifest.json (chiave → testo da
+ *      narrare) pronto come lista di lavoro per la pipeline TTS (genera_clip.py)
  *   5. segnala i CONFLITTI: stessa sequenza di mosse con testi diversi
  *      (la prima pagina vince; conviene uniformare il testo nel PGN)
+ *
+ * Le clip vivono nella libreria asset del sito (src/assets/WebPages/): la build
+ * risolve gli URL hashate di Vite tramite il bridge in src/pages/topic/[...slug].astro
+ * (mappa chiave → URL passata nel pageData). Dopo ogni aggiunta/rimozione di
+ * clip serve rieseguire `npm run build`.
  *
  * Uso:  node scripts/chess-audio.mjs
  */
@@ -24,7 +29,7 @@ import { join } from 'node:path'
 import { Chess } from 'chess.js'
 
 const TOPICS_DIR = new URL('../src/content/topics/', import.meta.url)
-const OUT_DIR = new URL('../public/audio/chess/', import.meta.url)
+const OUT_DIR = new URL('../src/assets/WebPages/Chess/', import.meta.url)
 
 /** Estrae un campo dal frontmatter: valore inline, o blocco folded >- (pgn) */
 function readField(raw, field) {
@@ -104,7 +109,7 @@ const manifest = Object.fromEntries(
 mkdirSync(OUT_DIR.pathname, { recursive: true })
 writeFileSync(join(OUT_DIR.pathname, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n')
 
-console.log(`♟️  ${library.size} clip mappate → public/audio/chess/manifest.json`)
+console.log(`♟️  ${library.size} clip mappate → src/assets/WebPages/Chess/manifest.json`)
 if (conflicts.length) {
   console.log(`\n⚠️  ${conflicts.length} conflitti (stessa sequenza, testi diversi):`)
   for (const c of conflicts) console.log('   - ' + c)

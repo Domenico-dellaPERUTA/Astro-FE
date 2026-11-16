@@ -382,7 +382,7 @@ if (typeof window !== 'undefined') {
 
 
 const pageStore = usePageStore()
-const { topic, type, items, code, pgn, currentIndex, showAvatar, avatarReady, setCarouselRef, navigateToPage, audio, carouselAction, setCarouselAction, isVideoFullscreen, toggleVideoFullscreen, setChessMove, chessCurrentMove, chessTotalMoves, chessComment, chessMoveLabel, chessAudioKey, stepsSlide, stepsSlideTotal, stepsStep, stepsStepTotal, stepsAction, setStepsAction, autoplay, stepsData } = pageStore
+const { topic, type, items, code, pgn, currentIndex, showAvatar, avatarReady, setCarouselRef, navigateToPage, audio, carouselAction, setCarouselAction, isVideoFullscreen, toggleVideoFullscreen, setChessMove, chessCurrentMove, chessTotalMoves, chessComment, chessMoveLabel, chessAudioKey, chessAudio, stepsSlide, stepsSlideTotal, stepsStep, stepsStepTotal, stepsAction, setStepsAction, autoplay, stepsData } = pageStore
 
 watch(carouselAction, async (action) => {
   if (!action || !carouselRef.value) return
@@ -1081,14 +1081,16 @@ watch([stepsSlide, stepsStep], () => {
 /** ♟️ Chess: clip audio della mossa corrente, in auto-play alla navigazione
  *  (stesso schema delle steps: navigi → suona; mossa senza clip → silenzio).
  *  La chiave è la sequenza SAN condivisa (es. "e4_e5_Nf3_f6"): le partite con
- *  la stessa apertura riusano le stesse clip in /audio/chess/<chiave>.mp3 */
-const chessAudioMissing = new Set<string>() // clip 404: non ritentare (no flicker avatar)
+ *  la stessa apertura riusano le stesse clip in src/assets/WebPages/Chess/.
+ *  L'URL risolta (hashata da Vite) arriva alla build nella mappa chessAudio
+ *  del pageData: chiave senza clip → nessuna voce, silenzio e zero richieste. */
 watch([chessCurrentMove, chessAudioKey], () => {
   if (type.value !== 'chess') return
   const key = chessAudioKey.value
   if (!key) { stopStepAudio(); return }
-  if (chessAudioMissing.has(key)) return
-  playStepMp3(`/audio/chess/${key}.mp3`, () => chessAudioMissing.add(key))
+  const url = chessAudio.value?.[key]
+  if (!url) return
+  playStepMp3(url)
 })
 
 /** 🖱 Click sul palco = avanza (tranne su link e controlli) */

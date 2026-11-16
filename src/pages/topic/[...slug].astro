@@ -85,6 +85,24 @@ function resolveAudio(legacyPath: string) {
   return legacyPath;
 }
 
+// ♟️ Audio delle pagine chess: le clip sono file `<chiave>.mp3` in
+// src/assets/WebPages/Chess/ (chiave = sequenza SAN senza glifi, uniti da "_").
+// allAssets (glob sopra) copre già la cartella; qui costruiamo la mappa
+// chiave → URL risolta da Vite (/_astro/...mp3) e la passiamo nel pageData:
+// il client non può ricostruire un URL hashato, quindi il bridge build-time è
+// indispensabile. Clip assente → chiave non presente → silenzio, zero richieste.
+// ⚠️ Dopo ogni aggiunta/rimozione di clip serve `npm run build`.
+const chessAudio: Record<string, string> = {};
+if (topic.data.type === "chess") {
+  for (const [assetPath, asset] of Object.entries(allAssets)) {
+    const m = /^\/src\/assets\/WebPages\/Chess\/(.+)\.mp3$/.exec(assetPath);
+    if (!m) continue;
+    const mod = (asset as any).default;
+    const url = typeof mod === "object" && mod !== null ? mod.src : mod;
+    if (typeof url === "string") chessAudio[m[1]] = url;
+  }
+}
+
 // 1. Risolviamo gli asset nel corpo del testo
 let resolvedBody = topic.body || "";
 
@@ -308,6 +326,7 @@ const pageData = {
   items: resolvedItems,
   slides: resolvedSlides,
   pgn: topic.data.pgn || "",
+  chessAudio,
   audio: resolvedAudio,
   autoplay: topic.data.autoplay === true,
   siblings: siblings,

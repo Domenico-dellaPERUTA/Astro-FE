@@ -181,7 +181,7 @@ const syncStore = () => {
     page.chessMoveLabel.value =
         (ply % 2 !== 0 ? `${moveNum}. ` : `${moveNum}… `) + (move.san ?? '')
     // Chiave della clip audio condivisa: sequenza SAN completa senza glifi
-    // (+ # ! ?) uniti da "_", es. "e4_e5_Nf3_f6" → /audio/chess/e4_e5_Nf3_f6.mp3
+    // (+ # ! ?) uniti da "_", es. "e4_e5_Nf3_f6" → src/assets/WebPages/Chess/e4_e5_Nf3_f6.mp3
     // Le partite che condividono l'apertura condividono automaticamente le clip
     page.chessAudioKey.value = history.value
         .slice(0, ply)

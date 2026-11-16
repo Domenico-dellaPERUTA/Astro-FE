@@ -33,6 +33,9 @@ const chessMove = ref<string | null>(null)
 const chessComment = ref('')
 const chessMoveLabel = ref('')
 const chessAudioKey = ref('')
+// ♟️ Mappa chiave → URL della clip, costruita alla build in [...slug].astro
+// (src/assets/WebPages/Chess/<chiave>.mp3 risolto da Vite in /_astro/...)
+const chessAudio = ref<Record<string, string>>({})
 const carouselAction = ref<string | null>(null)
 const isVideoFullscreen = ref(false)
 
@@ -86,6 +89,7 @@ const setPageData = (data: any) => {
     audio.value = data.audio ?? ''
     autoplay.value = data.autoplay === true
     stepsData.value = data.slides || []
+    chessAudio.value = data.chessAudio || {}
 
     // Per i tipi code, md, html e steps, imposta pathFile solo se audio è un percorso file (stringa)
     // Se audio === true il pulsante viene mostrato e verrà usata la sintesi vocale (TTS) come fallback
@@ -203,6 +207,7 @@ export const usePageStore = () => {
         chessComment,
         chessMoveLabel,
         chessAudioKey,
+        chessAudio,
         isInfoOpen,
         stepsSlide,
         stepsSlideTotal,
