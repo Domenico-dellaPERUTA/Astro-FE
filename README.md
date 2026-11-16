@@ -58,6 +58,28 @@ npm run preview  # Preview build
 
 ## Changelog
 
+### 2026-11-16 — ♟️ Le linee principali delle aperture: 24 nuove pagine
+
+Una pagina per linea principale (PGN commentato mossa per mossa + clip TTS
+condivise): 7 Aperte (due cavalli, pianissimo, russa, berlinese, Marshall,
+scambio, scozzese), 10 Semi-Aperte (drago, sveshnikov, scandinava, pirc,
+winawer, tarrasch, francese di scambio, avanzamento, panov, karpov), 6 Chiuse
+(est-indiana Mar del Plata, nimzo Rubinstein, grunfeld di scambio, slava,
+gambetto di donna accettato, olandese Leningrado) e 1 di Fianco (inglese
+simmetrica).
+
+- **Contenuti**: `src/content/topics/apertura-*.md` — stesso schema
+  `type: "chess"` + PGN commentato delle trappole; testi TTS-safe (niente
+  doppi apici, niente pattern cifra+punto, "scambia/cattura" al posto di
+  "cambio").
+- **Condivisione clip**: le chiavi coincidenti con le 25 pagine esistenti
+  riusano il testo CANON di `manifest.json` (swap automatico, vince il CANON);
+  le 315 chiavi nuove sono generate con la pipeline kokoro → 682 clip totali
+  in `src/assets/WebPages/Chess`.
+- **Validazione**: ogni PGN verificato mossa per mossa con chess.js
+  (arrocco vietato se il Cavallo g8 non si è mai mosso, inchiodature,
+  case occupate); il manifest rigenerato segnala 0 conflitti.
+
 ### 2026-11-16 — ♟️ Commento per mossa nelle pagine scacchi
 
 Ogni mossa delle pagine `type: "chess"` può ora avere un commento che ne spiega
