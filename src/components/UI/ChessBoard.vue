@@ -131,6 +131,9 @@ const chess = new Chess()
 const board = ref(chess.board())
 const history = ref<Move[]>([])
 const currentMoveIndex = ref(0) // 0 means start position
+// Commenti PGN standard {…} (es. "Nxe5! {Sacrificio che apre la diagonale.}")
+// mappati sul FEN della posizione DOPO la mossa a cui si riferiscono
+const commentsMap = ref(new Map<string, string>())
 
 // Parse Italian notation to Standard English (Algebraic)
 // Re T D A C -> K Q R B N
@@ -149,7 +152,13 @@ const italianToEnglish = (pgn: string): string => {
     R: 'K'  // Re
   }
 
-  return pgn.replace(/[TCADR]/g, (match) => map[match as keyof typeof map])
+  // La conversione vale solo per la notazione delle mosse: il contenuto dei
+  // commenti {…} (es. "{La Torre difende}") resta intatto
+  return pgn.split(/(\{[^}]*\})/g)
+    .map(part => part.startsWith('{')
+      ? part
+      : part.replace(/[TCADR]/g, (match) => map[match as keyof typeof map]))
+    .join('')
 }
 
 
@@ -157,6 +166,27 @@ const italianToEnglish = (pgn: string): string => {
 const syncStore = () => {
     page.chessCurrentMove.value = currentMoveIndex.value
     page.chessTotalMoves.value = history.value.length
+
+    // Commento, etichetta e chiave audio della mossa corrente
+    const ply = currentMoveIndex.value
+    if (ply === 0 || !history.value.length) {
+        page.chessComment.value = ''
+        page.chessMoveLabel.value = ''
+        page.chessAudioKey.value = ''
+        return
+    }
+    const move = history.value[ply - 1]
+    page.chessComment.value = commentsMap.value.get(move.after ?? '') || ''
+    const moveNum = Math.ceil(ply / 2)
+    page.chessMoveLabel.value =
+        (ply % 2 !== 0 ? `${moveNum}. ` : `${moveNum}… `) + (move.san ?? '')
+    // Chiave della clip audio condivisa: sequenza SAN completa senza glifi
+    // (+ # ! ?) uniti da "_", es. "e4_e5_Nf3_f6" → /audio/chess/e4_e5_Nf3_f6.mp3
+    // Le partite che condividono l'apertura condividono automaticamente le clip
+    page.chessAudioKey.value = history.value
+        .slice(0, ply)
+        .map(m => (m.san || '').replace(/[+#!?]/g, ''))
+        .join('_')
 }
 
 const loadGame = () => {
@@ -166,7 +196,13 @@ const loadGame = () => {
     try {
         chess.loadPgn(cleanPgn)
         // Store full history
-        history.value = chess.history({ verbose: true }) as {san: string, from: string, to: string}[]
+        history.value = chess.history({ verbose: true }) as {san: string, from: string, to: string, after?: string}[]
+        
+        // Commenti PGN {…}: da estrarre PRIMA del reset, quando la partita
+        // caricata è ancora in memoria (getComments legge la storia)
+        commentsMap.value = new Map(
+            chess.getComments().map(k => [k.fen, k.comment])
+        )
         
         // Reset to start
         chess.reset()
@@ -481,7 +517,9 @@ const moveAnnotation = computed(() => {
   
   // Cerchiamo la mossa corrispondente nel PGN originale
   // Un approccio semplice: cerchiamo la stringa della mossa seguita dai simboli
-  const pgnRaw = props.pgn
+  // NB: i commenti {…} vengono rimossi prima: i glifi (!, ?) stanno fuori dalle
+  // graffe e senza questa pulizia la regex catturerebbe il commento della mossa
+  const pgnRaw = props.pgn.replace(/\{[^}]*\}/g, ' ')
   
   // Cerchiamo l'indice della mossa (es. "17.")
   const moveNum = Math.ceil(currentMoveIndex.value / 2)

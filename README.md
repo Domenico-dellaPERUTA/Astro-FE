@@ -58,6 +58,45 @@ npm run preview  # Preview build
 
 ## Changelog
 
+### 2026-11-16 — ♟️ Commento per mossa nelle pagine scacchi
+
+Ogni mossa delle pagine `type: "chess"` può ora avere un commento che ne spiega
+scopo, piano o errore (es. `f6? {Errore grave: indebolisce la diagonale h5-e8…}`).
+
+#### Come funziona
+- **Testi**: commenti PGN standard `{…}` inline nel campo `pgn` del frontmatter
+  (formato scacchistico universale, nessun campo nuovo). chess.js 1.4 li
+  interpreta nativamente e li mappa sulla posizione esatta dopo la mossa.
+- **UI**: navigando con le frecce, sotto la scacchiera appare la legenda con la
+  mossa (`9. Bxb7`) e il suo commento; a posizione iniziale e pagine senza
+  commenti resta tutto pulito. I glifi `!`/`?`/`??` sulla scacchiera sono stati
+  ripristinati dopo l'introduzione dei commenti (la regex che li estrae ora
+  ignora il contenuto delle graffe).
+- **Audio 🔊** (libreria condivisa): navigando su una mossa viene riprodotta in
+  auto-play la clip `/audio/chess/<chiave>.mp3`, dove la chiave è la sequenza
+  SAN della partita fino a quella mossa senza glifi, unita da `_`
+  (es. `e4_e5_Nf3_f6.mp3`). Le partite che condividono l'apertura riusano le
+  stesse clip: una sola registrazione per "1. e4" vale per tutte le pagine.
+  Clip assente → silenzio (una sola richiesta 404 per chiave, poi cache).
+- **Pipeline TTS**: `node scripts/chess-audio.mjs` scandisce tutte le pagine
+  chess, valida i PGN e scrive `public/audio/chess/manifest.json`
+  (chiave → testo da narrare) per il generatore di clip; segnala i conflitti
+  (stessa sequenza con testi diversi nelle varie pagine).
+
+#### File
+- **`src/components/UI/ChessBoard.vue`**: estrazione commenti (`getComments()`,
+  mappati sul FEN `after`), hardening di `italianToEnglish` (non tocca più il
+  contenuto dei commenti `{…}`: "La Torre" resterebbe corrotto dalla
+  conversione notazione italiana), sync su store (commento, etichetta, chiave).
+- **`src/components/UI/TopicPage.vue`**: legenda sotto la scacchiera, auto-play
+  clip con cache delle mancanti, `stopStepAudio()` all'unmount (fix: l'audio
+  steps/chess continuava a suonare uscendo dalla pagina).
+- **`src/store/page.ts`**: `chessComment`, `chessMoveLabel`, `chessAudioKey`.
+- **`scripts/chess-audio.mjs`** (nuovo) e **`trappola-damiano.md`**: tutti e 19
+  i commenti scritti e verificati mossa per mossa con chess.js (incluso il
+  matto finale: `Kg7` è bloccato dal proprio pedone, `Kxf5` vietato per il
+  pedone e4).
+
 ### 2026-11-15 — SSR del contenuto (underlay statico) + SEO
 
 #### SSR underlay (pre-rendering statico alla build)

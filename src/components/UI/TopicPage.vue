@@ -254,7 +254,8 @@
     </div>
 
     <!-------------------------- ♟️ CHESS -------------------------------------->
-    <div v-else-if="type === 'chess'" class="chess-wrapper">
+    <div v-else-if="type === 'chess'" class="chess-shell">
+      <div class="chess-wrapper">
          <ChessBoard :pgn="pgn" />
 
          <!-- Pulsanti di navigazione rotondi laterali (stile carousel) -->
@@ -280,6 +281,13 @@
              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
            </svg>
          </button>
+      </div>
+
+      <!-- Commento della mossa corrente (testo dal PGN {...}, sempre in UI -->
+      <div v-if="chessMoveLabel || chessComment" class="chess-caption">
+        <span v-if="chessMoveLabel" class="chess-caption-move">{{ chessMoveLabel }}</span>
+        <span v-if="chessComment" class="chess-caption-text">{{ chessComment }}</span>
+      </div>
     </div>
 
     <!-------------------------- 🧩 STEPS (presentazione a slide) ------------->
@@ -374,7 +382,7 @@ if (typeof window !== 'undefined') {
 
 
 const pageStore = usePageStore()
-const { topic, type, items, code, pgn, currentIndex, showAvatar, avatarReady, setCarouselRef, navigateToPage, audio, carouselAction, setCarouselAction, isVideoFullscreen, toggleVideoFullscreen, setChessMove, chessCurrentMove, chessTotalMoves, stepsSlide, stepsSlideTotal, stepsStep, stepsStepTotal, stepsAction, setStepsAction, autoplay, stepsData } = pageStore
+const { topic, type, items, code, pgn, currentIndex, showAvatar, avatarReady, setCarouselRef, navigateToPage, audio, carouselAction, setCarouselAction, isVideoFullscreen, toggleVideoFullscreen, setChessMove, chessCurrentMove, chessTotalMoves, chessComment, chessMoveLabel, chessAudioKey, stepsSlide, stepsSlideTotal, stepsStep, stepsStepTotal, stepsAction, setStepsAction, autoplay, stepsData } = pageStore
 
 watch(carouselAction, async (action) => {
   if (!action || !carouselRef.value) return
@@ -951,7 +959,7 @@ function maybeAutoAdvance() {
   stepsNext()
 }
 
-function playStepMp3(src: string) {
+function playStepMp3(src: string, onMissing?: () => void) {
   stopStepAudio()
   try {
     showAvatar.value = 'run'
@@ -967,6 +975,7 @@ function playStepMp3(src: string) {
       if (stepAudioEl !== el) return
       stepAudioEl = null
       showAvatar.value = 'stop'
+      onMissing?.()
     }
     const p = el.play()
     if (p && typeof p.catch === 'function') {
@@ -1067,6 +1076,19 @@ function refreshSteps(silent = false) {
 watch([stepsSlide, stepsStep], () => {
   if (type.value !== 'steps' || !stepSlides.length) return
   refreshSteps()
+})
+
+/** ♟️ Chess: clip audio della mossa corrente, in auto-play alla navigazione
+ *  (stesso schema delle steps: navigi → suona; mossa senza clip → silenzio).
+ *  La chiave è la sequenza SAN condivisa (es. "e4_e5_Nf3_f6"): le partite con
+ *  la stessa apertura riusano le stesse clip in /audio/chess/<chiave>.mp3 */
+const chessAudioMissing = new Set<string>() // clip 404: non ritentare (no flicker avatar)
+watch([chessCurrentMove, chessAudioKey], () => {
+  if (type.value !== 'chess') return
+  const key = chessAudioKey.value
+  if (!key) { stopStepAudio(); return }
+  if (chessAudioMissing.has(key)) return
+  playStepMp3(`/audio/chess/${key}.mp3`, () => chessAudioMissing.add(key))
 })
 
 /** 🖱 Click sul palco = avanza (tranne su link e controlli) */
@@ -1345,6 +1367,7 @@ onUnmounted(() => {
   document.removeEventListener('fullscreenchange', updateFullscreenStatus)
   document.removeEventListener('webkitfullscreenchange', updateFullscreenStatus)
   document.removeEventListener('keydown', onStepsKeydown)
+  stopStepAudio()
 })
 
 /** 🧹 Cleanup */
@@ -1872,6 +1895,41 @@ watch(
   .chess-wrapper {
     padding: 0.25rem;
   }
+}
+
+/* Guscio chess: scacchiera + legenda mossa/commento sotto */
+.chess-shell {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Commento della mossa corrente (dal PGN {...}) */
+.chess-caption {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  max-width: 680px;
+  padding: 0.55rem 1rem;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+  min-height: 2.6rem;
+}
+
+.chess-caption-move {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+
+.chess-caption-text {
+  color: #cbd5e1;
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
 .video-frame-wrapper {

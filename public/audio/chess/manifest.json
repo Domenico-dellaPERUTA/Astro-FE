@@ -1,0 +1,21 @@
+{
+  "e4": "Apertura classica: il pedone di re occupa il centro e libera l'Alfiere e la Donna.",
+  "e4_e5": "Il Nero risponde in simmetria e contende il centro.",
+  "e4_e5_Nf3": "Sviluppo utile che attacca subito il pedone e5.",
+  "e4_e5_Nf3_f6": "Errore grave: il pedone difende e5, ma indebolisce la diagonale h5-e8 e blocca il Cavallo g8.",
+  "e4_e5_Nf3_f6_Nxe5": "Il Bianco ignora la minaccia e cattura: il sacrificio apre la diagonale della Donna.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5": "Fatale: accettare il dono lascia la diagonale h5-e8 completamente indifesa.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5_Qh5": "Scacco sulla diagonale aperta: la Donna attacca il Re e minaccia anche il pedone e5.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5_Qh5_Ke7": "Il Re avanza per bloccare lo scacco e difendere il pedone, ma resta esposto.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5_Qh5_Ke7_Qxe5": "La Donna recupera il Cavallo con interesse: il Re resta in mezzo alla scacchiera.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5_Qh5_Ke7_Qxe5_Kf7": "Il Re si ripiega, ma resta intrappolato sulla grande diagonale.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5_Qh5_Ke7_Qxe5_Kf7_Bc4": "Nuovo scacco: l'Alfiere punta al debole f7.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5_Qh5_Ke7_Qxe5_Kf7_Bc4_d5": "Blocco forzato: il pedone para lo scacco e aggancia l'Alfiere.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5_Qh5_Ke7_Qxe5_Kf7_Bc4_d5_Bxd5": "L'Alfiere cattura il pedone e rinnova lo scacco: il Re non ha respiro.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5_Qh5_Ke7_Qxe5_Kf7_Bc4_d5_Bxd5_Kg6": "Il Re continua la marcia, apparentemente aggressiva, ma entra nella zona del matto.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5_Qh5_Ke7_Qxe5_Kf7_Bc4_d5_Bxd5_Kg6_h4": "Mossa silenziosa ma decisiva: occupa h4, impedisce l'ingresso della Donna in h4 e prepara la spinta h5.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5_Qh5_Ke7_Qxe5_Kf7_Bc4_d5_Bxd5_Kg6_h4_h6": "Il Nero non vede la minaccia: f5 resta difesa solo dall'Alfiere c8.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5_Qh5_Ke7_Qxe5_Kf7_Bc4_d5_Bxd5_Kg6_h4_h6_Bxb7": "Il sacrificio decisivo: l'Alfiere attacca l'Alfiere c8, unico difensore di f5, e anche la Torre a8.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5_Qh5_Ke7_Qxe5_Kf7_Bc4_d5_Bxd5_Kg6_h4_h6_Bxb7_Bxb7": "Il Nero recupera l'Alfiere, ma così rimuove l'ultimo difensore della casa f5.",
+  "e4_e5_Nf3_f6_Nxe5_fxe5_Qh5_Ke7_Qxe5_Kf7_Bc4_d5_Bxd5_Kg6_h4_h6_Bxb7_Bxb7_Qf5": "Matto: il Re non può prendere la Donna, difesa dal pedone e4, la casa g7 è bloccata dal proprio pedone e f7 e h7 sono coperte."
+}

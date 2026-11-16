@@ -28,6 +28,11 @@ const chessCurrentMove = ref(0)
 const chessTotalMoves = ref(0)
 const chessFlipped = ref(false)
 const chessMove = ref<string | null>(null)
+// Commento della mossa corrente (dal PGN {...}) + etichetta "4… f6" +
+// chiave della clip audio condivisa (sequenza SAN, es. "e4_e5_Nf3_f6")
+const chessComment = ref('')
+const chessMoveLabel = ref('')
+const chessAudioKey = ref('')
 const carouselAction = ref<string | null>(null)
 const isVideoFullscreen = ref(false)
 
@@ -195,6 +200,9 @@ export const usePageStore = () => {
         chessTotalMoves,
         chessFlipped,
         chessMove,
+        chessComment,
+        chessMoveLabel,
+        chessAudioKey,
         isInfoOpen,
         stepsSlide,
         stepsSlideTotal,
