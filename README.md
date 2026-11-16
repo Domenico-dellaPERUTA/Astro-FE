@@ -96,6 +96,14 @@ scopo, piano o errore (es. `f6? {Errore grave: indebolisce la diagonale h5-e8…
   i commenti scritti e verificati mossa per mossa con chess.js (incluso il
   matto finale: `Kg7` è bloccato dal proprio pedone, `Kxf5` vietato per il
   pedone e4).
+- **Testi di tutte le 25 pagine ♟️**: ogni mossa di ogni partita (237+ mosse)
+  ha ora un commento che spiega scopo, piano o errore — scritti dopo
+  verifica col motore (mattoni confermati, valutazioni materiali, sicurezza
+  delle caselle). Le 27 chiavi condivise tra partite diverse usano testi
+  byte-identici: il manifest segna 367 clip uniche e nessun conflitto.
+  Convenzione TTS-friendly dei testi: niente virgolette doppie, niente
+  pattern cifra+punto (romperebbe la regex del parser PGN), una o due frasi
+  brevi per clip.
 
 ### 2026-11-15 — SSR del contenuto (underlay statico) + SEO
 
