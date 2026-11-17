@@ -58,6 +58,44 @@ npm run preview  # Preview build
 
 ## Changelog
 
+### 2026-11-17 — 🅰 Menu Angular: revisione completa contro Angular v22
+
+Rilettura dei 15 documenti `angular-*.md` del menu (todo "Progetto semplice"
+escluso, vedi nota) confrontati con angular.dev (v22.2.6 attuale): correzione
+di refusi ed errori fattuali + sezioni "Nelle versioni recenti" su standalone,
+control flow e signal.
+
+- **Errori corretti**: la direttiva è `NgModel` (era "ngModule"), titolo
+  "Reactive form" (era "React form"), pipe `date` (era "data") con formati
+  `'short'/'medium'/'shortTime'/'yyyy'` ed esempio number corretto (10.09654 →
+  "010.10"), `@NgModule` e "app.module.ts" (erano "@ngModule" e
+  "app-module.js") in Routing, link ciclo di vita →
+  `angular.dev/guide/components/lifecycle` (angular.io era morto), immagine
+  rotta `direttida_nuovo_input.png` → `direttiva_nuovo_input.png`, link Angular
+  Material → `material.angular.dev`, esempio `<ng-template *ngIf>` sbagliato
+  (ora mostra il ramo `else` con `#nomeBlocco`), immagini duplicate in
+  Routing/Direttive, refusi vari ("cartella di srv" → `src`, "node_module",
+  "il tools", "buit-in", "una una", "datti", "ver visualizzare",
+  "React form", "gerarchica", "onRicevidati"...).
+- **Aggiornamenti v17-v22**: sezioni "Nelle versioni recenti" in 13 pagine —
+  componenti standalone di default (v19) e file senza suffisso `.component`
+  (v20: `app.ts/app.html/app.css/app.config.ts`), control flow `@if/@else/@for`
+  (v17), `input()/output()/model()/viewChild()` al posto dei decoratori,
+  `provideRouter` + guard funzionali `CanActivateFn`, `provideHttpClient` +
+  interceptor funzionali `HttpInterceptorFn` (+ `httpResource`), `inject()` e
+  opzione `host` al posto di `@HostListener`, Signal Forms (v21) con
+  `form()`/`[formField]`/schema, Angular Aria (v21), zoneless + Vitest;
+  Introduzione aggiornata su `ng new` (Routing incluso di default, domanda
+  SSR, Node.js 22+).
+- **Fatti verificati su angular.dev**: `/installation`, `/cli/new`,
+  `/cli/generate/component`, guide `/guide/forms`, `/essentials/signal-forms`,
+  `/guide/components`, eventi v21/v22.
+- **Nota**: `angular-progetto-semplice.md` (tipo "steps" con clip TTS
+  sincronizzate ai testi) lasciato com'è — aggiornarlo richiederebbe
+  rigenerare le narrazioni.
+- **Contenuti gitignored**: modifiche solo in `src/content/topics/*.md`
+  (nessun commit dei contenuti).
+
 ### 2026-11-16 — ♟️ Le linee principali delle aperture: 24 nuove pagine
 
 Una pagina per linea principale (PGN commentato mossa per mossa + clip TTS
