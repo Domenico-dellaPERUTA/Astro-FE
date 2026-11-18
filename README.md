@@ -58,6 +58,40 @@ npm run preview  # Preview build
 
 ## Changelog
 
+### 2026-11-18 — 🌍 Mappa 3D della Terra nell'header
+
+Nuova icona mappamondo nella barra superiore (nascosta solo in modalità phone)
+che apre un globo interattivo a schermo intero, renderizzato con `three.js`
+(già presente tra le dipendenze).
+
+- **Texture**: Cross-blended Hypsometric Tints di Natural Earth (pubblico
+  dominio): rilievo ombreggiato con colori altimetrici/climatici (pianure
+  umide verdi, aree aride brune). Fiumi e laghi del dataset 1:50m Natural
+  Earth sono stati rasterizzati nella texture (il raster HYP non li include),
+  con i laghi sopra i fiumi. Convertita in WebP in `public/globe/` —
+  8192×4096 per lo zoom ravvicinato (~1,7 MB) e 1024×512 per l'apertura
+  immediata (~39 KB), caricata in modo progressivo. L'acqua è un tint piatto,
+  senza batimetria. Aggiunto il MIME `image/webp` in `public/.htaccess`.
+- **Interazione**: trascinamento col mouse per ruotare il globo attorno
+  all'asse inclinato di 23,44° (con inerzia), rotella per lo zoom, doppio
+  click o `0` per ripristinare la vista; frecce direzionali e pulsanti
+  nord/sud/est/ovest, zoom +/-. Zoom massimo esteso fino a distanza 1,25;
+  l'inclinazione verticale arriva fino a ±90°, così da poter guardare
+  direttamente il polo nord e il polo sud. Supporto tastiera (`Esc`, frecce,
+  `+`/`-`, `0`), focus trap e ripristino del focus alla chiusura.
+- **Asse regolabile**: slider `Asse` nei controlli (−90°…+90°, iniziale
+  23,44°) per inclinare l'asse terrestre; in alternativa `Shift` +
+  trascinamento orizzontale sul globo. Il reset (`0`, doppio click o pulsante)
+  riporta l'inclinazione a 23,44°. Lo slider è incluso nel focus trap e, quando
+  è focalizzato, le frecce ne regolano il valore invece di ruotare il globo.
+- **Scena**: graticola di meridiani e paralleli ogni 10° (linee ogni 30° più
+  marcate), atmosfera con shader, campo stellato, asse e anello meridiano,
+  rotazione automatica dopo 4,5 s di inattività (disattivata con
+  `prefers-reduced-motion`), stati di caricamento/errore con "Riprova".
+- **Bundle**: `EarthGlobe.vue` caricato con `defineAsyncComponent` e
+  precaricato su hover/focus dell'icona, così three.js resta fuori dal
+  bundle iniziale. La mappa si chiude al cambio di rotta.
+
 ### 2026-11-17 — 🅰 Menu Angular: revisione completa contro Angular v22
 
 Rilettura dei 15 documenti `angular-*.md` del menu (todo "Progetto semplice"

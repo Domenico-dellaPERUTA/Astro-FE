@@ -1,5 +1,9 @@
 # Header di sicurezza per il blog (deploy Apache su hosting Altervista)
 # Attivi solo se mod_headers è disponibile, per evitare errori 500 altrimenti.
+
+# Texture WebP della mappa 3D (EarthGlobe.vue)
+AddType image/webp .webp
+
 <IfModule mod_headers.c>
   # Previene il MIME-sniffing nei browser
   Header always set X-Content-Type-Options "nosniff"

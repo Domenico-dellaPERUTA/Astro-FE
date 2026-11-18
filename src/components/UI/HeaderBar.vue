@@ -58,8 +58,23 @@
         {{ currentTitle }}
       </h1>
 
-      <!-- Sezione destra: Ricerca + Home -->
+      <!-- Sezione destra: Globo + Ricerca + Home -->
       <div class="header-main-right">
+        <!-- Mappa 3D della Terra: nascosta in modalità phone -->
+        <button
+          v-if="!isPhone"
+          class="btn-icon btn-globe"
+          title="Mappa 3D del pianeta Terra"
+          aria-label="Apri la mappa 3D della Terra"
+          aria-haspopup="dialog"
+          :aria-expanded="globeOpen"
+          @click="globeOpen = true"
+          @mouseenter="warmGlobe"
+          @focus="warmGlobe"
+        >
+          <GlobeIcon class="icon" />
+        </button>
+
         <!-- Ricerca testuale su tutte le voci del menu -->
         <div ref="searchBox" class="search-box">
           <Search class="search-icon" />
@@ -277,6 +292,13 @@
       </div>
       <!----------------------------------------------------------------------------->
     </div>
+
+    <!-- Mappa 3D della Terra: teleportata su <body> per evitare i limiti di
+         stacking/overflow dell'header. Il componente (e three.js) viene
+         scaricato solo la prima volta che serve. -->
+    <Teleport to="body">
+      <EarthGlobe v-if="globeOpen" @close="globeOpen = false" />
+    </Teleport>
   </header>
 </template>
 
@@ -284,14 +306,24 @@
 import { 
   Menu, Home, Volume2, VolumeOff, Link,CircleSlash2,Scale,NotebookPen,EyeOff, User2,Castle,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,Image, Dot,GalleryThumbnails,Eye,
-  RefreshCw, Info, Expand, Shrink, Search, X, Pencil
+  RefreshCw, Info, Expand, Shrink, Search, X, Pencil, Globe as GlobeIcon
 } from 'lucide-vue-next'
-import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch, defineAsyncComponent } from 'vue'
 
 import { useInfoStore } from '../../store/info'
 import { usePageStore } from '../../store/page'
 import { useMenuStore } from '../../store/menu'
 import ActionButton from './ActionButton.vue'
+
+// 🌍 Mappa 3D: il chunk (three.js incluso) si scarica solo al primo utilizzo
+const EarthGlobe = defineAsyncComponent(() => import('./EarthGlobe.vue'))
+const globeOpen = ref(false)
+let globeWarmed = false
+const warmGlobe = () => {
+  if (globeWarmed) return
+  globeWarmed = true
+  import('./EarthGlobe.vue')
+}
 
 const pageStore = usePageStore()
 const { 
@@ -468,6 +500,7 @@ watch(route, () => {
   searchQuery.value = ''
   closeSearch()
   editorsMenuOpen.value = false
+  globeOpen.value = false
 })
 
 const onDocumentClick = (e: MouseEvent) => {
@@ -967,6 +1000,25 @@ const onLinkSelect = (item: Link) => {
 .btn-latex:hover {
   color: #ff8c00;
   border-color: rgba(255, 140, 0, 0.4);
+}
+
+/* 🌍 Icona mappamondo: l'icona ruota lentamente al passaggio del mouse */
+.btn-globe:hover {
+  color: #7dd3fc;
+  border-color: rgba(125, 211, 252, 0.45);
+}
+.btn-globe:hover .icon {
+  animation: globeIconSpin 7s linear infinite;
+}
+@keyframes globeIconSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-globe:hover .icon {
+    animation: none;
+  }
 }
 
 /* 🖊 Menu editor (LaTeX / Markdown) collegato all'icona matita */
